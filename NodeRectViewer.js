@@ -217,14 +217,14 @@ function NodeRectOnLoad () {
   <option value=vp.windowInner>Inner\
 \
   <option value=vp.document>Document\
-  <option value=vp.documentElementOffset>documentElement.offset\
-  <option value=vp.documentElementClient>documentElement.client\
-  <option value=vp.documentElementScrollableArea>documentElement.scroll (width, height)\
-  <option value=vp.documentElementScrollState>documentElement.scroll (top, left)\
-  <option value=vp.documentBodyOffset>document.body.offset\
-  <option value=vp.documentBodyClient>document.body.client\
-  <option value=vp.documentBodyScrollableArea>document.body.scroll (width, height)\
-  <option value=vp.documentBodyScrollState>document.body.scroll (top, left)\
+  <option value=vp.deOffset>documentElement.offset\
+  <option value=vp.deClient>documentElement.client\
+  <option value=vp.deScrollableArea>documentElement.scroll (width, height)\
+  <option value=vp.deScrollState>documentElement.scroll (top, left)\
+  <option value=vp.bodyOffset>document.body.offset\
+  <option value=vp.bodyClient>document.body.client\
+  <option value=vp.bodyScrollableArea>document.body.scroll (width, height)\
+  <option value=vp.bodyScrollState>document.body.scroll (top, left)\
 \
   <optgroup label=Window>\
   <option value=win.outer>Outer\

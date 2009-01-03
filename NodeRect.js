@@ -47,6 +47,7 @@ NodeRect.Rect.prototype.addOffset = function (r) {
   o.prev1 = this;
   o.prev2 = r;
   o.prevOp = 'add-offset'; 
+  o.supported = this.supported && r.supported;
   return o;
 }; // addOffset
 
@@ -57,6 +58,7 @@ NodeRect.Rect.prototype.addVector = function (r) {
   o.prev1 = this;
   o.prev2 = r;
   o.prevOp = 'add-vector'; 
+  o.supported = this.supported && r.supported;
   return o;
 }; // addVector
 
@@ -67,6 +69,7 @@ NodeRect.Rect.prototype.subtractOffset = function (r) {
   o.prev1 = this;
   o.prev2 = r;
   o.prevOp = 'sub-offset'; 
+  o.supported = this.supported && r.supported;
   return o;
 }; // subtractOffset
 
@@ -77,6 +80,7 @@ NodeRect.Rect.prototype.outsideEdge = function (r) {
   o.prev1 = this;
   o.prev2 = r;
   o.prevOp = 'out-edge';
+  o.supported = this.supported && r.supported;
   return o;
 }; // outsideEdge
 
@@ -87,6 +91,7 @@ NodeRect.Rect.prototype.insideEdge = function (r) {
   o.prev1 = this;
   o.prev2 = r;
   o.prevOp = 'in-edge';
+  o.supported = this.supported && r.supported;
   return o;
 }; // insideEdge
 
@@ -96,6 +101,7 @@ NodeRect.Rect.prototype.extend = function (r) {
   o.prev1 = this;
   o.prev2 = r;
   o.prevOp = 'extend';
+  o.supported = this.supported && r.supported;
   return o;
 }; // extend
 
@@ -251,6 +257,9 @@ NodeRect.getComputedRects = function (el, classObject) {
 NodeRect.getElementAttrRects = function (el) {
   var rects = {};
 
+  /* See <http://suika.fam.cx/%7Ewakaba/wiki/sw/n/offset%2A> for
+     compatibility problems. */
+
   rects.offset = NodeRect.Rect.tlwh
       (el.offsetTop, el.offsetLeft, el.offsetWidth, el.offsetHeight);
   rects.offset.label = el.nodeName + '.offset';
@@ -346,12 +355,6 @@ NodeRect.getViewportRects = function (win) {
   rects.windowInner = NodeRect.Rect.wh (win.innerWidth, win.innerHeight);
   rects.windowInner.label = 'window.inner';
 
-  /* Not supported by Fx3, WebKit, Opera, WinIE */
-  /*
-  rects.windowClient = NodeRect.Rect.wh (win.clientWidth, win.clientHeight);
-  rects.windowClient.label = 'window.client';
-  */
-
   /* Not supported by WinIE */
   rects.windowPageOffset
       = new NodeRect.Rect.Vector (win.pageXOffset, win.pageYOffset);
@@ -360,13 +363,6 @@ NodeRect.getViewportRects = function (win) {
   /* Fx3, WebKit: Same as page offset; Not supported by Opera, WinIE */
   rects.windowScrollXY = new NodeRect.Rect.Vector (win.scrollX, win.scrollY);
   rects.windowScrollXY.label = 'window.scroll (x, y)';
-
-  /* Not supported by Fx3, WebKit, Opera, WinIE */
-  /*
-  rects.windowScrollTL
-      = new NodeRect.Rect.Vector (win.scrollLeft, win.scrollTop);
-  rects.windowScrollTL.label = 'window.scroll (top, left)';
-  */
 
   /* Not supported by WebKit, Opera, WinIE */
   rects.windowScrollMax
@@ -379,106 +375,60 @@ NodeRect.getViewportRects = function (win) {
 
   if (docEl) {
     var deRects = NodeRect.getElementAttrRects (docEl);
-
-    /* Fx3: border box of the root element (origin: tl of padding edge) */
-    /* S3, O9 (Q): border box of the root element (origin: tl of border edge) */
-    /* O9 (S): border box of the root element (origin: tl of margin edge) */
-    /* IE7 (S): viewport w/o scroll (origin: tl of viewport) */
-    /* IE7 (Q): viewport's border box (origin: tl of border edge of viewport) */
-    rects.documentElementOffset = deRects.offset;
-
-    /* Fx3,S3,O9 (S): viewport w/o scroll (origin: tl of viewport) */
-    /* Fx3,S3 (Q): padding box of the root element (origin: tl of border edge) */
-    /* O9 (Q): top,height: padding of root (origin: border); left,width: viewport w/o scroll (origin: viewport) */
-    /* IE7 (S): viewport w/o scroll (origin: (-2, -2) of viewport (-2 = viewport's border) */
-    /* IE7 (Q): N/A (value = 0) */
-    rects.documentElementClient = deRects.client;
-
-    /* Fx3 (S): visible area of canvas (origin: tl of canvas) */
-    /* Fx3 (Q), S3, O9: border box of the root element (origin: tl of border edge) */
-    /* IE7 (S): margin area - margin-right, margin-bottom of the root element (origin: tl of margin edge) */
-    /* IE7 (Q): same as offset */
-    rects.documentElementScrollableArea = deRects.scrollableArea;
-
-    /* Fx3 (S), O9 (S), IE7 (S): viewport scroll top/left */
-    /* Fx3 (Q), S3, O9 (Q), IE7 (Q): NOT viewport scroll top/left */
-    rects.documentElementScrollState = deRects.scrollState;
-
+    rects.deOffset = deRects.offset;
+    rects.deClient = deRects.client;
+    rects.deScrollableArea = deRects.scrollableArea;
+    rects.deScrollState = deRects.scrollState;
   } else {
-    rects.documentElementOffset = NodeRect.Rect.nosupport ();
-    rects.documentElementClient = NodeRect.Rect.nosupport ();
-    rects.documentElementScrollableArea = NodeRect.Rect.nosupport ();
-    rects.documentElementScrollState = NodeRect.Rect.nosupport ();
+    rects.deOffset = NodeRect.Rect.nosupport ();
+    rects.deClient = NodeRect.Rect.nosupport ();
+    rects.deScrollableArea = NodeRect.Rect.nosupport ();
+    rects.deScrollState = NodeRect.Rect.nosupport ();
   }
-  rects.documentElementOffset.label = 'documentElement.offset';
-  rects.documentElementClient.label = 'documentElement.client';
-  rects.documentElementScrollableArea.label = 'documentElement.scroll (width, height)';
-  rects.documentElementScrollState.label = 'documentElement.scroll (top, left)';
+  rects.deOffset.label = 'documentElement.offset';
+  rects.deClient.label = 'documentElement.client';
+  rects.deScrollableArea.label = 'documentElement.scroll (width, height)';
+  rects.deScrollState.label = 'documentElement.scroll (top, left)';
 
   if (bodyEl) {
     var dbRects = NodeRect.getElementAttrRects (bodyEl);
-
-    /* Fx3: border box of the body element (origin: tl of padding edge) */
-    /* S3, O9 (S): border box of the body element (origin: tl of border edge) */
-    /* O9 (Q): viewport w/ scroll (origin: tl of viewport) */
-    /* IE7 (S): border box of the body element (origin: tl of margin of root) */
-    /* IE7 (Q): same as root's offset */
-    rects.documentBodyOffset = dbRects.offset;
-
-    /* Fx3,S3,O9,IE7 (S): padding box of the body element (origin: tl of border edge) */
-    /* Fx3,S3,O9,IE7 (Q): viewport w/o scroll (origin: tl of viewport) */
-    /* S3 (Q): top/left += body's border-top/left */
-    rects.documentBodyClient = dbRects.client;
-
-    /* Fx3,O9 (S): border box of the body element (origin: tl of border edge) */
-    /* Fx3 (Q), S3, O9 (Q): visible area of canvas (origin: tl of canvas) */
-    /* IE7: (extended-)padding box of the body element (origin: tl of padding edge) */
-    rects.documentBodyScrollableArea = dbRects.scrollableArea;
-
-    /* Fx3,O9,IE7 (S): NOT viewport scroll top/left */
-    /* Fx3 (Q), S3, O9 (Q): viewport scroll top/left */
-    rects.documentBodyScrollState = dbRects.scrollState;
-
-    /* Fx3 (S,Q), S3 (S), O9, IE7: NOT stretch html & body elements */
-    /* S3 (Q): stretch html & body elements */
-
-    /* IE7 (Q): body's margin => viewport's margin; body's margin +
-       border + padding => body's padding(-like area); html's margin +
-       border + padding is ignored */
+    rects.bodyOffset = dbRects.offset;
+    rects.bodyClient = dbRects.client;
+    rects.bodyScrollableArea = dbRects.scrollableArea;
+    rects.bodyScrollState = dbRects.scrollState;
   } else {
-    rects.documentBodyOffset = NodeRect.Rect.nosupport ();
-    rects.documentBodyClient = NodeRect.Rect.nosupport ();
-    rects.documentBodyScrollState = NodeRect.Rect.nosupport ();
-    rects.documentBodyScrollableArea = NodeRect.Rect.nosupport ();
+    rects.bodyOffset = NodeRect.Rect.nosupport ();
+    rects.bodyClient = NodeRect.Rect.nosupport ();
+    rects.bodyScrollState = NodeRect.Rect.nosupport ();
+    rects.bodyScrollableArea = NodeRect.Rect.nosupport ();
   }
-  rects.documentBodyOffset.label = 'document.body.offset';
-  rects.documentBodyClient.label = 'document.body.client';
-  rects.documentBodyScrollableArea.label = 'document.body.scroll (width, height)';
-  rects.documentBodyScrollState.label = 'document.body.scroll (top, left)';
+  rects.bodyOffset.label = 'document.body.offset';
+  rects.bodyClient.label = 'document.body.client';
+  rects.bodyScrollableArea.label = 'document.body.scroll (width, height)';
+  rects.bodyScrollState.label = 'document.body.scroll (top, left)';
 
   if (document.all) {
     if (quirks) {
-      rects.scrollState = rects.documentBodyScrollState;
+      rects.scrollState = rects.bodyScrollState;
     } else {
-      rects.scrollState = rects.documentElementScrollState;
+      rects.scrollState = rects.deScrollState;
     }
   } else {
     rects.scrollState = rects.windowPageOffset;
   }
 
   if (quirks) {
-    rects.icb = rects.documentBodyClient;
+    rects.icb = rects.bodyClient;
     rects.icb = rects.icb.subtractOffset (rects.icb);
     /* This is not ICB in Firefox if the document is in the quirks mode
        and both |html| and |body| has scrollbars.  In such cases there
        is no way to obtain ICB (content edge), AFAICT. */
   } else {
     if (document.all) {
-      rects.icb = rects.documentElementOffset;
-      rects.boundingClientOrigin
-          = rects.icb.subtractOffset (rects.documentElementClient);
+      rects.icb = rects.deOffset;
+      rects.boundingClientOrigin = rects.icb.subtractOffset (rects.deClient);
     } else {
-      rects.icb = rects.documentElementClient;
+      rects.icb = rects.deClient;
     }
   }
 
@@ -492,7 +442,7 @@ NodeRect.getViewportRects = function (win) {
      while returning zero in any other browsers AFAICT, sniffing Gecko by
      UA string. */
   if (navigator.userAgent.indexOf("Gecko/") >= 0) {
-    rects.icb = rects.icb.addOffset (rects.documentElementOffset);
+    rects.icb = rects.icb.addOffset (rects.deOffset);
     rects.icb.label = 'ICB (origin: border edge of root element box)';
 
     var debc = docEl.getBoundingClientRect ();
