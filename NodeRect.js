@@ -248,11 +248,38 @@ NodeRect.Rect.Band.prototype.getNegatedTLVector = function () {
   return o;
 }; // getNegatedTLVector
 
-NodeRect.getCumulativeOffsetRect = function (oel, classObject) {
+NodeRect.getCumulativeOffsetRect = function (oel) {
   var el = oel;
-  if (!classObject) classObject = NodeRect.Rect;
-  var rect = new classObject (0, 0, 0, 0, 0, 0);
+  var rect = NodeRect.Rect.trbl (0, 0, 0, 0);
   rect.label = 'Origin';
+
+  if (/WebKit/.test (navigator.userAgent)) {
+    var docEl = el.ownerDocument.documentElement;
+    var bodyEl = el.ownerDocument.body;
+
+    if (docEl) {
+      var rects = NodeRect.getBoxAreaRects (docEl);
+
+      if (docEl == oel) {
+        /* If viewport is not the root element, this should not be added. */
+        rect = rects.padding;
+      } else if (bodyEl == oel) {
+        rect = rects.padding.addOffset (rects.border.addOffset (rects.margin));
+      } else {
+        rect = rects.padding.addOffset (rects.border);
+      }
+    }
+
+    if (bodyEl) {
+      var rects = NodeRect.getBoxAreaRects (bodyEl);
+      
+      if (bodyEl == oel) {
+        rect = rect.addOffset (rects.margin);
+      } else {
+        rect = rect.addOffset (rects.border);
+      }
+    }
+  }
 
   var offsetChain = [];
   while (el) {
@@ -263,12 +290,11 @@ NodeRect.getCumulativeOffsetRect = function (oel, classObject) {
   while (offsetChain.length) {
     var el = offsetChain.shift ();
 
-    var offset = new classObject
-        (el.offsetTop, null, null, el.offsetLeft,
-         el.offsetWidth, el.offsetHeight);
+    var offset = NodeRect.Rect.tlwh
+        (el.offsetTop, el.offsetLeft, el.offsetWidth, el.offsetHeight);
     offset.label = el.nodeName + '.offset';
 
-    rect = rect.addOffset (offset);
+    rect = offset.addOffset (rect);
     rect.label = el.nodeName + ' cumulative offset';
     
     /* TODO: add border if necessary */
@@ -277,7 +303,7 @@ NodeRect.getCumulativeOffsetRect = function (oel, classObject) {
         window.getComputedStyle &&
         getComputedStyle (el, null).position == 'absolute' &&
         /Konqueror|Safari|KHTML/.test (navigator.userAgent)) {
-      break;
+//      break;
     }
 
     el = el.offsetParent;
@@ -285,7 +311,7 @@ NodeRect.getCumulativeOffsetRect = function (oel, classObject) {
 
   if (window.opera && /* Opera 9.52 */
       oel == oel.ownerDocument.body) {
-    var cssRects = NodeRect.getBoxAreaRects (oel, classObject);
+    var cssRects = NodeRect.getBoxAreaRects (oel);
     rect = rect.addOffset (cssRects.margin);
     rect.label = oel.nodeName + ' adjusted offset';
   }
