@@ -21,10 +21,37 @@ NodeRect.Rect.wh = function (w, h) {
 }; // wh
 
 NodeRect.Rect.trbl = function (t, r, b, l) {
-  var r = new NodeRect.Rect (t, r, b, l);
-  if (!isNaN (t + 0)) r.supported = true;
-  return r;
+  var o = new NodeRect.Rect (t, r, b, l);
+  if (!isNaN (t + r + b + l + 0)) o.supported = true;
+  return o;
 }; // trbl
+
+var parseLength = function (s) {
+  /* TODO: parse any <length> supported by IE */
+  var m;
+  if (s == 'thin') {
+    return 4;
+  } else if (s == 'medium') {
+    return 8;
+  } else if (s == 'thick') {
+    return 16;
+  } else if (s == 'auto') {
+    return 0; /* Hard to compute, give up! */
+  } else if (m = s.match (/^(-?[0-9.]+)([A-Za-z%]+)$/)) {
+    if (m[2] == 'px') {
+      return parseFloat (m[1]);
+    } else {
+      return null;
+    }
+  } else {
+    return null;
+  }
+}; // parseLength
+
+NodeRect.Rect.trblIE = function (t, r, b, l) {
+  return NodeRect.Rect.trbl
+      (parseLength (t), parseLength (r), parseLength (b), parseLength (l));
+}; // trblIE
 
 NodeRect.Rect.tlwh = function (t, l, w, h) {
   var r = new NodeRect.Rect (t, null, null, l, w, h);
@@ -212,6 +239,15 @@ NodeRect.Rect.Band = function (t, r, b, l) {
 
 NodeRect.Rect.Band.prototype = new NodeRect.Rect;
 
+NodeRect.Rect.Band.prototype.getNegatedTLVector = function () {
+  var o = new NodeRect.Rect.Vector (-this.left, -this.top);
+  o.prevOp = 'topleft-negated';
+  o.prev1 = this;
+  o.supported = this.supported;
+  o.label = this.label + ', top-left corner, negated';
+  return o;
+}; // getNegatedTLVector
+
 NodeRect.getCumulativeOffsetRect = function (oel, classObject) {
   var el = oel;
   if (!classObject) classObject = NodeRect.Rect;
@@ -294,11 +330,14 @@ NodeRect.getBoxAreaRects = function (el) {
       parseFloat (cs.paddingLeft.slice (0, -2))
     );
   } else if (el.currentStyle) {
-    /* TODO: parse currentStyle */
-
-    rects.margin = NodeRect.Rect.nosupport ();
-    rects.border = NodeRect.Rect.nosupport ();
-    rects.padding = NodeRect.Rect.nosupport ();
+    var cs = el.currentStyle;
+    rects.margin = NodeRect.Rect.trblIE
+        (cs.marginTop, cs.marginRight, cs.marginBottom, cs.marginLeft);
+    rects.border = NodeRect.Rect.trblIE
+        (cs.borderTopWidth, cs.borderRightWidth,
+         cs.borderBottomWidth, cs.borderLeftWidth);
+    rects.padding = NodeRect.Rect.trblIE
+        (cs.paddingTop, cs.paddingRight, cs.paddingBottom, cs.paddingLeft);
   } else {
     rects.margin = NodeRect.Rect.nosupport ();
     rects.border = NodeRect.Rect.nosupport ();
@@ -467,6 +506,12 @@ NodeRect.getViewportRects = function (win) {
     /* This is not ICB in Firefox if the document is in the quirks mode
        and both |html| and |body| has scrollbars.  In such cases there
        is no way to obtain ICB (content edge), AFAICT. */
+
+    if (document.all) {
+      var docElRects = NodeRect.getBoxAreaRects (bodyEl);
+      rects.boundingClientOrigin = docElRects.border.getNegatedTLVector ();
+      rects.boundingClientOrigin.label = 'Viewport border offset';
+    }
   } else {
     if (document.all) {
       rects.icb = rects.deOffset;
