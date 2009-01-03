@@ -1,13 +1,3 @@
-function dumpHash (hash) {
-  var r = [];
-  var names = ['top', 'right', 'bottom', 'left', 'width', 'height'];
-  for (var i in names) {
-    if (parseInt (i) != i) continue;
-    r.push (names[i] + ": " + hash[names[i]]);
-  }
-  return r.join (" \n");
-} // dumpHash
-
 function setCSSPosition (style, value) {
   if (value == 'fixed') {
     if (!window.opera &&
@@ -39,6 +29,9 @@ function update (form) {
     } else if (type.substring (0, 3) === 'vp.') {
       var rects = NodeRect.getViewportRects (window, rectClass);
       rect = rects[type.substring (3)];
+    } else if (type.substring (0, 4) === 'win.') {
+      var rects = NodeRect.getWindowRects (window, rectClass);
+      rect = rects[type.substring (4)];
     } else if (type.substring (0, 7) === 'screen.') {
       var rects = NodeRect.getScreenRects (window, rectClass);
       rect = rects[type.substring (7)];
@@ -46,7 +39,7 @@ function update (form) {
       var rects = NodeRect.getElementRects (el, rectClass);
       rect = rects[type];
     }
-    form.result.value = dumpHash (rect);
+    form.result.value = rect.toString ();
     if (form.trace.checked) {
       showTrace (rect, position);
     } else {
@@ -81,6 +74,7 @@ function showTrace (rect, position) {
 function setHighlight (rect, coords) {
   var marker = document.createElement ('div');
   setCSSPosition (marker.style, coords == 'viewport' ? 'fixed' : 'absolute');
+  marker.style.zIndex = '99999';
   marker.nrOriginalLeft = rect.left;
   marker.nrOriginalTop = rect.top;
   if (!isNaN (rect.top)) marker.style.top = rect.top + 'px';
@@ -93,7 +87,12 @@ function setHighlight (rect, coords) {
   marker.style.MozBoxSizing = 'border-box';
   marker.style.WebkitBoxSizing = 'border-box';
   marker.style.boxSizing = 'border-box';
-  marker.style.border = bw + 'px solid red';
+  if (rect instanceof NodeRect.Rect.Vector) {
+    marker.style[rect.leftward ? 'borderLeft' : 'borderRight'] = bw + 'px solid red';
+    marker.style[rect.upward ? 'borderBottom' : 'borderTop'] = bw + 'px solid red';
+  } else {
+    marker.style.border = bw + 'px solid red';
+  }
   var colors = ['#FFFFCC', '#FFCCCC', '#CC99FF', '#99CCFF'];
   marker.style.backgroundColor = colors[rect.index % colors.length];
   marker.style.opacity = 0.3;
@@ -136,7 +135,7 @@ function setHighlight (rect, coords) {
   };
 
   var label = rect.getFullLabel ? rect.getFullLabel () : '';
-  marker.title = "*" + label + "* \n" + dumpHash (rect);
+  marker.title = "*" + label + "* \n" + rect.toString ();
 
   var text = marker.appendChild (document.createElement ('div'));
   text.style.position = 'absolute';
@@ -206,22 +205,17 @@ function NodeRectOnLoad () {
   <option value="border">border</option>\
   <option value="padding">padding</option>\
 \
-  <optgroup label=Canvas>\
-  <option value=vp.icb>Initial containing block\
-\
   <optgroup label=Viewport>\
   <option value=vp.contentBox>Content box\
+  <!--<option value=vp.windowClient>Client-->\
+  <option value=vp.icb>Initial containing block\
   <option value=vp.scrollState>Scroll state\
-\
-  <option value=vp.windowOuter>Outer\
-  <option value=vp.windowInner>Inner\
-  <option value=vp.windowScreenXY>Screen (x, y)\
-  <option value=vp.windowScreenTL>Screen (top, left)\
   <option value=vp.windowScrollXY>Scroll (x, y)\
-  <option value=vp.windowScrollTL>Scroll (top, left)\
+  <!--<option value=vp.windowScrollTL>Scroll (top, left)-->\
   <option value=vp.windowPageOffset>Page offset\
-  <option value=vp.windowClient>Client\
   <option value=vp.windowScrollMax>Scroll maximum\
+  <option value=vp.windowInner>Inner\
+\
   <option value=vp.document>Document\
   <option value=vp.documentElementOffset>documentElement.offset\
   <option value=vp.documentElementClient>documentElement.client\
@@ -231,6 +225,11 @@ function NodeRectOnLoad () {
   <option value=vp.documentBodyClient>document.body.client\
   <option value=vp.documentBodyScrollableArea>document.body.scroll (width, height)\
   <option value=vp.documentBodyScrollState>document.body.scroll (top, left)\
+\
+  <optgroup label=Window>\
+  <option value=win.outer>Outer\
+  <option value=win.screenXY>Screen (x, y)\
+  <option value=win.screenTL>Screen (top, left)\
 \
   <optgroup label=Screen>\
   <option value=screen.device>Device\

@@ -11,8 +11,30 @@ NodeRect.Rect = function (t, r, b, l, w, h) {
   this.height = w != null ? h : b - t /* + 1 */;
   this.index = NodeRect.Rect.index++;
   this.label = null;
-  this.relative = false;
+  this.supported = false;
 }; // Rect
+
+NodeRect.Rect.wh = function (w, h) {
+  var r = new NodeRect.Rect (0, null, null, 0, w, h);
+  if (!isNaN (w + 0)) r.supported = true;
+  return r;
+}; // wh
+
+NodeRect.Rect.trbl = function (t, r, b, l) {
+  var r = new NodeRect.Rect (t, r, b, l);
+  if (!isNaN (t + 0)) r.supported = true;
+  return r;
+}; // trbl
+
+NodeRect.Rect.tlwh = function (t, l, w, h) {
+  var r = new NodeRect.Rect (t, null, null, l, w, h);
+  if (!isNaN (t + 0) && !isNaN (w + 0)) r.supported = true;
+  return r;
+}; // tlwh
+
+NodeRect.Rect.nosupport = function () {
+  return new NodeRect.Rect (0, 0, 0, 0);
+}; // nosupport
 
 NodeRect.Rect.resetIndex = function () {
   NodeRect.Rect.index = 0;
@@ -89,6 +111,44 @@ NodeRect.Rect.prototype.getFullLabel = function () {
   }
   return label;
 }; // getFullLabel
+
+NodeRect.Rect.prototype.toString = function () {
+  if (this.supported) {
+    var r = 'Top: ' + this.top + " \n";
+    r += 'Right: ' + this.right + " \n";
+    r += 'Bottom: ' + this.bottom + " \n";
+    r += 'Left: ' + this.left + " \n";
+    r += 'Width: ' + this.width + " \n";
+    r += 'Height: ' + this.height + " \n";
+    return r;
+  } else {
+    return "Not supported \n";
+  }
+}; // toString
+
+NodeRect.Rect.Vector = function (x /* width */, y /* height */) {
+  var w = x < 0 ? -x : x;
+  var h = y < 0 ? -y : y;
+  NodeRect.Rect.apply (this, [0, null, null, 0, w, h]);
+  if (!isNaN (x + 0)) this.supported = true;
+  this.leftward = x < 0;
+  this.upward = y < 0;
+}; // Vector
+
+NodeRect.Rect.Vector.prototype = new NodeRect.Rect;
+
+NodeRect.Rect.Vector.prototype.toString = function () {
+  if (this.supported) {
+    var r = '(left, top) = (x, y) = (';
+    if (this.leftward) r += '-';
+    r += this.width + ', ';
+    if (this.upward) r += '-';
+    r += this.height + ') \n';
+    return r;
+  } else {
+    return "Not supported \n";
+  }
+}; // toString
 
 NodeRect.getCumulativeOffsetRect = function (oel, classObject) {
   var el = oel;
@@ -188,30 +248,22 @@ NodeRect.getComputedRects = function (el, classObject) {
   return rects;
 }; // getComputedRects
 
-NodeRect.getElementAttrRects = function (el, rectClass) {
-  if (!rectClass) rectClass = NodeRect.Rect;
-
+NodeRect.getElementAttrRects = function (el) {
   var rects = {};
 
-  rects.offset = new rectClass (
-    el.offsetTop, null, null, el.offsetLeft,
-    el.offsetWidth, el.offsetHeight
-  );
+  rects.offset = NodeRect.Rect.tlwh
+      (el.offsetTop, el.offsetLeft, el.offsetWidth, el.offsetHeight);
   rects.offset.label = el.nodeName + '.offset';
 
-  rects.client = new rectClass (
-    el.clientTop, null, null, el.clientLeft,
-    el.clientWidth, el.clientHeight
-  );
+  rects.client = NodeRect.Rect.tlwh
+      (el.clientTop, el.clientLeft, el.clientWidth, el.clientHeight);
   rects.client.label = el.nodeName + '.client';
 
-  rects.scrollableArea = new rectClass
-      (0, null, null, 0, el.scrollWidth, el.scrollHeight);
+  rects.scrollableArea = NodeRect.Rect.wh (el.scrollWidth, el.scrollHeight);
   rects.scrollableArea.label = el.nodeName + '.scroll (width, height)';
 
-  rects.scrollState = new rectClass
-      (0, null, null, 0, el.scrollLeft, el.scrollTop);
-  rects.scrollState.label = el.nodeName + '.scroll (top, left)';
+  rects.scrollState = new NodeRect.Rect.Vector (el.scrollLeft, el.scrollTop);
+  rects.scrollState.label = el.nodeName + '.scroll (left, top)';
 
   return rects;
 }; // getElementAttrRects
@@ -278,9 +330,8 @@ NodeRect.getElementRects = function (el, rectClass) {
   return rects;
 }; // getElementRects
 
-NodeRect.getViewportRects = function (win, rectClass) {
+NodeRect.getViewportRects = function (win) {
   if (!win) win = window;
-  if (!rectClass) rectClass = NodeRect.Rect;
 
   var doc = win.document;
   var docEl = doc.documentElement;
@@ -292,56 +343,42 @@ NodeRect.getViewportRects = function (win, rectClass) {
 
   /* Fx, WebKit, Opera: entire viewport (including scrollbars),
      Not supported by WinIE */
-  rects.windowInner
-      = new rectClass (0, null, null, 0, win.innerWidth, win.innerHeight);
+  rects.windowInner = NodeRect.Rect.wh (win.innerWidth, win.innerHeight);
   rects.windowInner.label = 'window.inner';
 
-  /* Not supported by WinIE */
-  rects.windowOuter
-      = new rectClass (0, null, null, 0, win.outerWidth, win.outerHeight);
-  rects.windowOuter.label = 'window.outer';
-
-  /* Opera: Wrong; Not supported by WinIE */
-  rects.windowScreenXY
-      = new rectClass (0, null, null, 0, win.screenX, win.screenY);
-  rects.windowScreenXY.label = 'window.screen (x, y)';
-
-  /* Not supported by Fx3 */
-  rects.windowScreenTL
-      = new rectClass (0, null, null, 0, win.screenLeft, win.screenTop);
-  rects.windowScreenTL.label = 'window.screen (top, left)';
-
   /* Not supported by Fx3, WebKit, Opera, WinIE */
-  rects.windowClient
-      = new rectClass (0, null, null, 0, win.clientWidth, win.clientHeight);
+  /*
+  rects.windowClient = NodeRect.Rect.wh (win.clientWidth, win.clientHeight);
   rects.windowClient.label = 'window.client';
+  */
 
   /* Not supported by WinIE */
   rects.windowPageOffset
-      = new rectClass (0, null, null, 0, win.pageXOffset, win.pageYOffset);
+      = new NodeRect.Rect.Vector (win.pageXOffset, win.pageYOffset);
   rects.windowPageOffset.label = 'window.pageOffset';
 
   /* Fx3, WebKit: Same as page offset; Not supported by Opera, WinIE */
-  rects.windowScrollXY
-      = new rectClass (0, null, null, 0, win.scrollX, win.scrollY);
+  rects.windowScrollXY = new NodeRect.Rect.Vector (win.scrollX, win.scrollY);
   rects.windowScrollXY.label = 'window.scroll (x, y)';
 
   /* Not supported by Fx3, WebKit, Opera, WinIE */
+  /*
   rects.windowScrollTL
-      = new rectClass (0, null, null, 0, win.scrollLeft, win.scrollTop);
+      = new NodeRect.Rect.Vector (win.scrollLeft, win.scrollTop);
   rects.windowScrollTL.label = 'window.scroll (top, left)';
+  */
 
   /* Not supported by WebKit, Opera, WinIE */
   rects.windowScrollMax
-      = new rectClass (0, null, null, 0, win.scrollMaxX, win.scrollMaxY);
+      = new NodeRect.Rect.Vector (win.scrollMaxX, win.scrollMaxY);
   rects.windowScrollMax.label = 'window.scrollMax';
 
   /* Not supported by Opera, WinIE */
-  rects.document = new rectClass (0, null, null, 0, doc.width, doc.height);
+  rects.document = NodeRect.Rect.wh (doc.width, doc.height);
   rects.document.label = 'Document';
 
   if (docEl) {
-    var deRects = NodeRect.getElementAttrRects (docEl, rectClass);
+    var deRects = NodeRect.getElementAttrRects (docEl);
 
     /* Fx3: border box of the root element (origin: tl of padding edge) */
     /* S3, O9 (Q): border box of the root element (origin: tl of border edge) */
@@ -368,10 +405,10 @@ NodeRect.getViewportRects = function (win, rectClass) {
     rects.documentElementScrollState = deRects.scrollState;
 
   } else {
-    rects.documentElementOffset = new rectClass;
-    rects.documentElementClient = new rectClass;
-    rects.documentElementScrollableArea = new rectClass;
-    rects.documentElementScrollState = new rectClass;
+    rects.documentElementOffset = NodeRect.Rect.nosupport ();
+    rects.documentElementClient = NodeRect.Rect.nosupport ();
+    rects.documentElementScrollableArea = NodeRect.Rect.nosupport ();
+    rects.documentElementScrollState = NodeRect.Rect.nosupport ();
   }
   rects.documentElementOffset.label = 'documentElement.offset';
   rects.documentElementClient.label = 'documentElement.client';
@@ -379,7 +416,7 @@ NodeRect.getViewportRects = function (win, rectClass) {
   rects.documentElementScrollState.label = 'documentElement.scroll (top, left)';
 
   if (bodyEl) {
-    var dbRects = NodeRect.getElementAttrRects (bodyEl, rectClass);
+    var dbRects = NodeRect.getElementAttrRects (bodyEl);
 
     /* Fx3: border box of the body element (origin: tl of padding edge) */
     /* S3, O9 (S): border box of the body element (origin: tl of border edge) */
@@ -409,10 +446,10 @@ NodeRect.getViewportRects = function (win, rectClass) {
        border + padding => body's padding(-like area); html's margin +
        border + padding is ignored */
   } else {
-    rects.documentBodyOffset = new rectClass;
-    rects.documentBodyClient = new rectClass;
-    rects.documentBodyScrollState = new rectClass;
-    rects.documentBodyScrollableArea = new rectClass;
+    rects.documentBodyOffset = NodeRect.Rect.nosupport ();
+    rects.documentBodyClient = NodeRect.Rect.nosupport ();
+    rects.documentBodyScrollState = NodeRect.Rect.nosupport ();
+    rects.documentBodyScrollableArea = NodeRect.Rect.nosupport ();
   }
   rects.documentBodyOffset.label = 'document.body.offset';
   rects.documentBodyClient.label = 'document.body.client';
@@ -459,7 +496,7 @@ NodeRect.getViewportRects = function (win, rectClass) {
     rects.icb.label = 'ICB (origin: border edge of root element box)';
 
     var debc = docEl.getBoundingClientRect ();
-    debc = new rectClass (debc.top, debc.right, debc.bottom, debc.left);
+    debc = NodeRect.Rect.trbl (debc.top, debc.right, debc.bottom, debc.left);
     debc.label = docEl.nodeName + ' boundingClientRect';
 
     var debcAbs = debc.addVector (rects.scrollState);
@@ -475,9 +512,29 @@ NodeRect.getViewportRects = function (win, rectClass) {
   return rects;
 }; // getViewportRects
 
-NodeRect.getScreenRects = function (win, rectClass) {
+NodeRect.getWindowRects = function (win) {
   if (!win) win = window;
-  if (!rectClass) rectClass = NodeRect.Rect;
+
+  var rects = {};
+
+  /* Not supported by WinIE */
+  rects.outer = NodeRect.Rect.wh (win.outerWidth, win.outerHeight);
+  rects.outer.label = 'window.outer';
+
+  /* Opera: Wrong; Not supported by WinIE */
+  rects.screenXY = new NodeRect.Rect.Vector (win.screenX, win.screenY);
+  rects.screenXY.label = 'window.screen (x, y)';
+
+  /* Not supported by Fx3 */
+  rects.screenTL
+      = new NodeRect.Rect.Vector (win.screenLeft, win.screenTop);
+  rects.screenTL.label = 'window.screen (top, left)';
+
+  return rects;
+}; // getWindowRects
+
+NodeRect.getScreenRects = function (win) {
+  if (!win) win = window;
 
   var s = win.screen;
 
@@ -485,11 +542,11 @@ NodeRect.getScreenRects = function (win, rectClass) {
  
   /* top & left not supported by Opera, WinIE, WebKit */
   rects.device
-      = new rectClass (s.top || 0, null, null, s.left || 0, s.width, s.height);
+      = NodeRect.Rect.trbl (s.top || 0, null, null, s.left || 0, s.width, s.height);
   rects.device.label = 'screen device';
 
   /* top & left not supported by Opera, WinIE */
-  rects.avail = new rectClass
+  rects.avail = NodeRect.Rect.trbl
       (s.availTop || 0, null, null, s.availLeft || 0,
        s.availWidth, s.availHeight);
   rects.avail.label = 'screen.avail';
