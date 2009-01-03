@@ -8,7 +8,7 @@ NodeRect.Rect = function (t, r, b, l, w, h) {
   this.bottom = b != null ? b : h == 0 ? t : t + h /* - 1 */;
   this.left = l;
   this.width = w != null ? w : r - l /* + 1 */;
-  this.height = w != null ? h : b - t /* + 1 */;
+  this.height = h != null ? h : b - t /* + 1 */;
   this.index = NodeRect.Rect.index++;
   this.label = null;
   this.supported = false;
@@ -40,8 +40,16 @@ NodeRect.Rect.resetIndex = function () {
   NodeRect.Rect.index = 0;
 }; // resetIndex
 
+NodeRect.Rect.prototype.getRenderedLeft = function () {
+  return this.left;
+}; // getRenderedLeft
+
+NodeRect.Rect.prototype.getRenderedTop = function () {
+  return this.top;
+}; // getRenderedTop
+
 NodeRect.Rect.prototype.addOffset = function (r) {
-  var o = new r.constructor
+  var o = new this.constructor
       (this.top + r.top, null, null, this.left + r.left,
        this.width, this.height);
   o.prev1 = this;
@@ -52,8 +60,10 @@ NodeRect.Rect.prototype.addOffset = function (r) {
 }; // addOffset
 
 NodeRect.Rect.prototype.addVector = function (r) {
-  var o = new r.constructor
-      (this.top + r.height, null, null, this.left + r.width,
+  var width = r.getX ? r.getX () : r.width;
+  var height = r.getY ? r.getY () : r.height;
+  var o = new this.constructor
+      (this.top + height, null, null, this.left + width,
        this.width, this.height);
   o.prev1 = this;
   o.prev2 = r;
@@ -63,7 +73,7 @@ NodeRect.Rect.prototype.addVector = function (r) {
 }; // addVector
 
 NodeRect.Rect.prototype.subtractOffset = function (r) {
-  var o = new r.constructor
+  var o = new this.constructor
       (this.top - r.top, null, null, this.left - r.left,
        this.width, this.height);
   o.prev1 = this;
@@ -73,8 +83,19 @@ NodeRect.Rect.prototype.subtractOffset = function (r) {
   return o;
 }; // subtractOffset
 
-NodeRect.Rect.prototype.outsideEdge = function (r) {
-  var o = new r.constructor
+NodeRect.Rect.prototype.subtractVector = function (r) {
+  var o = new this.constructor
+      (this.top - r.height, null, null, this.left - r.width,
+       this.width, this.height);
+  o.prev1 = this;
+  o.prev2 = r;
+  o.prevOp = 'sub-vector'; 
+  o.supported = this.supported && r.supported;
+  return o;
+}; // subtractVector
+
+NodeRect.Rect.prototype.addBandOutside = function (r) {
+  var o = new this.constructor
       (this.top - r.top, this.right + r.right,
        this.bottom + r.bottom, this.left - r.left);
   o.prev1 = this;
@@ -82,32 +103,34 @@ NodeRect.Rect.prototype.outsideEdge = function (r) {
   o.prevOp = 'out-edge';
   o.supported = this.supported && r.supported;
   return o;
-}; // outsideEdge
+}; // addBandOutside
 
-NodeRect.Rect.prototype.insideEdge = function (r) {
-  var o = new r.constructor
-      (this.top + r.top, this.right - r.right,
-       this.bottom - r.bottom, this.left + r.left);
+NodeRect.Rect.prototype.getTLVector = function () {
+  var o = new NodeRect.Rect.Vector (this.left, this.top);
+  o.prevOp = 'topleft';
   o.prev1 = this;
-  o.prev2 = r;
-  o.prevOp = 'in-edge';
-  o.supported = this.supported && r.supported;
+  o.supported = this.supported;
+  o.label = this.label + ', top-left corner';
   return o;
-}; // insideEdge
+}; // getTLVector
 
-NodeRect.Rect.prototype.extend = function (r) {
-  var o = new r.constructor
-      (this.top, this.right + r.width, this.bottom + r.height, this.left);
+NodeRect.Rect.prototype.getNegatedTLVector = function () {
+  var o = new NodeRect.Rect.Vector (-this.left, -this.top);
+  o.prevOp = 'topleft-negated';
   o.prev1 = this;
-  o.prev2 = r;
-  o.prevOp = 'extend';
-  o.supported = this.supported && r.supported;
+  o.supported = this.supported;
+  o.label = this.label + ', top-left corner, negated';
   return o;
-}; // extend
+}; // getNegatedTLVector
 
 NodeRect.Rect.prototype.getFullLabel = function () {
   var label;
-  if (this.prevOp) {
+  if (this.prevOp === 'topleft' || this.prevOp === 'topleft-negated') {
+    label = this.index + ' = ' +
+        this.prevOp +
+        ' (' + this.prev1.index + ') ' +
+        this.label;
+  } else if (this.prevOp) {
     label = this.index + ' = ' +
         this.prevOp +
         ' (' + this.prev1.index + ', ' + this.prev2.index + ') ' +
@@ -139,22 +162,55 @@ NodeRect.Rect.Vector = function (x /* width */, y /* height */) {
   if (!isNaN (x + 0)) this.supported = true;
   this.leftward = x < 0;
   this.upward = y < 0;
+  this.constructor = NodeRect.Rect.Vector;
 }; // Vector
 
 NodeRect.Rect.Vector.prototype = new NodeRect.Rect;
 
+NodeRect.Rect.Vector.prototype.getX = function () {
+  return this.leftward ? -this.width : this.width;
+}; // getX
+
+NodeRect.Rect.Vector.prototype.getY = function () {
+  return this.upward ? -this.height : this.height;
+}; // getY
+
+NodeRect.Rect.Vector.prototype.getRenderedLeft = function () {
+  return this.leftward ? -this.width : 0;
+}; // getRenderedLeft
+
+NodeRect.Rect.Vector.prototype.getRenderedTop = function () {
+  return this.upward ? -this.height : 0;
+}; // getRenderedTop
+
+NodeRect.Rect.Vector.prototype.addVector = function (r) {
+  var o = new this.constructor
+      (this.getX () + r.getX (), this.getY () + r.getY ());
+  o.prev1 = this;
+  o.prev2 = r;
+  o.prevOp = 'add-vector'; 
+  o.supported = this.supported && r.supported;
+  return o;
+}; // addVector
+
 NodeRect.Rect.Vector.prototype.toString = function () {
   if (this.supported) {
     var r = '(left, top) = (x, y) = (';
-    if (this.leftward) r += '-';
-    r += this.width + ', ';
-    if (this.upward) r += '-';
-    r += this.height + ') \n';
+    r += this.getX () + ', ';
+    r += this.getY () + ') \n';
     return r;
   } else {
     return "Not supported \n";
   }
 }; // toString
+
+NodeRect.Rect.Band = function (t, r, b, l) {
+  NodeRect.Rect.apply (this, [t, r, b, l]);
+  if (!isNaN (t + 0)) this.supported = true;
+  this.constructor = NodeRect.Rect.Band;
+}; // Band
+
+NodeRect.Rect.Band.prototype = new NodeRect.Rect;
 
 NodeRect.getCumulativeOffsetRect = function (oel, classObject) {
   var el = oel;
@@ -193,7 +249,7 @@ NodeRect.getCumulativeOffsetRect = function (oel, classObject) {
 
   if (window.opera && /* Opera 9.52 */
       oel == oel.ownerDocument.body) {
-    var cssRects = NodeRect.getComputedRects (oel, classObject);
+    var cssRects = NodeRect.getBoxAreaRects (oel, classObject);
     rect = rect.addOffset (cssRects.margin);
     rect.label = oel.nodeName + ' adjusted offset';
   }
@@ -215,44 +271,44 @@ NodeRect.getCumulativeClientRect = function (el, classObject) {
   return rect;
 }; // getCumulativeClientRect
 
-NodeRect.getComputedRects = function (el, classObject) {
-  if (!classObject) classObject = NodeRect.Rect;
+NodeRect.getBoxAreaRects = function (el) {
   var rects = {};
   if (window.getComputedStyle) {
     var cs = getComputedStyle (el, null);
-    rects.margin = new classObject (
+    rects.margin = NodeRect.Rect.trbl (
       parseFloat (cs.marginTop.slice (0, -2)),
       parseFloat (cs.marginRight.slice (0, -2)),
       parseFloat (cs.marginBottom.slice (0, -2)),
       parseFloat (cs.marginLeft.slice (0, -2))
     );
-    rects.border = new classObject (
+    rects.border = NodeRect.Rect.trbl (
       parseFloat (cs.borderTopWidth.slice (0, -2)),
       parseFloat (cs.borderRightWidth.slice (0, -2)),
       parseFloat (cs.borderBottomWidth.slice (0, -2)),
       parseFloat (cs.borderLeftWidth.slice (0, -2))
     );
-    rects.padding = new classObject (
+    rects.padding = NodeRect.Rect.trbl (
       parseFloat (cs.paddingTop.slice (0, -2)),
       parseFloat (cs.paddingRight.slice (0, -2)),
       parseFloat (cs.paddingBottom.slice (0, -2)),
       parseFloat (cs.paddingLeft.slice (0, -2))
     );
   } else if (el.currentStyle) {
+    /* TODO: parse currentStyle */
 
-    rects.margin = new classObject (0, 0, 0, 0);
-    rects.border = new classObject (0, 0, 0, 0);
-    rects.padding = new classObject (0, 0, 0, 0);
+    rects.margin = NodeRect.Rect.nosupport ();
+    rects.border = NodeRect.Rect.nosupport ();
+    rects.padding = NodeRect.Rect.nosupport ();
   } else {
-    rects.margin = new classObject (0, 0, 0, 0);
-    rects.border = new classObject (0, 0, 0, 0);
-    rects.padding = new classObject (0, 0, 0, 0);
+    rects.margin = NodeRect.Rect.nosupport ();
+    rects.border = NodeRect.Rect.nosupport ();
+    rects.padding = NodeRect.Rect.nosupport ();
   }
-  rects.margin.label = el.nodeName + '.style.margin';
-  rects.border.label = el.nodeName + '.style.border';
-  rects.padding.label = el.nodeName + '.style.padding';
+  rects.margin.label = el.nodeName + ' computedStyle.margin';
+  rects.border.label = el.nodeName + ' computedStyle.border';
+  rects.padding.label = el.nodeName + ' computedStyle.padding';
   return rects;
-}; // getComputedRects
+}; // getBoxAreaRects
 
 NodeRect.getElementAttrRects = function (el) {
   var rects = {};
@@ -277,63 +333,51 @@ NodeRect.getElementAttrRects = function (el) {
   return rects;
 }; // getElementAttrRects
 
-NodeRect.getElementRects = function (el, rectClass) {
-  if (!rectClass) rectClass = NodeRect.Rect;
+NodeRect.getElementRects = function (el) {
   var rects = {};
 
   if (el.getBoundingClientRect) {
-    var html = el.ownerDocument.documentElement;
-    var body = el.ownerDocument.body;
-    var vpRect = new rectClass (
-      (body.scrollTop || html.scrollTop) - html.clientTop,
-      null,
-      null,
-      (body.scrollLeft || html.scrollLeft) - html.clientLeft,
-      html.clientWidth,
-      html.clientHeight
-    );
-    vpRect.label = 'Viewport';
+    var origin = NodeRect.getViewportRects (window).boundingClientOrigin;
 
     var bb = el.getBoundingClientRect ();
     rects.boundingClient
-        = new rectClass (bb.top, bb.right, bb.bottom, bb.left);
+        = NodeRect.Rect.trbl (bb.top, bb.right, bb.bottom, bb.left);
     rects.boundingClient.label = el.nodeName + '.boundingClient';
 
-    rects.borderEdge = vpRect.addOffset (rects.boundingClient);
+    rects.borderEdge = rects.boundingClient.addVector (origin);
     rects.borderEdge.label = el.nodeName + ' border edge';
   } else {
-    rects.boundingClient = new rectClass (0, 0, 0, 0);
+    rects.boundingClient = NodeRect.Rect.nosupport ();
     rects.boundingClient.label = el.nodeName + '.boundingClient';
 
-    rects.borderEdge = NodeRect.getCumulativeOffsetRect (el, rectClass);
+    rects.borderEdge = NodeRect.getCumulativeOffsetRect (el);
   }
 
   /* Gecko-only, deprecated */
   if (el.ownerDocument.getBoxObjectFor) {
     var bo = el.ownerDocument.getBoxObjectFor (el);
-    rects.boxObject
-        = new rectClass (bo.y, null, null, bo.x, bo.width, bo.height);
-    rects.boxObjectScreen = new rectClass (0, bo.screenX, bo.screenY, 0);
+    rects.boxObject = NodeRect.Rect.tlwh (bo.y, bo.x, bo.width, bo.height);
+    rects.boxObjectScreen = new NodeRect.Rect.Vector (bo.screenX, bo.screenY);
   } else {
-    rects.boxObject = new rectClass (0, 0, 0, 0);
-    rects.boxObjectScreen = new rectClass (0, 0, 0, 0);
+    rects.boxObject = NodeRect.Rect.nosupport ();
+    rects.boxObjectScreen = NodeRect.Rect.nosupport ();
   }
   rects.boxObject.label = el.nodeName + ' boxObject';
   rects.boxObjectScreen.label = el.nodeName + ' boxObject.screen';
 
-  var elRects = NodeRect.getElementAttrRects (el, rectClass);
+  var elRects = NodeRect.getElementAttrRects (el);
   rects.offset = elRects.offset;
   rects.client = elRects.client;
   rects.scrollableArea = elRects.scrollableArea;
   rects.scrollState = elRects.scrollState;
   
-  var cssRects = NodeRect.getComputedRects (el, rectClass);
+  var cssRects = NodeRect.getBoxAreaRects (el);
   rects.margin = cssRects.margin;
   rects.border = cssRects.border;
   rects.padding = cssRects.padding;
 
   /* Wrong if |el| has multiple line boxes. */
-  rects.marginEdge = rects.borderEdge.outsideEdge (rects.margin);
+  rects.marginEdge = rects.borderEdge.addBandOutside (rects.margin);
   rects.marginEdge.label = el.nodeName + ' margin edge';
 
   return rects;
@@ -419,45 +463,66 @@ NodeRect.getViewportRects = function (win) {
 
   if (quirks) {
     rects.icb = rects.bodyClient;
-    rects.icb = rects.icb.subtractOffset (rects.icb);
+    rects.icb = rects.icb.subtractOffset (rects.icb); // Safari
     /* This is not ICB in Firefox if the document is in the quirks mode
        and both |html| and |body| has scrollbars.  In such cases there
        is no way to obtain ICB (content edge), AFAICT. */
   } else {
     if (document.all) {
       rects.icb = rects.deOffset;
+
       rects.boundingClientOrigin = rects.icb.subtractOffset (rects.deClient);
+      rects.boundingClientOrigin.label
+          = rects.icb.label + ' - documentElement.client';
+
+      rects.boundingClientOrigin = rects.boundingClientOrigin.getTLVector ();
     } else {
       rects.icb = rects.deClient;
     }
   }
-
-  if (!rects.boundingClientOrigin) {
-    rects.boundingClientOrigin = rects.icb;
-  }
-  rects.boundingClientOrigin.label = 'Bounding client rect origin';
 
   /* Firefox's initial containing block is the padding box.  There is 
      no reliable way to detect the offset from the tl of canvas in Fx
      while returning zero in any other browsers AFAICT, sniffing Gecko by
      UA string. */
   if (navigator.userAgent.indexOf("Gecko/") >= 0) {
-    rects.icb = rects.icb.addOffset (rects.deOffset);
-    rects.icb.label = 'ICB (origin: border edge of root element box)';
+    var deBorder = rects.deOffset.getTLVector ();
+    deBorder.label = 'padding edge -> border edge of root element box';
 
     var debc = docEl.getBoundingClientRect ();
     debc = NodeRect.Rect.trbl (debc.top, debc.right, debc.bottom, debc.left);
     debc.label = docEl.nodeName + ' boundingClientRect';
 
     var debcAbs = debc.addVector (rects.scrollState);
-    debcAbs.label = docEl.nodeName + ' boundingClientRect (canvas origin)';
+    debcAbs.label = debc.label + ', canvas origin';
 
-    rects.icb = rects.icb.subtractOffset (debcAbs);
+    var deMargin = debcAbs.getNegatedTLVector ();
+    deMargin.label = 'border edge -> margin edge of root element box';
+
+    rects.canvasOrigin = deBorder.addVector (deMargin);
+    rects.canvasOrigin.label = 'Canvas origin';
+
+    rects.icb = rects.icb.subtractVector (rects.canvasOrigin);
     rects.icb.label = 'ICB (origin: margin edge of root element box)';
+  } else {
+    rects.canvasOrigin = new NodeRect.Rect.Vector (0, 0);
+    rects.canvasOrigin.label = 'Canvas origin';
   }
 
   rects.contentBox = rects.icb.addVector (rects.scrollState);
   rects.contentBox.label = 'Viewport content box';
+
+  if (rects.boundingClientOrigin) {
+    rects.boundingClientOrigin
+        = rects.boundingClientOrigin.addVector (rects.scrollState);
+    rects.boundingClientOrigin.label = 'Bounding client rect origin';
+  } else {
+    rects.boundingClientOrigin = rects.scrollState;
+  }
+
+  rects.boundingClientOrigin
+      = rects.boundingClientOrigin.addVector (rects.canvasOrigin);
+  rects.boundingClientOrigin.label = 'Bounding client rect origin (canvas origin)';
 
   return rects;
 }; // getViewportRects

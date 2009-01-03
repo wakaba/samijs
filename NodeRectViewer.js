@@ -27,16 +27,16 @@ function update (form) {
     } else if (type == 'cumulativeClient') {
       rect = NodeRect.getCumulativeClientRect (el, rectClass);
     } else if (type.substring (0, 3) === 'vp.') {
-      var rects = NodeRect.getViewportRects (window, rectClass);
+      var rects = NodeRect.getViewportRects (window);
       rect = rects[type.substring (3)];
     } else if (type.substring (0, 4) === 'win.') {
-      var rects = NodeRect.getWindowRects (window, rectClass);
+      var rects = NodeRect.getWindowRects (window);
       rect = rects[type.substring (4)];
     } else if (type.substring (0, 7) === 'screen.') {
-      var rects = NodeRect.getScreenRects (window, rectClass);
+      var rects = NodeRect.getScreenRects (window);
       rect = rects[type.substring (7)];
     } else {
-      var rects = NodeRect.getElementRects (el, rectClass);
+      var rects = NodeRect.getElementRects (el);
       rect = rects[type];
     }
     form.result.value = rect.toString ();
@@ -58,40 +58,60 @@ function showTrace (rect, position) {
   } else if (rect.prevOp === 'add-vector') {
     showTrace (rect.prev1, position);
     showTrace (rect.prev2, position);
+  } else if (rect.prevOp === 'sub-vector') {
+    showTrace (rect.prev1, position);
+    showTrace (rect.prev2, position);
   } else if (rect.prevOp === 'in-edge') {
     showTrace (rect.prev1, position);
     showTrace (rect.prev2, position);
   } else if (rect.prevOp === 'out-edge') {
     showTrace (rect.prev1, position);
     showTrace (rect.prev2, position);
-  } else if (rect.prevOp === 'extend') {
+  } else if (rect.prevOp === 'topleft') {
     showTrace (rect.prev1, position);
-    showTrace (rect.prev2, position);
+  } else if (rect.prevOp === 'topleft-negated') {
+    showTrace (rect.prev1, position);
   }
   setHighlight (rect, position);
 } // showTrace
 
 function setHighlight (rect, coords) {
+  var left = rect.getRenderedLeft ();
+  var top = rect.getRenderedTop ();
+
   var marker = document.createElement ('div');
   setCSSPosition (marker.style, coords == 'viewport' ? 'fixed' : 'absolute');
   marker.style.zIndex = '99999';
-  marker.nrOriginalLeft = rect.left;
-  marker.nrOriginalTop = rect.top;
-  if (!isNaN (rect.top)) marker.style.top = rect.top + 'px';
-  if (!isNaN (rect.left)) marker.style.left = rect.left + 'px';
+  marker.nrOriginalLeft = left;
+  marker.nrOriginalTop = top;
+  if (!isNaN (top)) marker.style.top = top + 'px';
+  if (!isNaN (left)) marker.style.left = left + 'px';
   var bw = 1;
   var diff = 0;
   if (document.all && document.compatMode == 'CSS1Compat') diff = bw * 2;
-  if (rect.width >= 0) marker.style.width = (rect.width - diff) + 'px';
-  if (rect.height >= 0) marker.style.height = (rect.height - diff) + 'px';
+  if (rect.width >= 0) {
+    if (rect.width - diff > 0) {
+      marker.style.width = (rect.width - diff) + 'px';
+    } else {
+      marker.style.height = rect.width + 'px';
+    }
+  }
+  if (rect.height >= 0) {
+    if (rect.height - diff > 0) {
+      marker.style.height = (rect.height - diff) + 'px';
+    } else {
+      marker.style.height = rect.height + 'px';
+    }
+  }
   marker.style.MozBoxSizing = 'border-box';
   marker.style.WebkitBoxSizing = 'border-box';
   marker.style.boxSizing = 'border-box';
+  marker.style.border = bw + 'px solid red';
   if (rect instanceof NodeRect.Rect.Vector) {
-    marker.style[rect.leftward ? 'borderLeft' : 'borderRight'] = bw + 'px solid red';
-    marker.style[rect.upward ? 'borderBottom' : 'borderTop'] = bw + 'px solid red';
-  } else {
-    marker.style.border = bw + 'px solid red';
+    marker.style[rect.leftward ? 'borderRightStyle' : 'borderLeftStyle']
+        = 'dotted';
+    marker.style[rect.upward ? 'borderTopStyle' : 'borderBottomStyle']
+        = 'dotted';
   }
   var colors = ['#FFFFCC', '#FFCCCC', '#CC99FF', '#99CCFF'];
   marker.style.backgroundColor = colors[rect.index % colors.length];
@@ -205,6 +225,9 @@ function NodeRectOnLoad () {
   <option value="border">border</option>\
   <option value="padding">padding</option>\
 \
+  <optgroup label=Canvas>\
+  <option value=vp.canvasOrigin>Origin of canvas\
+\
   <optgroup label=Viewport>\
   <option value=vp.contentBox>Content box\
   <!--<option value=vp.windowClient>Client-->\
@@ -215,6 +238,7 @@ function NodeRectOnLoad () {
   <option value=vp.windowPageOffset>Page offset\
   <option value=vp.windowScrollMax>Scroll maximum\
   <option value=vp.windowInner>Inner\
+  <option value=vp.boundingClientOrigin>Origin of getBoundingClientRect\
 \
   <option value=vp.document>Document\
   <option value=vp.deOffset>documentElement.offset\
