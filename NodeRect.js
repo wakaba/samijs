@@ -19,52 +19,6 @@ NodeRect.Rect.resetIndex = function () {
 }; // resetIndex
 
 NodeRect.Rect.prototype.addOffset = function (r) {
-  return new r.constructor
-      (this.top + r.top, null, null, this.left + r.left,
-       this.width, this.height);
-}; // addOffset
-
-NodeRect.Rect.prototype.addVector = function (r) {
-  return new r.constructor
-      (this.top + r.height, null, null, this.left + r.width,
-       this.width, this.height);
-}; // addVector
-
-NodeRect.Rect.prototype.subtractOffset = function (r) {
-  return new r.constructor
-      (this.top - r.top, null, null, this.left - r.left,
-       this.width, this.height);
-}; // subtractOffset
-
-NodeRect.Rect.prototype.outsideEdge = function (r) {
-  var o = new r.constructor
-      (this.top - r.top, this.right + r.right,
-       this.bottom + r.bottom, this.left - r.left);
-  return o;
-}; // outsideEdge
-
-NodeRect.Rect.prototype.insideEdge = function (r) {
-  var o = new r.constructor
-      (this.top + r.top, this.right - r.right,
-       this.bottom - r.bottom, this.left + r.left);
-  return o;
-}; // insideEdge
-
-NodeRect.Rect.prototype.extend = function (r) {
-  var o = new r.constructor
-      (this.top, this.right + r.width, this.bottom + r.height, this.left);
-  return o;
-}; // extend
-
-NodeRect.Rect.prototype.getFullLabel = function () {
-  return this.index + ' ' + this.label;
-}; // getFullLabel
-
-NodeRect.Rect.Trace = function () {
-  return NodeRect.Rect.apply (this, arguments);
-}; // Trace
-
-NodeRect.Rect.Trace.prototype.addOffset = function (r) {
   var o = new r.constructor
       (this.top + r.top, null, null, this.left + r.left,
        this.width, this.height);
@@ -74,9 +28,9 @@ NodeRect.Rect.Trace.prototype.addOffset = function (r) {
   return o;
 }; // addOffset
 
-NodeRect.Rect.Trace.prototype.addVector = function (r) {
+NodeRect.Rect.prototype.addVector = function (r) {
   var o = new r.constructor
-      (this.top + r.width, null, null, this.left + r.height,
+      (this.top + r.height, null, null, this.left + r.width,
        this.width, this.height);
   o.prev1 = this;
   o.prev2 = r;
@@ -84,7 +38,7 @@ NodeRect.Rect.Trace.prototype.addVector = function (r) {
   return o;
 }; // addVector
 
-NodeRect.Rect.Trace.prototype.subtractOffset = function (r) {
+NodeRect.Rect.prototype.subtractOffset = function (r) {
   var o = new r.constructor
       (this.top - r.top, null, null, this.left - r.left,
        this.width, this.height);
@@ -94,7 +48,7 @@ NodeRect.Rect.Trace.prototype.subtractOffset = function (r) {
   return o;
 }; // subtractOffset
 
-NodeRect.Rect.Trace.prototype.outsideEdge = function (r) {
+NodeRect.Rect.prototype.outsideEdge = function (r) {
   var o = new r.constructor
       (this.top - r.top, this.right + r.right,
        this.bottom + r.bottom, this.left - r.left);
@@ -104,7 +58,7 @@ NodeRect.Rect.Trace.prototype.outsideEdge = function (r) {
   return o;
 }; // outsideEdge
 
-NodeRect.Rect.Trace.prototype.insideEdge = function (r) {
+NodeRect.Rect.prototype.insideEdge = function (r) {
   var o = new r.constructor
       (this.top + r.top, this.right - r.right,
        this.bottom - r.bottom, this.left + r.left);
@@ -114,7 +68,7 @@ NodeRect.Rect.Trace.prototype.insideEdge = function (r) {
   return o;
 }; // insideEdge
 
-NodeRect.Rect.Trace.prototype.extend = function (r) {
+NodeRect.Rect.prototype.extend = function (r) {
   var o = new r.constructor
       (this.top, this.right + r.width, this.bottom + r.height, this.left);
   o.prev1 = this;
@@ -123,7 +77,7 @@ NodeRect.Rect.Trace.prototype.extend = function (r) {
   return o;
 }; // extend
 
-NodeRect.Rect.Trace.prototype.getFullLabel = function () {
+NodeRect.Rect.prototype.getFullLabel = function () {
   var label;
   if (this.prevOp) {
     label = this.index + ' = ' +

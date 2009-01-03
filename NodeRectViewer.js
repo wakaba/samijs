@@ -47,7 +47,11 @@ function update (form) {
       rect = rects[type];
     }
     form.result.value = dumpHash (rect);
-    showTrace (rect, position);
+    if (form.trace.checked) {
+      showTrace (rect, position);
+    } else {
+      setHighlight (rect, position);
+    }
   }
 } // update
 
@@ -207,6 +211,7 @@ function NodeRectOnLoad () {
 \
   <optgroup label=Viewport>\
   <option value=vp.contentBox>Content box\
+  <option value=vp.scrollState>Scroll state\
 \
   <option value=vp.windowOuter>Outer\
   <option value=vp.windowInner>Inner\
@@ -243,5 +248,5 @@ s.src = "http://uupaa-js.googlecode.com/svn/trunk/uupaa.js";
 document.body.appendChild (s);
 
 var s = document.createElement ('script');
-s.src = "http://suika.fam.cx/~wakaba/-temp/NodeRect.js?" + Math.random ();
+s.src = "http://suika.fam.cx/www/css/noderect/NodeRect.js?" + Math.random ();
 document.body.appendChild (s);
