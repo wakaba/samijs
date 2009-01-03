@@ -169,17 +169,17 @@ NodeRect.Rect.prototype.getFullLabel = function () {
 }; // getFullLabel
 
 NodeRect.Rect.prototype.toString = function () {
-  if (this.supported) {
-    var r = 'Top: ' + this.top + " \n";
-    r += 'Right: ' + this.right + " \n";
-    r += 'Bottom: ' + this.bottom + " \n";
-    r += 'Left: ' + this.left + " \n";
-    r += 'Width: ' + this.width + " \n";
-    r += 'Height: ' + this.height + " \n";
-    return r;
-  } else {
-    return "Not supported \n";
+  var r = '';
+  if (!this.supported) {
+    r += "Not supported \n";
   }
+  r += 'Top: ' + this.top + " \n";
+  r += 'Right: ' + this.right + " \n";
+  r += 'Bottom: ' + this.bottom + " \n";
+  r += 'Left: ' + this.left + " \n";
+  r += 'Width: ' + this.width + " \n";
+  r += 'Height: ' + this.height + " \n";
+  return r;
 }; // toString
 
 NodeRect.Rect.Vector = function (x /* width */, y /* height */) {
@@ -221,14 +221,14 @@ NodeRect.Rect.Vector.prototype.addVector = function (r) {
 }; // addVector
 
 NodeRect.Rect.Vector.prototype.toString = function () {
-  if (this.supported) {
-    var r = '(left, top) = (x, y) = (';
-    r += this.getX () + ', ';
-    r += this.getY () + ') \n';
-    return r;
-  } else {
-    return "Not supported \n";
+  var r = '';
+  if (!this.supported) {
+    r = "Not supported \n";
   }
+  r += '(left, top) = (x, y) = (';
+  r += this.getX () + ', ';
+  r += this.getY () + ') \n';
+  return r;
 }; // toString
 
 NodeRect.Rect.Band = function (t, r, b, l) {
