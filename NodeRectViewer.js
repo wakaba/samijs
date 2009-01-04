@@ -22,7 +22,9 @@ function update (form) {
     var position = form.coords.value;
     var type = form.prop.value;
     var rectClass = form.trace.checked ? NodeRect.Rect.Trace : null;
-    if (type == 'cumulativeOffset') {
+    if (type == '') {
+      return;
+    } else if (type == 'cumulativeOffset') {
       rect = NodeRect.getCumulativeOffsetRect (el, rectClass);
     } else if (type == 'cumulativeClient') {
       rect = NodeRect.getCumulativeClientRect (el, rectClass);
@@ -188,6 +190,7 @@ function NodeRectOnLoad () {
   controller.style.bottom = 0;
   controller.style.backgroundColor = '#FFCCFF';
   controller.style.zIndex = '99999999';
+  var cb = ' style="color: green" ';
   controller.innerHTML = '<form>\
   <textarea name=result style="width: 20em; height: 8em"></textarea><br>\
   <input name=selector value="body" onchange=" update(form) " onkeyup=" update(form) " style="width: 15em">\
@@ -199,26 +202,28 @@ function NodeRectOnLoad () {
   <option value=viewport>Viewport</select>\
   <select name=prop onchange=update(form)>\
 \
-  <optgroup label="Screen coordinate">\
-  <option value=boxObjectScreen>getBoxObjectFor.screen\
+  <optgroup label="Element coordinate">\
+  <option value="offset">offset</option>\
+  <option value="client">client</option>\
+  <option value="scrollableArea">scroll (width, height)\
+  <option value="scrollState">scroll (top, left)\
+\
+  <optgroup label="Viewport coordinate">\
+  <option value="boundingClient">getBoundingClientRect</option>\
 \
   <optgroup label="Canvas coordinate">\
-  <option value="marginEdge">Margin edge</option>\
-  <option selected value="borderEdge">Border edge</option>\
+  <option value="marginEdge"' + cb + '>Margin edge</option>\
+  <option selected value="borderEdge"' + cb + '>Border edge</option>\
   <option value="cumulativeOffset">Cumulative offset</option>\
   <option value="paddingEdge">Padding edge</option>\
   <option value="cumulativeClient">Cumulative client</option>\
   <option value="contentEdge">Content edge</option>\
   <option value=boxObject>getBoxObjectFor\
 \
-  <optgroup label="Viewport coordinate">\
-  <option value="boundingClient">getBoundingClientRect</option>\
+  <optgroup label="Screen coordinate">\
+  <option value=boxObjectScreen>getBoxObjectFor.screen\
 \
-  <optgroup label="Element coordinate">\
-  <option value="offset">offset</option>\
-  <option value="client">client</option>\
-  <option value="scrollableArea">scroll (width, height)\
-  <option value="scrollState">scroll (top, left)\
+  </optgroup><option value>----------\
 \
   <optgroup label="Box">\
   <option value="margin">margin</option>\
@@ -226,19 +231,17 @@ function NodeRectOnLoad () {
   <option value="padding">padding</option>\
 \
   <optgroup label=Canvas>\
-  <option value=vp.canvasOrigin>Origin of canvas\
+  <option value=vp.canvasOrigin' + cb + '>Origin of canvas\
 \
   <optgroup label=Viewport>\
-  <option value=vp.contentBox>Content box\
-  <!--<option value=vp.windowClient>Client-->\
-  <option value=vp.icb>Initial containing block\
-  <option value=vp.scrollState>Scroll state\
+  <option value=vp.contentBox' + cb + '>Content box\
+  <option value=vp.icb' + cb + '>Initial containing block\
+  <option value=vp.scrollState' + cb + '>Scroll state\
   <option value=vp.windowScrollXY>Scroll (x, y)\
-  <!--<option value=vp.windowScrollTL>Scroll (top, left)-->\
   <option value=vp.windowPageOffset>Page offset\
   <option value=vp.windowScrollMax>Scroll maximum\
   <option value=vp.windowInner>Inner\
-  <option value=vp.boundingClientOrigin>Origin of getBoundingClientRect\
+  <option value=vp.boundingClientOrigin' + cb + '>Origin of getBoundingClientRect\
 \
   <option value=vp.document>Document\
   <option value=vp.deOffset>documentElement.offset\
@@ -256,8 +259,8 @@ function NodeRectOnLoad () {
   <option value=win.screenTL>Screen (top, left)\
 \
   <optgroup label=Screen>\
-  <option value=screen.device>Device\
-  <option value=screen.avail>Available\
+  <option value=screen.device' + cb + '>Device\
+  <option value=screen.avail' + cb + '>Available\
 \
   </select>\
   </form>';
