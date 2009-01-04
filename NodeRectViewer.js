@@ -1,19 +1,5 @@
 if (!window.NodeRectViewer) window.NodeRectViewer = {};
 
-function setCSSPosition (style, value) {
-  if (value == 'fixed') {
-    if (!window.opera &&
-        /MSIE/.test (navigator.userAgent) &&
-        document.compatMode != 'CSS1Compat') {
-      style.position = 'absolute';
-    } else {
-      style.position = value;
-    }
-  } else {
-    style.position = value;
-  }
-} // setCSSPosition
-
 function update (form) {
   clearHighlight ();
   form.result.value = '';
@@ -87,8 +73,7 @@ NodeRectViewer.Box = function (rect, coords /* viewport or canvas */) {
   var marker = document.createElement ('div');
   this.element = marker;
 
-  setCSSPosition (marker.style, coords == 'viewport' ? 'fixed' : 'absolute');
-  
+  this.setPositionProperty (coords == 'viewport' ? 'fixed' : 'absolute');
   this.setInitialPosition (rect.getRenderedLeft (), rect.getRenderedTop ());
   this.setMaxZIndex ();
 
@@ -134,6 +119,19 @@ if (!NodeRectViewer.maxBoxZIndex) NodeRectViewer.maxZIndex = 9999;
 NodeRectViewer.Box.prototype.setMaxZIndex = function () {
   this.element.style.zIndex = ++NodeRectViewer.maxZIndex;
 }; // setMaxZIndex
+
+NodeRectViewer.Box.prototype.setPositionProperty = function (value) {
+  var style = this.element.style;
+  if (value == 'fixed') {
+    if (document.all && document.compatMode != 'CSS1Compat') {
+      style.position = 'absolute';
+    } else {
+      style.position = value;
+    }
+  } else {
+    style.position = value;
+  }
+}; // setPositionProperty
 
 NodeRectViewer.Box.prototype.setInitialPosition = function (left, top) {
   this.initialLeft = left;

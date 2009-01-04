@@ -98,6 +98,8 @@ NodeRect.Rect.nosupport = function () {
   return new NodeRect.Rect (0, 0, 0, 0);
 }; // nosupport
 
+if (!NodeRect.Rect.index) NodeRect.Rect.index = 0;
+
 NodeRect.Rect.resetIndex = function () {
   NodeRect.Rect.index = 0;
 }; // resetIndex
