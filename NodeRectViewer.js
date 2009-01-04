@@ -1,13 +1,21 @@
 if (!window.NodeRectViewer) window.NodeRectViewer = {};
 
-NodeRectViewer.Box = function (rect, coords /* viewport or canvas */) {
+NodeRectViewer.Box = function (rect, coords, refBox) {
   var self = this;
 
   var marker = document.createElement ('div');
   this.element = marker;
 
+  var left = rect.getRenderedLeft ();
+  var top = rect.getRenderedTop ();
+
+  if (refBox) {
+    left += refBox.getSourceLeft ();
+    top += refBox.getSourceTop ();
+  }
+
   this.setPositionProperty (coords == 'viewport' ? 'fixed' : 'absolute');
-  this.setInitialPosition (rect.getRenderedLeft (), rect.getRenderedTop ());
+  this.setInitialPosition (left, top);
   this.setMaxZIndex ();
 
   if (rect instanceof NodeRect.Rect.Vector) {
@@ -72,6 +80,22 @@ NodeRectViewer.Box.prototype.setInitialPosition = function (left, top) {
   this.initialTop = top;
   this.setPosition (this.initialLeft, this.initialTop);
 }; // setInitialPosition
+
+NodeRectViewer.Box.prototype.getSourceLeft = function () {
+  return this.left;
+}; // getSourceLeft
+
+NodeRectViewer.Box.prototype.getSourceTop = function () {
+  return this.top;
+}; // getSourceTop
+
+NodeRectViewer.Box.prototype.getDestinationLeft = function () {
+  return this.left + this.width;
+}; // getDestinationLeft
+
+NodeRectViewer.Box.prototype.getDestinationTop = function () {
+  return this.top + this.height;
+}; // getDestinationTop
 
 NodeRectViewer.Box.prototype.setPosition = function (left, top) {
   if (!isNaN (top + 0)) {
@@ -493,40 +517,44 @@ NodeRectViewer.Controller.prototype.update = function (form) {
   }
 }; // update
 
-NodeRectViewer.Controller.prototype.showTrace = function (rect, position) {
+NodeRectViewer.Controller.prototype.showTrace =
+function (rect, position, refBox) {
   if (rect.prevOp === 'add-offset') {
-    this.showTrace (rect.prev1, position);
-    this.showTrace (rect.prev2, position);
+    var b1 = this.showTrace (rect.prev1, position);
+    this.showTrace (rect.prev2, position, b1);
   } else if (rect.prevOp === 'sub-offset') {
-    this.showTrace (rect.prev1, position);
-    this.showTrace (rect.prev2, position);
+    var b1 = this.showTrace (rect.prev1, position);
+    this.showTrace (rect.prev2, position, b1);
   } else if (rect.prevOp === 'add-vector') {
-    this.showTrace (rect.prev1, position);
-    this.showTrace (rect.prev2, position);
+    var b1 = this.showTrace (rect.prev1, position);
+    this.showTrace (rect.prev2, position, b1);
   } else if (rect.prevOp === 'sub-vector') {
-    this.showTrace (rect.prev1, position);
-    this.showTrace (rect.prev2, position);
+    var b1 = this.showTrace (rect.prev1, position);
+    this.showTrace (rect.prev2, position, b1);
   } else if (rect.prevOp === 'in-edge') {
-    this.showTrace (rect.prev1, position);
-    this.showTrace (rect.prev2, position);
+    var b1 = this.showTrace (rect.prev1, position);
+    this.showTrace (rect.prev2, position, b1);
   } else if (rect.prevOp === 'out-edge') {
-    this.showTrace (rect.prev1, position);
-    this.showTrace (rect.prev2, position);
+    var b1 = this.showTrace (rect.prev1, position);
+    this.showTrace (rect.prev2, position, b1);
   } else if (rect.prevOp === 'topleft') {
     this.showTrace (rect.prev1, position);
   } else if (rect.prevOp === 'topleft-negated') {
     this.showTrace (rect.prev1, position);
   }
 
-  this.setHighlight (rect, position);
+  return this.setHighlight (rect, position, refBox);
 }; // showTrace
 
-NodeRectViewer.Controller.prototype.setHighlight = function (rect, coords) {
-  var marker = new NodeRectViewer.Box (rect, coords);
+NodeRectViewer.Controller.prototype.setHighlight =
+function (rect, coords, refBox) {
+  var marker = new NodeRectViewer.Box (rect, coords, refBox);
 
   document.body.appendChild (marker.element);
   if (!this.highlightElements) this.highlightElements = [];
   this.highlightElements.push (marker.element);
+
+  return marker;
 }; // setHighlight
 
 NodeRectViewer.Controller.prototype.clearHighlight = function () {
