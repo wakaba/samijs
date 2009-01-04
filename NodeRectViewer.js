@@ -91,9 +91,9 @@ NodeRectViewer.Box = function (rect, coords /* viewport or canvas */) {
   this.element = marker;
 
   setCSSPosition (marker.style, coords == 'viewport' ? 'fixed' : 'absolute');
-  marker.style.zIndex = '99999';
   
   this.setPosition (this.initialLeft, this.initialTop);
+  this.setMaxZIndex ();
 
   var bw = 1;
   var diff = 0;
@@ -137,25 +137,8 @@ NodeRectViewer.Box = function (rect, coords /* viewport or canvas */) {
     this.firstChild.style.backgroundColor = 'transparent';
   };
   marker.onmousedown = function (event) {
-    if (document.nrDragging) return;
-    document.nrDragging = true;
-    event = event || window.event;
-    this.style.cursor = 'move';
-    self.dragStartLeft = self.left;
-    self.dragStartTop = self.top;
-    self.dragStartX = event.clientX;
-    self.dragStartY = event.clientY;
-  };
-  marker.onmousemove = function (event) {
-    if (this.style.cursor != 'move') return;
-    event = event || window.event;
-    var diffX = event.clientX - self.dragStartX; 
-    var diffY = event.clientY - self.dragStartY;
-    self.setPosition (self.dragStartLeft + diffX, self.dragStartTop + diffY);
-  };
-  marker.onmouseup = function (event) {
-    document.nrDragging = false;
-    this.style.cursor = 'default';
+    self.setMaxZIndex ();
+    self.startDrag (event || window.event);
   };
   marker.ondblclick = function () {
     self.setPosition (self.initialLeft, self.initialTop);
@@ -164,6 +147,12 @@ NodeRectViewer.Box = function (rect, coords /* viewport or canvas */) {
   var label = rect.getFullLabel ? rect.getFullLabel () : '';
   this.setDescription (label, rect.toString ());
 }; // Box
+
+if (!NodeRectViewer.maxBoxZIndex) NodeRectViewer.maxZIndex = 9999;
+
+NodeRectViewer.Box.prototype.setMaxZIndex = function () {
+  this.element.style.zIndex = ++NodeRectViewer.maxZIndex;
+}; // setMaxZIndex
 
 NodeRectViewer.Box.prototype.setPosition = function (left, top) {
   if (!isNaN (top + 0)) {
@@ -197,7 +186,123 @@ function setHighlight (rect, coords) {
   document.body.appendChild (marker.element);
   if (!document.highlightElements) document.highlightElements = [];
   document.highlightElements.push (marker.element);
-} // setHighlight
+}; // setHighlight
+
+NodeRectViewer.Box.dragging = null;
+
+if (!NodeRectViewer.Box.activeHandlers) NodeRectViewer.Box.activeHandlers = {};
+
+NodeRectViewer.Box.mousemoveHandler = function (event) {
+  if (NodeRectViewer.Box.dragging) {
+    NodeRectViewer.Box.dragging.handleDrag (event || window.event);
+  }
+}; // mousemoveHandler
+
+NodeRectViewer.Box.mouseupHandler = function (event) {
+  if (NodeRectViewer.Box.dragging) {
+    NodeRectViewer.Box.dragging.endDrag (event || window.event);
+  }
+}; // mouseupHandler
+
+NodeRectViewer.Box.addDragHandlers = function () {
+  if (window.addEventListener) {
+    if (!NodeRectViewer.Box.activeHandlers.mousemove) {
+      window.addEventListener
+          ('mousemove', NodeRectViewer.Box.mousemoveHandler, false);
+      NodeRectViewer.Box.activeHandlers.mousemove
+          = NodeRectViewer.Box.mousemoveHandler;
+    }
+    if (!NodeRectViewer.Box.activeHandlers.mouseup) {
+      window.addEventListener
+          ('mouseup', NodeRectViewer.Box.mouseupHandler, false);
+      NodeRectViewer.Box.activeHandlers.mouseup
+          = NodeRectViewer.Box.mouseupHandler;
+    }
+  } else if (document.attachEvent) {
+    if (!NodeRectViewer.Box.activeHandlers.mousemove) {
+      document.attachEvent ('onmousemove', NodeRectViewer.Box.mousemoveHandler);
+      NodeRectViewer.Box.activeHandlers.mousemove
+          = NodeRectViewer.Box.mousemoveHandler;
+    }
+   if (!NodeRectViewer.Box.activeHandlers.mouseup) {
+      document.attachEvent ('onmouseup', NodeRectViewer.Box.mouseupHandler);
+      NodeRectViewer.Box.activeHandlers.mouseup
+          = NodeRectViewer.Box.mouseupHandler;
+    }
+  }
+}; // addDragHandlers
+
+NodeRectViewer.Box.removeDragHandlers = function () {
+  if (window.removeEventListener) {
+    if (NodeRectViewer.Box.activeHandlers.mousemove) {
+      window.removeEventListener
+          ('mousemove', NodeRectViewer.Box.activeHandlers.mousemove, false);
+    }
+    if (NodeRectViewer.Box.activeHandlers.mouseup) {
+      window.removeEventListener
+          ('mouseup', NodeRectViewer.Box.activeHandlers.mouseup, false);
+    }
+  } else if (document.detachEvent) {
+    if (NodeRectViewer.Box.activeHandlers.mousemove) {
+      document.detachEvent ('onmousemove', NodeRectViewer.Box.mousemoveHandler);
+    }
+    if (NodeRectViewer.Box.activeHandlers.mouseup) {
+      document.detachEvent ('onmouseup', NodeRectViewer.Box.mouseupHandler);
+    }
+  }
+  NodeRectViewer.Box.activeHandlers.mousemove = null;
+  NodeRectViewer.Box.activeHandlers.mouseup = null;
+}; // removeDragHandlers
+
+NodeRectViewer.Box.removeDragHandlers ();
+
+NodeRectViewer.Box.prototype.startDrag = function (event) {
+  if (NodeRectViewer.Box.dragging) return;
+  NodeRectViewer.Box.dragging = this;
+  NodeRectViewer.Box.addDragHandlers ();
+
+  this.element.style.cursor = 'move';
+
+  this.dragStartLeft = this.left;
+  this.dragStartTop = this.top;
+  this.dragStartX = event.clientX;
+  this.dragStartY = event.clientY;
+
+  if (event.preventDefault) {
+    event.preventDefault ();
+  } else {
+    event.returnValue = false;
+  }
+}; // startDrag
+
+NodeRectViewer.Box.prototype.handleDrag = function (event) {
+  if (NodeRectViewer.Box.dragging != this) return;
+
+  var diffX = event.clientX - this.dragStartX; 
+  var diffY = event.clientY - this.dragStartY;
+  this.setPosition (this.dragStartLeft + diffX, this.dragStartTop + diffY);
+
+  if (event.preventDefault) {
+    event.preventDefault ();
+  } else {
+    event.returnValue = false;
+  }
+}; // handleDrag
+
+NodeRectViewer.Box.prototype.endDrag = function (event) {
+  if (NodeRectViewer.Box.dragging != this) return;
+
+  NodeRectViewer.Box.dragging = null;
+  NodeRectViewer.Box.removeDragHandlers ();
+
+  this.element.style.cursor = 'default';
+
+  if (event.preventDefault) {
+    event.preventDefault ();
+  } else {
+    event.defaultValue = false;
+  }
+}; // endDrag
 
 function clearHighlight () {
   if (document.highlightElements) {
