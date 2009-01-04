@@ -95,33 +95,13 @@ NodeRectViewer.Box = function (rect, coords /* viewport or canvas */) {
   this.setPosition (this.initialLeft, this.initialTop);
   this.setMaxZIndex ();
 
-  var bw = 1;
-  var diff = 0;
-  if (document.all && document.compatMode == 'CSS1Compat') diff = bw * 2;
-  if (rect.width >= 0) {
-    if (rect.width - diff > 0) {
-      marker.style.width = (rect.width - diff) + 'px';
-    } else {
-      marker.style.height = rect.width + 'px';
-    }
-  }
-  if (rect.height >= 0) {
-    if (rect.height - diff > 0) {
-      marker.style.height = (rect.height - diff) + 'px';
-    } else {
-      marker.style.height = rect.height + 'px';
-    }
-  }
-  marker.style.MozBoxSizing = 'border-box';
-  marker.style.WebkitBoxSizing = 'border-box';
-  marker.style.boxSizing = 'border-box';
-  marker.style.border = bw + 'px solid red';
   if (rect instanceof NodeRect.Rect.Vector) {
-    marker.style[rect.leftward ? 'borderRightStyle' : 'borderLeftStyle']
-        = 'dotted';
-    marker.style[rect.upward ? 'borderTopStyle' : 'borderBottomStyle']
-        = 'dotted';
+    this.setBorder (!rect.upward, !rect.leftward, rect.upward, rect.leftward);
+  } else {
+    this.setBorder (true, true, true, true);
   }
+
+  this.setDimension (rect.width, rect.height);
 
   this.setColor (rect.index);
   this.setOpacity (0.3);
@@ -164,6 +144,80 @@ NodeRectViewer.Box.prototype.setPosition = function (left, top) {
   }
 }; // setPosition
 
+if (document.all && document.compatMode == 'CSS1Compat') {
+  NodeRectViewer.Box.boxSizing = 'content-box';
+} else {
+  NodeRectViewer.Box.boxSizing = 'border-box';
+}
+
+NodeRectViewer.Box.prototype.setDimension = function (w, h) {
+  if (w < 0 || (w + 0) != w) w = 0;
+  if (h < 0 || (h + 0) != h) h = 0;
+
+  var ww = w;
+  var hh = h;
+  if (ww < 20) ww = 20;
+  if (hh < 20) hh = 20;
+
+  this.element.style.width = ww + 'px';
+  this.element.style.height = hh + 'px';
+
+  var borderEl = this.borderElement;
+  if (borderEl) {
+    if (NodeRectViewer.Box.boxSizing === 'content-box') {
+      var mw = this.borderLeftWidth + this.borderRightWidth;
+      var mh = this.borderTopWidth + this.borderBottomWidth;
+      if (w < mw) w = mw; else w -= mw;
+      if (h < mh) h = mh; else h -= mh;
+    }
+
+    borderEl.style.width = w + 'px';
+    borderEl.style.height = h + 'px';
+  }
+}; // setDimension
+
+NodeRectViewer.Box.prototype.setBorder = function (t, r, b, l) {
+  var borderEl = this.borderElement;
+  if (!borderEl) {
+    borderEl = this.element.ownerDocument.createElement ('div');
+    borderEl.style.position = 'absolute';
+    borderEl.style.top = 0;
+    borderEl.style.left = 0;
+    borderEl.style.MozBoxSizing = 'border-box';
+    borderEl.style.WebkitBoxSizing = 'border-box';
+    borderEl.style.boxSizing = 'border-box';
+    this.borderElement = borderEl;
+    this.element.appendChild (borderEl);
+  }
+
+  var bw = 1;
+  borderEl.style.border = bw + 'px red none';
+  if (t) {
+    borderEl.style.borderTopStyle = 'solid';
+    this.borderTopWidth = bw;
+  } else {
+    this.borderTopWidth = 0;
+  }
+  if (r) {
+    borderEl.style.borderRightStyle = 'solid';
+    this.borderRightWidth = bw;
+  } else {
+    this.borderRightWidth = 0;
+  }
+  if (b) {
+    borderEl.style.borderBottomStyle = 'solid';
+    this.borderBottomWidth = bw;
+  } else {
+    this.borderBottomWidth = 0;
+  }
+  if (l) {
+    borderEl.style.borderLeftStyle = 'solid';
+    this.borderLeftWidth = bw;
+  } else {
+    this.borderLeftWidth = 0;
+  }
+}; // setBorder
+
 NodeRectViewer.Box.colors = ['#FFFFCC', '#FFCCCC', '#CC99FF', '#99CCFF'];
 
 NodeRectViewer.Box.prototype.setColor = function (index) {
@@ -177,18 +231,22 @@ NodeRectViewer.Box.prototype.setOpacity = function (opacity) {
 }; // setOpacity
 
 NodeRectViewer.Box.prototype.setLabelColor = function (fg, bg) {
-  var textEl = this.element.firstChild;
+  var textEl = this.labelElement;
   if (!textEl) return;
   textEl.style.color = fg;
   textEl.style.backgroundColor = bg;
 }; // setLabelColor
 
 NodeRectViewer.Box.prototype.setDescription = function (label, desc) {
-  this.element.innerHTML = '';
-
   this.element.title = "*" + label + "* \n" + desc;
 
-  var textEl = this.element.ownerDocument.createElement ('div');
+  var textEl = this.labelElement;
+  if (textEl) {
+    textEl.innerHTML = '';
+  } else {
+    textEl = this.element.ownerDocument.createElement ('div');
+    this.labelElement = textEl;
+  }
   textEl.style.position = 'absolute';
   if (!isNaN (this.width)) textEl.style.left = (this.width / 2) + 'px';
   if (!isNaN (this.height)) textEl.style.top = (this.height / 2) + 'px';
