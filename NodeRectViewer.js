@@ -84,17 +84,12 @@ function showTrace (rect, position) {
 NodeRectViewer.Box = function (rect, coords /* viewport or canvas */) {
   var self = this;
 
-  this.initialLeft = rect.getRenderedLeft ();
-  this.initialTop = rect.getRenderedTop ();
-  this.width = rect.width;
-  this.height = rect.height;
-
   var marker = document.createElement ('div');
   this.element = marker;
 
   setCSSPosition (marker.style, coords == 'viewport' ? 'fixed' : 'absolute');
   
-  this.setPosition (this.initialLeft, this.initialTop);
+  this.setInitialPosition (rect.getRenderedLeft (), rect.getRenderedTop ());
   this.setMaxZIndex ();
 
   if (rect instanceof NodeRect.Rect.Vector) {
@@ -140,6 +135,12 @@ NodeRectViewer.Box.prototype.setMaxZIndex = function () {
   this.element.style.zIndex = ++NodeRectViewer.maxZIndex;
 }; // setMaxZIndex
 
+NodeRectViewer.Box.prototype.setInitialPosition = function (left, top) {
+  this.initialLeft = left;
+  this.initialTop = top;
+  this.setPosition (this.initialLeft, this.initialTop);
+}; // setInitialPosition
+
 NodeRectViewer.Box.prototype.setPosition = function (left, top) {
   if (!isNaN (top + 0)) {
     this.element.style.top = top + 'px';
@@ -160,6 +161,9 @@ if (document.all && document.compatMode == 'CSS1Compat') {
 NodeRectViewer.Box.prototype.setDimension = function (w, h) {
   if (w < 0 || (w + 0) != w) w = 0;
   if (h < 0 || (h + 0) != h) h = 0;
+
+  this.width = w;
+  this.height = h;
 
   var ww = w;
   var hh = h;
@@ -412,11 +416,13 @@ function NodeRectOnLoad () {
 
   var vpRects = NodeRect.getViewportRects ();
   var icb = vpRects.icb;
+
   var wh = NodeRect.Rect.whCSS (document.body, '20em', '11em');
   var controllerRect
       = new NodeRect.Rect
-          (null, icb.width, icb.height, null, wh.width, wh.height);
+          (0, icb.width, null, null, wh.width, wh.height);
   controllerRect.label = 'NodeRect viewer';
+
   var controller = new NodeRectViewer.Box (controllerRect, 'viewport');
   controller.element.style.backgroundColor = '#FFCCFF';
   controller.element.style.whiteSpace = 'nowrap';
@@ -449,8 +455,7 @@ function NodeRectOnLoad () {
   <option value=viewport>Viewport\
   </select>\
 \
-  <select name=prop title="Show box(es) of ..." onchange=update(form)\
-      style="width:10em">\
+  <select name=prop title="Show box(es) of ..." onchange=update(form)>\
 \
   <optgroup label="Element coordinate">\
   <option value=offset title="offset* attributes">offset\
@@ -514,8 +519,15 @@ function NodeRectOnLoad () {
   </select>\
   </form>';
   
+  controller.element.style.width = 'auto';
+  controller.element.style.height = 'auto';
   document.body.appendChild (controller.element);
   NodeRectViewer.controller = controller;
+
+  controller.setDimension
+      (controller.element.offsetWidth, controller.element.offsetHeight);
+  controller.setInitialPosition
+      (icb.width - controller.width, icb.height - controller.height);
 
   update (controller.element.firstChild);
 } // NodeRectOnLoad
