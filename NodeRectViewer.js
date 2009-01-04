@@ -49,6 +49,8 @@ function update (form) {
     } else {
       setHighlight (rect, position);
     }
+
+    if (NodeRectViewer.controller) NodeRectViewer.controller.setMaxZIndex ();
   }
 } // update
 
@@ -116,11 +118,16 @@ NodeRectViewer.Box = function (rect, coords /* viewport or canvas */) {
     self.setLabelColor ('black', 'transparent');
   };
   marker.onmousedown = function (event) {
+    event = event || window.event;
     self.setMaxZIndex ();
-    self.startDrag (event || window.event);
+    if (!self.isClickable (event.target || event.srcElement)) {
+      self.startDrag (event);
+    }
   };
   marker.ondblclick = function () {
-    self.setPosition (self.initialLeft, self.initialTop);
+    if (!self.isClickable (event.target || event.srcElement)) {
+      self.setPosition (self.initialLeft, self.initialTop);
+    }
   };
 
   var label = rect.getFullLabel ? rect.getFullLabel () : '';
@@ -380,6 +387,14 @@ NodeRectViewer.Box.prototype.endDrag = function (event) {
   }
 }; // endDrag
 
+NodeRectViewer.Box.prototype.isClickable = function (target) {
+  return false;
+}; // isClickable
+
+NodeRectViewer.Box.prototype.remove = function () {
+  this.element.parentNode.removeChild (this.element);
+}; // remove
+
 function clearHighlight () {
   if (document.highlightElements) {
     for (var i in document.highlightElements) {
@@ -391,31 +406,57 @@ function clearHighlight () {
 }
 
 function NodeRectOnLoad () {
-  var controller = document.createElement ('article');
-  controller.style.display = 'block';
-  setCSSPosition (controller.style, 'fixed');
-  controller.style.right = 0;
-  controller.style.bottom = 0;
-  controller.style.backgroundColor = '#FFCCFF';
-  controller.style.zIndex = '99999999';
+  if (NodeRectViewer.controller) {
+    NodeRectViewer.controller.remove ();
+  }
+
+  var vpRects = NodeRect.getViewportRects ();
+  var icb = vpRects.icb;
+  var wh = NodeRect.Rect.whCSS (document.body, '20em', '11em');
+  var controllerRect
+      = new NodeRect.Rect
+          (null, icb.width, icb.height, null, wh.width, wh.height);
+  controllerRect.label = 'NodeRect viewer';
+  var controller = new NodeRectViewer.Box (controllerRect, 'viewport');
+  controller.element.style.backgroundColor = '#FFCCFF';
+  controller.element.style.whiteSpace = 'nowrap';
+  controller.isClickable = function (target) {
+    return target.form;
+  };
+  controller.setOpacity = function () {
+    this.constructor.prototype.setOpacity.apply (this, [1.0]);
+  };
+
   var cb = ' style="color: green" ';
-  controller.innerHTML = '<form>\
-  <textarea name=result style="width: 20em; height: 8em"></textarea><br>\
-  <input name=selector value="body" onchange=" update(form) " onkeyup=" update(form) " style="width: 15em">\
-  <input name=selectorIndex value=0 onchange=update(form) onkeyup=update(form) style=width:3em>\
-  <input type=checkbox name=trace title="Show chain" onclick=update(form)>\
+  controller.element.innerHTML = '<form>\
+\
+  <textarea name=result style=width:95%;height:6em></textarea>\
   <br>\
-  <button type=button onclick=update(form)>update</button>\
-  <select name=coords onchange=update(form)>\
+\
+  <input name=selector title="Target element selector" value=body \
+      onchange=update(form) onkeyup=update(form) \
+      style=width:14em>\
+  <input name=selectorIndex title="Target element index" value=0 \
+      onchange=update(form) onkeyup=update(form) \
+      style=width:3em>\
+  <input type=checkbox name=trace title="Show box chain" onclick=update(form)>\
+  <br>\
+\
+  <button type=button onclick=update(form)>Update</button>\
+  <select name=coords title="Layout box(es) with coordinate ..." \
+      onchange=update(form)>\
   <option selected value=canvas>Canvas\
-  <option value=viewport>Viewport</select>\
-  <select name=prop onchange=update(form)>\
+  <option value=viewport>Viewport\
+  </select>\
+\
+  <select name=prop title="Show box(es) of ..." onchange=update(form)\
+      style="width:10em">\
 \
   <optgroup label="Element coordinate">\
-  <option value="offset">offset</option>\
-  <option value="client">client</option>\
-  <option value="scrollableArea">scroll (width, height)\
-  <option value="scrollState">scroll (top, left)\
+  <option value=offset title="offset* attributes">offset\
+  <option value=client title="client* attributes">client\
+  <option value=scrollableArea title="scroll* attributes">scroll (width/height)\
+  <option value=scrollState title="scroll* attributes">scroll (top/left)\
 \
   <optgroup label="Viewport coordinate">\
   <option value="boundingClient">getBoundingClientRect</option>\
@@ -426,7 +467,6 @@ function NodeRectOnLoad () {
   <option value="cumulativeOffset">Cumulative offset</option>\
   <option value="paddingEdge">Padding edge</option>\
   <option value="cumulativeClient">Cumulative client</option>\
-  <option value="contentEdge">Content edge</option>\
   <option value=boxObject>getBoxObjectFor\
 \
   <optgroup label="Screen coordinate">\
@@ -474,8 +514,10 @@ function NodeRectOnLoad () {
   </select>\
   </form>';
   
-  document.body.appendChild (controller);
-  update (controller.firstChild);
+  document.body.appendChild (controller.element);
+  NodeRectViewer.controller = controller;
+
+  update (controller.element.firstChild);
 } // NodeRectOnLoad
 
 var s = document.createElement ('script');

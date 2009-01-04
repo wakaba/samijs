@@ -2,13 +2,43 @@
 
 if (!window.NodeRect) NodeRect = {};
 
+NodeRect.getPixelWH = function (el, w, h) {
+  var testEl = document.createElement ('div');
+  testEl.style.display = 'block';
+  testEl.style.position = 'absolute';
+  testEl.style.margin = 0;
+  testEl.style.borderWidth = 0;
+  testEl.style.padding = 0;
+  try {
+    testEl.style.width = w;
+    testEl.style.height = h;
+  } catch (e) {
+  }
+  el.appendChild (testEl);
+  var px = {width: testEl.clientWidth, height: testEl.clientHeight};
+  el.removeChild (testEl);
+  return px;
+}; // getPixelWH
+
 NodeRect.Rect = function (t, r, b, l, w, h) {
-  this.top = t;
-  this.right = r != null ? r : w == 0 ? l : l + w /* - 1 */;
-  this.bottom = b != null ? b : h == 0 ? t : t + h /* - 1 */;
-  this.left = l;
-  this.width = w != null ? w : r - l /* + 1 */;
-  this.height = h != null ? h : b - t /* + 1 */;
+  if (t != null) {
+    this.top = t;
+    this.bottom = b != null ? b : t + h;
+    this.height = h != null ? h : b - t;
+  } else {
+    this.bottom = b;
+    this.top = b - h;
+    this.height = h;
+  }
+  if (l != null) {
+    this.left = l;
+    this.right = r != null ? r : l + w;
+    this.width = w != null ? w : r - l;
+  } else {
+    this.right = r;
+    this.left = r - w;
+    this.width = w;
+  }
   this.index = NodeRect.Rect.index++;
   this.label = null;
   this.supported = false;
@@ -19,6 +49,11 @@ NodeRect.Rect.wh = function (w, h) {
   if (!isNaN (w + 0)) r.supported = true;
   return r;
 }; // wh
+
+NodeRect.Rect.whCSS = function (el, w, h) {
+  var px = NodeRect.getPixelWH (el, w, h);
+  return NodeRect.Rect.wh (px.width, px.height);
+}; // whCSS
 
 NodeRect.Rect.trbl = function (t, r, b, l) {
   var o = new NodeRect.Rect (t, r, b, l);
