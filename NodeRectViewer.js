@@ -1,3 +1,5 @@
+if (!window.NodeRectViewer) window.NodeRectViewer = {};
+
 function setCSSPosition (style, value) {
   if (value == 'fixed') {
     if (!window.opera &&
@@ -77,11 +79,13 @@ function showTrace (rect, position) {
   setHighlight (rect, position);
 } // showTrace
 
-function setHighlight (rect, coords) {
+NodeRectViewer.Box = function (rect, coords /* viewport or canvas */) {
   var left = rect.getRenderedLeft ();
   var top = rect.getRenderedTop ();
 
   var marker = document.createElement ('div');
+  this.element = marker;
+
   setCSSPosition (marker.style, coords == 'viewport' ? 'fixed' : 'absolute');
   marker.style.zIndex = '99999';
   marker.nrOriginalLeft = left;
@@ -166,10 +170,14 @@ function setHighlight (rect, coords) {
   text.style.fontSize = '20px';
   text.appendChild (document.createTextNode (label));
 
-  document.body.appendChild (marker);
+}; // Box
+
+function setHighlight (rect, coords) {
+  var marker = new NodeRectViewer.Box (rect, coords);
+
+  document.body.appendChild (marker.element);
   if (!document.highlightElements) document.highlightElements = [];
-  document.highlightElements.push (marker);
-  return marker;
+  document.highlightElements.push (marker.element);
 } // setHighlight
 
 function clearHighlight () {
@@ -198,7 +206,8 @@ function NodeRectOnLoad () {
   <input type=checkbox name=trace title="Show chain" onclick=update(form)>\
   <br>\
   <button type=button onclick=update(form)>update</button>\
-  <select name=coords onchange=update(form)><option selected value=page>Page\
+  <select name=coords onchange=update(form)>\
+  <option selected value=canvas>Canvas\
   <option value=viewport>Viewport</select>\
   <select name=prop onchange=update(form)>\
 \
@@ -240,7 +249,7 @@ function NodeRectOnLoad () {
   <option value=vp.windowScrollXY>Scroll (x, y)\
   <option value=vp.windowPageOffset>Page offset\
   <option value=vp.windowScrollMax>Scroll maximum\
-  <option value=vp.windowInner>Inner\
+  <option value=vp.windowInner>Window inner\
   <option value=vp.boundingClientOrigin' + cb + '>Origin of getBoundingClientRect\
 \
   <option value=vp.document>Document\
@@ -254,7 +263,7 @@ function NodeRectOnLoad () {
   <option value=vp.bodyScrollState>document.body.scroll (top, left)\
 \
   <optgroup label=Window>\
-  <option value=win.outer>Outer\
+  <option value=win.outer>Window outer\
   <option value=win.screenXY>Screen (x, y)\
   <option value=win.screenTL>Screen (top, left)\
 \
