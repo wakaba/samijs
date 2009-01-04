@@ -160,8 +160,8 @@ NodeRect.Rect.prototype.subtractVector = function (r) {
 
 NodeRect.Rect.prototype.addBandOutside = function (r) {
   var o = new this.constructor
-      (this.top - r.top, this.right + r.right,
-       this.bottom + r.bottom, this.left - r.left);
+      (this.top - Math.abs (r.top), this.right + Math.abs (r.right),
+       this.bottom + Math.abs (r.bottom), this.left - Math.abs (r.left));
   o.prev1 = this;
   o.prev2 = r;
   o.prevOp = 'out-edge';

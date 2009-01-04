@@ -449,6 +449,7 @@ NodeRectViewer.Controller = function () {
 }; // Controller
 
 NodeRectViewer.Controller.prototype.remove = function () {
+  this.clearHighlight ();
   this.box.remove ();
 }; // remove
 
