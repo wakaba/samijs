@@ -1,72 +1,5 @@
 if (!window.NodeRectViewer) window.NodeRectViewer = {};
 
-function update (form) {
-  clearHighlight ();
-  form.result.value = '';
-  var el = uu.css (form.selector.value)[parseInt (form.selectorIndex.value) || 0];
-  if (el) {
-    NodeRect.Rect.resetIndex ();
-    var rect;
-    var position = form.coords.value;
-    var type = form.prop.value;
-    var rectClass = form.trace.checked ? NodeRect.Rect.Trace : null;
-    if (type == '') {
-      return;
-    } else if (type == 'cumulativeOffset') {
-      rect = NodeRect.getCumulativeOffsetRect (el, rectClass);
-    } else if (type == 'cumulativeClient') {
-      rect = NodeRect.getCumulativeClientRect (el, rectClass);
-    } else if (type.substring (0, 3) === 'vp.') {
-      var rects = NodeRect.getViewportRects (window);
-      rect = rects[type.substring (3)];
-    } else if (type.substring (0, 4) === 'win.') {
-      var rects = NodeRect.getWindowRects (window);
-      rect = rects[type.substring (4)];
-    } else if (type.substring (0, 7) === 'screen.') {
-      var rects = NodeRect.getScreenRects (window);
-      rect = rects[type.substring (7)];
-    } else {
-      var rects = NodeRect.getElementRects (el);
-      rect = rects[type];
-    }
-    form.result.value = rect.toString ();
-    if (form.trace.checked) {
-      showTrace (rect, position);
-    } else {
-      setHighlight (rect, position);
-    }
-
-    if (NodeRectViewer.controller) NodeRectViewer.controller.setMaxZIndex ();
-  }
-} // update
-
-function showTrace (rect, position) {
-  if (rect.prevOp === 'add-offset') {
-    showTrace (rect.prev1, position);
-    showTrace (rect.prev2, position);
-  } else if (rect.prevOp === 'sub-offset') {
-    showTrace (rect.prev1, position);
-    showTrace (rect.prev2, position);
-  } else if (rect.prevOp === 'add-vector') {
-    showTrace (rect.prev1, position);
-    showTrace (rect.prev2, position);
-  } else if (rect.prevOp === 'sub-vector') {
-    showTrace (rect.prev1, position);
-    showTrace (rect.prev2, position);
-  } else if (rect.prevOp === 'in-edge') {
-    showTrace (rect.prev1, position);
-    showTrace (rect.prev2, position);
-  } else if (rect.prevOp === 'out-edge') {
-    showTrace (rect.prev1, position);
-    showTrace (rect.prev2, position);
-  } else if (rect.prevOp === 'topleft') {
-    showTrace (rect.prev1, position);
-  } else if (rect.prevOp === 'topleft-negated') {
-    showTrace (rect.prev1, position);
-  }
-  setHighlight (rect, position);
-} // showTrace
-
 NodeRectViewer.Box = function (rect, coords /* viewport or canvas */) {
   var self = this;
 
@@ -104,7 +37,8 @@ NodeRectViewer.Box = function (rect, coords /* viewport or canvas */) {
       self.startDrag (event);
     }
   };
-  marker.ondblclick = function () {
+  marker.ondblclick = function (event) {
+    event = event || window.event;
     if (!self.isClickable (event.target || event.srcElement)) {
       self.setPosition (self.initialLeft, self.initialTop);
     }
@@ -265,14 +199,6 @@ NodeRectViewer.Box.prototype.setDescription = function (label, desc) {
   this.element.appendChild (textEl);
 }; // setDescription
 
-function setHighlight (rect, coords) {
-  var marker = new NodeRectViewer.Box (rect, coords);
-
-  document.body.appendChild (marker.element);
-  if (!document.highlightElements) document.highlightElements = [];
-  document.highlightElements.push (marker.element);
-}; // setHighlight
-
 NodeRectViewer.Box.dragging = null;
 
 if (!NodeRectViewer.Box.activeHandlers) NodeRectViewer.Box.activeHandlers = {};
@@ -397,21 +323,9 @@ NodeRectViewer.Box.prototype.remove = function () {
   this.element.parentNode.removeChild (this.element);
 }; // remove
 
-function clearHighlight () {
-  if (document.highlightElements) {
-    for (var i in document.highlightElements) {
-      var el = document.highlightElements[i];
-      if (el.parentNode) el.parentNode.removeChild (el);
-    }
-    document.highlightElements = [];
-  }
-}
 
-function NodeRectOnLoad () {
-  if (NodeRectViewer.controller) {
-    NodeRectViewer.controller.remove ();
-  }
 
+NodeRectViewer.Controller = function () {
   var vpRects = NodeRect.getViewportRects ();
   var icb = vpRects.icb;
 
@@ -422,6 +336,7 @@ function NodeRectOnLoad () {
   controllerRect.label = 'NodeRect viewer';
 
   var controller = new NodeRectViewer.Box (controllerRect, 'viewport');
+  this.box = controller;
   controller.element.style.backgroundColor = '#FFCCFF';
   controller.element.style.whiteSpace = 'nowrap';
   controller.isClickable = function (target) {
@@ -520,14 +435,115 @@ function NodeRectOnLoad () {
   controller.element.style.width = 'auto';
   controller.element.style.height = 'auto';
   document.body.appendChild (controller.element);
-  NodeRectViewer.controller = controller;
 
   controller.setDimension
       (controller.element.offsetWidth, controller.element.offsetHeight);
   controller.setInitialPosition
       (icb.width - controller.width, icb.height - controller.height);
 
-  update (controller.element.firstChild);
+  var self = this;
+  controller.element.firstChild.update = function (form) {
+    self.update (form);
+  };
+  this.update (controller.element.firstChild);
+}; // Controller
+
+NodeRectViewer.Controller.prototype.remove = function () {
+  this.box.remove ();
+}; // remove
+
+NodeRectViewer.Controller.prototype.update = function (form) {
+  this.clearHighlight ();
+  form.result.value = '';
+  var el = uu.css (form.selector.value)[parseInt (form.selectorIndex.value) || 0];
+  if (el) {
+    NodeRect.Rect.resetIndex ();
+    var rect;
+    var position = form.coords.value;
+    var type = form.prop.value;
+    var rectClass = form.trace.checked ? NodeRect.Rect.Trace : null;
+    if (type == '') {
+      return;
+    } else if (type == 'cumulativeOffset') {
+      rect = NodeRect.getCumulativeOffsetRect (el, rectClass);
+    } else if (type == 'cumulativeClient') {
+      rect = NodeRect.getCumulativeClientRect (el, rectClass);
+    } else if (type.substring (0, 3) === 'vp.') {
+      var rects = NodeRect.getViewportRects (window);
+      rect = rects[type.substring (3)];
+    } else if (type.substring (0, 4) === 'win.') {
+      var rects = NodeRect.getWindowRects (window);
+      rect = rects[type.substring (4)];
+    } else if (type.substring (0, 7) === 'screen.') {
+      var rects = NodeRect.getScreenRects (window);
+      rect = rects[type.substring (7)];
+    } else {
+      var rects = NodeRect.getElementRects (el);
+      rect = rects[type];
+    }
+    form.result.value = rect.toString ();
+    if (form.trace.checked) {
+      this.showTrace (rect, position);
+    } else {
+      this.setHighlight (rect, position);
+    }
+
+    this.box.setMaxZIndex ();
+  }
+}; // update
+
+NodeRectViewer.Controller.prototype.showTrace = function (rect, position) {
+  if (rect.prevOp === 'add-offset') {
+    this.showTrace (rect.prev1, position);
+    this.showTrace (rect.prev2, position);
+  } else if (rect.prevOp === 'sub-offset') {
+    this.showTrace (rect.prev1, position);
+    this.showTrace (rect.prev2, position);
+  } else if (rect.prevOp === 'add-vector') {
+    this.showTrace (rect.prev1, position);
+    this.showTrace (rect.prev2, position);
+  } else if (rect.prevOp === 'sub-vector') {
+    this.showTrace (rect.prev1, position);
+    this.showTrace (rect.prev2, position);
+  } else if (rect.prevOp === 'in-edge') {
+    this.showTrace (rect.prev1, position);
+    this.showTrace (rect.prev2, position);
+  } else if (rect.prevOp === 'out-edge') {
+    this.showTrace (rect.prev1, position);
+    this.showTrace (rect.prev2, position);
+  } else if (rect.prevOp === 'topleft') {
+    this.showTrace (rect.prev1, position);
+  } else if (rect.prevOp === 'topleft-negated') {
+    this.showTrace (rect.prev1, position);
+  }
+
+  this.setHighlight (rect, position);
+}; // showTrace
+
+NodeRectViewer.Controller.prototype.setHighlight = function (rect, coords) {
+  var marker = new NodeRectViewer.Box (rect, coords);
+
+  document.body.appendChild (marker.element);
+  if (!document.highlightElements) document.highlightElements = [];
+  document.highlightElements.push (marker.element);
+}; // setHighlight
+
+NodeRectViewer.Controller.prototype.clearHighlight = function () {
+  if (document.highlightElements) {
+    for (var i in document.highlightElements) {
+      var el = document.highlightElements[i];
+      if (el.parentNode) el.parentNode.removeChild (el);
+    }
+    document.highlightElements = [];
+  }
+}; // clearHighlight
+
+function NodeRectOnLoad () {
+  if (NodeRectViewer.controller) {
+    NodeRectViewer.controller.remove ();
+  }
+
+  NodeRectViewer.controller = new NodeRectViewer.Controller ();
 } // NodeRectOnLoad
 
 var s = document.createElement ('script');
