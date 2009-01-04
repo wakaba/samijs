@@ -1,21 +1,21 @@
 
-if (typeof (JSTE) === "undefined") var JSTE = {};
+if (typeof (KKN) === "undefined") var KKN = {};
 
-JSTE.SpaceChars = /[\x09\x0A\x0C\x0D\x20]+/;
+KKN.SpaceChars = /[\x09\x0A\x0C\x0D\x20]+/;
 
-JSTE.Class = function (constructor, prototype) {
-  return JSTE.Subclass (constructor, JSTE.EventTarget, prototype);
+KKN.Class = function (constructor, prototype) {
+  return KKN.Subclass (constructor, KKN.EventTarget, prototype);
 }; // Class
 
-JSTE.Class.addClassMethods = function (classObject, methods) {
-  new JSTE.Hash (methods).forEach (function (n, v) {
+KKN.Class.addClassMethods = function (classObject, methods) {
+  new KKN.Hash (methods).forEach (function (n, v) {
     if (!classObject[n]) {
       classObject[n] = v;
     }
   });
 }; // addClassMethods
 
-JSTE.Subclass = function (constructor, superclass, prototype) {
+KKN.Subclass = function (constructor, superclass, prototype) {
   constructor.prototype = new superclass;
   for (var n in prototype) {
     constructor.prototype[n] = prototype[n];
@@ -25,14 +25,14 @@ JSTE.Subclass = function (constructor, superclass, prototype) {
   return constructor;
 }; // Subclass
 
-JSTE.EventTarget = new JSTE.Subclass (function () {
+KKN.EventTarget = new KKN.Subclass (function () {
   
 }, function () {}, {
   addEventListener: function (eventType, handler, useCapture) {
     if (useCapture) return;
     if (!this.eventListeners) this.eventListeners = {};
     if (!this.eventListeners[eventType]) {
-      this.eventListeners[eventType] = new JSTE.List;
+      this.eventListeners[eventType] = new KKN.List;
     }
     this.eventListeners[eventType].push (handler);
   }, // addEventListener
@@ -58,7 +58,7 @@ JSTE.EventTarget = new JSTE.Subclass (function () {
   } // dispatchEvent
 }); // EventTarget
 
-JSTE.Event = new JSTE.Class (function (eventType, canBubble, cancelable) {
+KKN.Event = new KKN.Class (function (eventType, canBubble, cancelable) {
   this.type = eventType;
   this.bubbles = canBubble;
   this.cancelable = cancelable;
@@ -71,7 +71,7 @@ JSTE.Event = new JSTE.Class (function (eventType, canBubble, cancelable) {
   } // isDefaultPrevented
 });
 
-JSTE.Observer = new JSTE.Class (function (eventType, target, onevent) {
+KKN.Observer = new KKN.Class (function (eventType, target, onevent) {
   this.eventType = eventType;
   if (target.addEventListener) {
     this.target = target;
@@ -94,7 +94,7 @@ JSTE.Observer = new JSTE.Class (function (eventType, target, onevent) {
   } // stop
 }); // Observer
 
-JSTE.List = new JSTE.Class (function (arrayLike) {
+KKN.List = new KKN.Class (function (arrayLike) {
   this.list = arrayLike || [];
 }, {
   getLast: function () {
@@ -140,17 +140,17 @@ JSTE.List = new JSTE.Class (function (arrayLike) {
   getFirstMatch: function (code) {
     return this.forEach (function (item) {
       if (code (item)) {
-        return new JSTE.List.Return (item);
+        return new KKN.List.Return (item);
       }
     });
   }, // getFirstMatch
   
   switchByElementType: function () {
-    var cases = new JSTE.List (arguments);
+    var cases = new KKN.List (arguments);
     this.forEach (function (n) {
       cases.forEach (function (c) {
         if (c.namespaceURI == n.namespaceURI) {
-          return new JSTE.List.Return (c.execute (n));
+          return new KKN.List.Return (c.execute (n));
         }
       });
     });
@@ -187,27 +187,27 @@ JSTE.List = new JSTE.Class (function (arrayLike) {
   
 }); // List
 
-JSTE.List.Return = new JSTE.Class (function (rv) {
+KKN.List.Return = new KKN.Class (function (rv) {
   this.stop = true;
   this.returnValue = rv;
 }, {
   
 }); // Return
 
-JSTE.List.SpaceSeparated = function (v) {
-  return new JSTE.List ((v || '').split (JSTE.SpaceChars)).grep (function (v) {
+KKN.List.SpaceSeparated = function (v) {
+  return new KKN.List ((v || '').split (KKN.SpaceChars)).grep (function (v) {
     return v.length;
   });
 }; // SpaceSeparated
 
-JSTE.List.SwitchByLocalName = new JSTE.Class (function (ns, cases, ow) {
+KKN.List.SwitchByLocalName = new KKN.Class (function (ns, cases, ow) {
   this.namespaceURI = ns;
   this.cases = cases;
   this.otherwise = ow || function (n) { };
 }, {
   execute: function (n) {
     for (var ln in this.cases) {
-      if (JSTE.Element.matchLocalName (n, ln)) {
+      if (KKN.Element.matchLocalName (n, ln)) {
         return this.cases[ln] (n);
       }
     }
@@ -215,7 +215,7 @@ JSTE.List.SwitchByLocalName = new JSTE.Class (function (ns, cases, ow) {
   }
 });
 
-JSTE.Hash = new JSTE.Class (function (hash) {
+KKN.Hash = new KKN.Class (function (hash) {
   this.hash = hash || {};
 }, {
   forEach: function (code) {
@@ -240,9 +240,9 @@ JSTE.Hash = new JSTE.Class (function (hash) {
   } // setNamedItem
 });
 
-if (!JSTE.Node) JSTE.Node = {};
+if (!KKN.Node) KKN.Node = {};
 
-JSTE.Class.addClassMethods (JSTE.Node, {
+KKN.Class.addClassMethods (KKN.Node, {
   querySelector: function (node, selectors) {
     if (node.querySelector) {
       var el;
@@ -273,25 +273,25 @@ JSTE.Class.addClassMethods (JSTE.Node, {
       } catch (e) {
         nl = null;
       }
-      return new JSTE.List (nl);
+      return new KKN.List (nl);
     } else if (window.uu && uu.css) {
       if (selectors != "") {
         /* NOTE: uu.css return all elements for "" or ",xxx" */
-        return new JSTE.List (uu.css (selectors, node));
+        return new KKN.List (uu.css (selectors, node));
       } else {
-        return new JSTE.List;
+        return new KKN.List;
       }
     } else if (window.Ten && Ten.DOM && Ten.DOM.getElementsBySelector) {
-      return new JSTE.List (Ten.DOM.getElementsBySelector (selectors));
+      return new KKN.List (Ten.DOM.getElementsBySelector (selectors));
     } else {
-      return new JSTE.List;
+      return new KKN.List;
     }
   } // querySelectorAll
 });
 
-if (!JSTE.Element) JSTE.Element = {};
+if (!KKN.Element) KKN.Element = {};
 
-JSTE.Class.addClassMethods (JSTE.Element, {
+KKN.Class.addClassMethods (KKN.Element, {
   getLocalName: function (el) {
     var localName = el.localName;
     if (!localName) {
@@ -306,10 +306,10 @@ JSTE.Class.addClassMethods (JSTE.Element, {
   match: function (el, ns, ln) {
     if (el.nodeType !== 1) return false;
     if (el.namespaceURI !== ns) return false;
-    return JSTE.Element.matchLocalName (el, ln);
+    return KKN.Element.matchLocalName (el, ln);
   }, // match
   matchLocalName: function (el, ln) {
-    var localName = JSTE.Element.getLocalName (el);
+    var localName = KKN.Element.getLocalName (el);
     if (ln instanceof RegExp) {
       if (!localName.match (ln)) return false;
     } else {
@@ -319,13 +319,13 @@ JSTE.Class.addClassMethods (JSTE.Element, {
   }, // matchLocalName
   
   getChildElement: function (el, ns, ln) {
-    return new JSTE.List (el.childNodes).getFirstMatch (function (item) {
-      return JSTE.Element.match (item, ns, ln);
+    return new KKN.List (el.childNodes).getFirstMatch (function (item) {
+      return KKN.Element.match (item, ns, ln);
     });
   }, // getChildElement
   getChildElements: function (el, ns, ln) {
-    return new JSTE.List (el.childNodes).grep (function (item) {
-      return JSTE.Element.match (item, ns, ln);
+    return new KKN.List (el.childNodes).grep (function (item) {
+      return KKN.Element.match (item, ns, ln);
     });
   }, // getChildElements
   
@@ -335,13 +335,13 @@ JSTE.Class.addClassMethods (JSTE.Element, {
   
   createTemplate: function (doc, node) {
     var df = doc.createDocumentFragment ();
-    new JSTE.List (node.childNodes).forEach (function (n) {
+    new KKN.List (node.childNodes).forEach (function (n) {
       if (n.nodeType == 1) {
-        var c = doc.createElement (JSTE.Element.getLocalName (n));
-        new JSTE.List (c.attributes).forEach (function (n) {
+        var c = doc.createElement (KKN.Element.getLocalName (n));
+        new KKN.List (c.attributes).forEach (function (n) {
           c.setAttribute (n.name, n.value);
         });
-        c.appendChild (JSTE.Element.createTemplate (doc, n));
+        c.appendChild (KKN.Element.createTemplate (doc, n));
         df.appendChild (c);
       } else if (n.nodeType == 3 || n.nodeType == 4) {
         df.appendChild (doc.createTextNode (n.data));
@@ -359,13 +359,13 @@ JSTE.Class.addClassMethods (JSTE.Element, {
   }, // hasAttribute
   
   getClassNames: function (el) {
-    return new JSTE.List (el.className.split (JSTE.SpaceChars));
+    return new KKN.List (el.className.split (KKN.SpaceChars));
   }, // getClassNames
   addClassName: function (el, newClassName) {
     el.className = el.className + ' ' + newClassName;
   }, // deleteClassName
   deleteClassName: function (el, oldClassName) {
-    var classNames = el.className.split (JSTE.SpaceChars);
+    var classNames = el.className.split (KKN.SpaceChars);
     var newClasses = [];
     for (var n in classNames) {
       if (classNames[n] != oldClassName) {
@@ -375,7 +375,7 @@ JSTE.Class.addClassMethods (JSTE.Element, {
     el.className = newClasses.join (' ');
   }, // deleteClassName
   replaceClassName: function (el, oldClassName, newClassName) {
-    var classNames = el.className.split (JSTE.SpaceChars);
+    var classNames = el.className.split (KKN.SpaceChars);
     var newClasses = [newClassName];
     for (var n in classNames) {
       if (classNames[n] != oldClassName) {
@@ -386,7 +386,7 @@ JSTE.Class.addClassMethods (JSTE.Element, {
   }, // replaceClassName
   
   getIds: function (el) {
-    return new JSTE.List (el.id != "" ? [el.id] : []);
+    return new KKN.List (el.id != "" ? [el.id] : []);
   } // getIds
   
-}); // JSTE.Element
+}); // KKN.Element
