@@ -1,0 +1,216 @@
+<!DOCTYPE HTML>
+<html lang=en class=account-user-misc>
+<meta charset=utf-8>
+<title>新しい利用者アカウントの作成</title>
+<link rel=stylesheet href="/admin/style/common">
+<h1>新しい利用者アカウントの作成</h1>
+
+<form action=new-user accept-charset=utf-8 method=post>
+
+<p><strong>利用者識別子</strong>: <input type=text name=user-id
+maxlength=20 size=10 required pattern="[0-9a-z-]{4,20}"> (文字「a」〜「z」、「0」〜「9」、「-」を使って 4〜10 文字の文字列を指定してください。)<p><strong>合言葉</strong>: <input type=password name=user-pass
+size=10 required pattern=".{4,}"> (最低4文字入力してください。)<p><strong>合言葉</strong> (もう一度): <input type=password
+name=user-pass2 size=10 required pattern=".{4,}">
+
+<p><input type=submit value="作成" class=create></form>
+
+<section>
+<!DOCTYPE HTML>
+<html lang=en class=account-user-info>
+<title>さん</title>
+<link rel=stylesheet href="/admin/style/common">
+<h1>さん</h1><section id=groups><h2>グループ</h2><section id="groups-joined"><h3>参加中のグループ</h3><ul><li><form action="group.admin-groups" accept-charset=utf-8 method=post><a href="../../groups/admin-groups/">admin-groups</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.admin-users" accept-charset=utf-8 method=post><a href="../../groups/admin-users/">admin-users</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.helo" accept-charset=utf-8 method=post><a href="../../groups/helo/">helo</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.helo-admin" accept-charset=utf-8 method=post><a href="../../groups/helo-admin/">helo-admin</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.schema-db" accept-charset=utf-8 method=post><a href="../../groups/schema-db/">schema-db</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.spec-ja" accept-charset=utf-8 method=post><a href="../../groups/spec-ja/">spec-ja</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.spec-ja-admin" accept-charset=utf-8 method=post><a href="../../groups/spec-ja-admin/">spec-ja-admin</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.suikawiki" accept-charset=utf-8 method=post><a href="../../groups/suikawiki/">suikawiki</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.test-results" accept-charset=utf-8 method=post><a href="../../groups/test-results/">test-results</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form></ul></section><section id="groups-requested"><h3>参加申請中 (未許可) のグループ</h3><ul><li><form action="" accept-charset=utf-8 method=post><a href="../../groups//"></a> <input type=hidden name=action value=leave><input type=submit value="申請取消"></form></ul></section></section><section id=props><h2>特性</h2><p><em>これらの特性は管理者のみが見ることができますが、秘密の情報は記述しないことをお勧めします。</em><form action="prop" accept-charset=utf-8 method=post><input type=hidden name=name value="full_name"><p><label><strong>名前</strong>: <input type="text" name="value" value=""></label> <input type=submit value="保存"></form><form action="prop" accept-charset=utf-8 method=post><input type=hidden name=name value="mail_addr"><p><label><strong>メイル・アドレス</strong>: <input type="email" name="value" value=""></label> <input type=submit value="保存"></form><form action="prop" accept-charset=utf-8 method=post><input type=hidden name=name value="home_url"><p><label><strong>Web サイト URL</strong>: <input type="url" name="value" value=""></label> <input type=submit value="保存"></form></section><section id=password><h2>合言葉</h2>
+
+<form action=password method=post accept-charset=utf-8>
+
+<p>合言葉を変更できます。<p><strong>新しい合言葉</strong>: <input type=password name=user-pass
+size=10 required pattern=".{4,}"> (最低4文字入力してください。) <p><strong>新しい合言葉</strong> (もう一度): <input type=password
+name=user-pass2 size=10 required pattern=".{4,}">
+
+<p><input type=submit value="変更">
+
+</form>
+</section>
+
+<section id=disable-account><h2>アカウントの無効化</h2>
+
+<form action=disabled method=post accept-charset=utf-8>
+
+<p><label><input type=checkbox name=action value=enable checked> このアカウントを有効にする</label>
+
+<p><strong>警告!</strong> 自分のアカウントを無効にすると、自分で再度有効にすることはできません。<p><input type=submit value="変更"></form></section></section>
+
+<style>
+
+.balloon {
+  display: block;
+  position: absolute;
+}
+.container {
+  display: block;
+  position: relative;
+  left: 49px;
+  top: -22px /* -(10px + 34px) / 2 */;
+  min-height: 54px /* 10px + 34px + 10px */;
+  width: 20em;
+  padding: 1em;
+  background-color: rgb(128, 255, 255);
+  color: black;
+  -moz-border-radius: 16px;
+  -webkit-border-radius: 16px;
+}
+.pointer {
+  display: block;
+  position: absolute;
+  left: -49px;
+  top: 10px;
+  width: 49px;
+  height: 34px;
+  background-image: url(test.png) /* 49x34 */;
+}
+
+.selected {
+  outline: 2px blue dotted !important;
+}
+</style>
+
+<script type="text/javascript" src="uupaa-detect.mini.js"></script>
+<script type="text/javascript" src="uupaa-selector.js"></script>
+<script type="text/javascript" src="uupaa-selector+.js"></script>
+
+<script id="uupaa.js" type="text/javascript" src="uupaa/uupaa.js"></script>
+
+<script src=tutorial.js></script>
+
+<script>
+
+window.onload = function () {
+  window.loaded = true;
+};
+
+function showElement (elements) {
+  if (!window.loaded) {
+    new JSTE.Observer ('load', window, function () {
+      showElement (elements);
+    });
+    return;
+  }
+
+  var top = Infinity;
+  var left = Infinity;
+  var topEl;
+  var leftEl;
+  elements.forEach (function (el) {
+    var rect = uu.element.rect (el);
+    alert([rect.y,el.offsetTop,el.offsetParent?el.offsetParent.nodeName:null,el.offsetParent?el.offsetParent.offsetTop:null]);
+    if (rect.y < top) {
+      top = rect.y;
+      topEl = el;
+    }
+    if (rect.x < left) {
+      left = rect.x;
+      leftEl = el;
+    }
+  });
+  
+  var rect = uu.viewport.rect ();
+  if (rect.sh <= top && top <= rect.sh + rect.h) {
+    top = rect.sh;
+  }
+  if (rect.sw <= left && left <= rect.sw + rect.w) {
+    left = rect.sw;
+  }
+  
+  if (leftEl || topEl) {
+  alert([top,left]);
+    var od = (leftEl || topEl).ownerDocument;
+    var point = od.createElement ('span');
+    point.style.display = 'block';
+    point.style.position = 'absolute';
+    point.style.top = top + 'px';
+    point.style.left = left + 'px';
+    point.style.width = 0;
+    point.style.height = 0;
+    od.documentElement.appendChild (point);
+    point.scrollIntoView (true);
+    point.parentNode.removeChild (point);
+  }
+}
+
+var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
+  this.element = document.createElement ('article');
+  this.element.className = 'balloon';
+  this.element.appendChild (messageContainer);
+  document.documentElement.appendChild (this.element);
+
+  if (refElement) {
+    var rect = uu.element.rect (refElement);
+    
+    var left = rect.x + rect.ow;
+    var top = rect.y + rect.oh / 2;
+    
+    this.element.style.top = top + 'px';
+    this.element.style.left = left + 'px';
+
+    this.refElement = refElement;
+    JSTE.Element.addClassName (refElement, 'selected');
+  }
+  
+  var self = this;
+  //setTimeout (function () {
+    showElement (new JSTE.List ([refElement]).onlyNonNull ());
+  //}, 2000);
+}, {
+  remove: function () {
+    if (this.refElement) {
+      JSTE.Element.deleteClassName (this.refElement, 'selected');
+    }
+  } // remove
+});
+
+var MyMessage = new JSTE.Subclass (function () {
+  return this._super.apply (this, arguments);
+}, JSTE.Message, {
+  _render: function (msgContainer, buttonContainer) {
+    var doc = this._targetDocument;
+    
+    var container = doc.createElement ('section');
+    container.className = 'container';
+    var style = doc.createElement ('style');
+    style.textContent = this.select + ' { outline: red 2px solid }';
+    container.appendChild (style);
+    
+    container.appendChild (msgContainer);
+    container.appendChild (buttonContainer);
+    
+    var refElement = JSTE.Node.querySelector (document, this.select);
+    
+    if (refElement) {
+      var pointer = doc.createElement ('span');
+      pointer.className = 'pointer';
+      container.appendChild (pointer);
+    }
+    
+    this._simpleBalloon = new SimpleBalloon (container, refElement);
+    
+    return this._simpleBalloon.element;
+  }, // _render
+  _remove: function () {
+    this._simpleBalloon.remove ();
+  } // _remove
+});
+
+  var xhr = new XMLHttpRequest ();
+  xhr.open ('GET', 'test.xml', false);
+  xhr.send (null);
+
+
+document.a =
+JSTE.Course.createFromDocument (xhr.responseXML, document);
+
+document.b = 
+new JSTE.Tutorial (document, document.a, {messageClass: MyMessage});
+
+
+</script>
+
