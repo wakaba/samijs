@@ -318,6 +318,8 @@ NodeRect.getCumulativeOffsetRect = function (oel) {
     }
   }
 
+  rect = rect.getTLVector ();
+
   var offsetChain = [];
   while (el) {
     offsetChain.unshift (el);
@@ -327,11 +329,10 @@ NodeRect.getCumulativeOffsetRect = function (oel) {
   while (offsetChain.length) {
     var el = offsetChain.shift ();
 
-    var offset = NodeRect.Rect.tlwh
-        (el.offsetTop, el.offsetLeft, el.offsetWidth, el.offsetHeight);
+    var offset = new NodeRect.Rect.Vector (el.offsetLeft, el.offsetTop);
     offset.label = el.nodeName + '.offset';
 
-    rect = offset.addOffset (rect);
+    rect = offset.addVector (rect);
     rect.label = el.nodeName + ' cumulative offset';
     
     /* TODO: add border if necessary */
@@ -352,6 +353,12 @@ NodeRect.getCumulativeOffsetRect = function (oel) {
     rect = rect.addOffset (cssRects.margin);
     rect.label = oel.nodeName + ' adjusted offset';
   }
+
+  var offsetBox = NodeRect.Rect.wh (oel.offsetWidth, oel.offsetHeight);
+  offsetBox.label = oel.nodeName + ' offset box (width/height)';
+
+  rect = offsetBox.addVector (rect);
+  rect.label = oel.nodeName + ' cumulative offset box';
 
   return rect;
 }; // getCumulativeOffsetRect
