@@ -371,14 +371,19 @@ NodeRectViewer.Controller = function () {
   };
 
   var cb = ' style="color: green" ';
-  controller.element.innerHTML = '<form>\
+  controller.element.innerHTML = '<form><div \
+      style="width:98%;height:8em; overflow: auto;\
+      border: groove 2px gray;\
+      background-color:white;color:black;\
+      line-height: 1.1;\
+      white-space: pre;\
+      white-space: -moz-pre-wrap;\
+      white-space: pre-wrap"></div>\
 \
-  <textarea name=result style=width:95%;height:6em></textarea>\
-  <br>\
 \
   <input name=selector title="Target element selector" value=body \
-      onchange=update(form) onkeyup=update(form) \
-      style=width:14em>\
+      onkeypress=commandInputChanged(event) \
+      style=width:70%>\
   <input name=selectorIndex title="Target element index" value=0 \
       onchange=update(form) onkeyup=update(form) \
       style=width:3em>\
@@ -465,11 +470,22 @@ NodeRectViewer.Controller = function () {
   controller.setInitialPosition
       (icb.width - controller.width, icb.height - controller.height);
 
+  var form = controller.element.firstChild;
+  this.logElement = form.firstChild;
+  this.logElement.form = true; // dummy for isClickable
+
   var self = this;
-  controller.element.firstChild.update = function (form) {
+  form.update = function (form) {
     self.update (form);
   };
-  this.update (controller.element.firstChild);
+  form.commandInputChanged = function (event) {
+    if (event.keyCode == 13 || event.keyCode == 10) {
+      self.invokeCommand (this);
+      event.preventDefault ();
+      event.returnValue = false;
+    }
+  };
+  this.invokeCommand (form);
 }; // Controller
 
 NodeRectViewer.Controller.prototype.remove = function () {
@@ -479,8 +495,8 @@ NodeRectViewer.Controller.prototype.remove = function () {
 
 NodeRectViewer.Controller.prototype.update = function (form) {
   this.clearHighlight ();
-  form.result.value = '';
-  var el = uu.css (form.selector.value)[parseInt (form.selectorIndex.value) || 0];
+
+  var el = uu.css (this.selector)[parseInt (form.selectorIndex.value) || 0];
   if (el) {
     NodeRect.Rect.resetIndex ();
     var rect;
@@ -506,7 +522,7 @@ NodeRectViewer.Controller.prototype.update = function (form) {
       var rects = NodeRect.getElementRects (el);
       rect = rects[type];
     }
-    form.result.value = rect.toString ();
+    this.addOutputLog (rect.toString ());
     if (form.trace.checked) {
       this.showTrace (rect, position);
     } else {
@@ -516,6 +532,37 @@ NodeRectViewer.Controller.prototype.update = function (form) {
     this.box.setMaxZIndex ();
   }
 }; // update
+
+NodeRectViewer.Controller.prototype.invokeCommand = function (form) {
+  var command = form.selector.value;
+    this.addInputLog ('selector = ' + command);
+    this.selector = command;
+    this.update (form);
+  form.selector.value = '';
+}; // invokeCommand
+
+NodeRectViewer.Controller.prototype.addInputLog = function (s) {
+  var doc = this.logElement.ownerDocument;
+  var entryEl = doc.createElement ('div');
+  entryEl.style.color = 'blue';
+  entryEl.appendChild (doc.createTextNode ('> ' + s));
+  entryEl.form = true; // dummy for isClickable
+  this.logElement.appendChild (entryEl);
+  this.logElement.scrollTop = this.logElement.scrollHeight;
+}; // addInputLog
+
+NodeRectViewer.Controller.prototype.addOutputLog = function (s) {
+  var doc = this.logElement.ownerDocument;
+  var entryEl = doc.createElement ('div');
+  var lines = s.split (/\r?\n/); // to avoid IE bug
+  for (var i = 0; i < lines.length; i++) {
+    entryEl.appendChild (doc.createTextNode (lines[i]));
+    entryEl.appendChild (doc.createElement ('br'));
+  }
+  entryEl.form = true; // dummy for isClickable
+  this.logElement.appendChild (entryEl);
+  this.logElement.scrollTop = this.logElement.scrollHeight;
+}; // addOutputLog
 
 NodeRectViewer.Controller.prototype.showTrace =
 function (rect, position, refBox) {
