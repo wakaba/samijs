@@ -524,17 +524,17 @@ NodeRectViewer.Controller.prototype.setHighlight = function (rect, coords) {
   var marker = new NodeRectViewer.Box (rect, coords);
 
   document.body.appendChild (marker.element);
-  if (!document.highlightElements) document.highlightElements = [];
-  document.highlightElements.push (marker.element);
+  if (!this.highlightElements) this.highlightElements = [];
+  this.highlightElements.push (marker.element);
 }; // setHighlight
 
 NodeRectViewer.Controller.prototype.clearHighlight = function () {
-  if (document.highlightElements) {
-    for (var i in document.highlightElements) {
-      var el = document.highlightElements[i];
+  if (this.highlightElements) {
+    for (var i in this.highlightElements) {
+      var el = this.highlightElements[i];
       if (el.parentNode) el.parentNode.removeChild (el);
     }
-    document.highlightElements = [];
+    this.highlightElements = [];
   }
 }; // clearHighlight
 

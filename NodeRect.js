@@ -3,7 +3,7 @@
 if (!window.NodeRect) NodeRect = {};
 
 NodeRect.getPixelWH = function (el, w, h) {
-  var testEl = document.createElement ('div');
+  var testEl = el.ownerDocument.createElement ('div');
   testEl.style.display = 'block';
   testEl.style.position = 'absolute';
   testEl.style.margin = 0;
