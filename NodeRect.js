@@ -628,13 +628,12 @@ NodeRect.getScreenRects = function (win) {
  
   /* top & left not supported by Opera, WinIE, WebKit */
   rects.device
-      = NodeRect.Rect.trbl (s.top || 0, null, null, s.left || 0, s.width, s.height);
+      = NodeRect.Rect.tlwh (s.top || 0, s.left || 0, s.width, s.height);
   rects.device.label = 'screen device';
 
   /* top & left not supported by Opera, WinIE */
-  rects.avail = NodeRect.Rect.trbl
-      (s.availTop || 0, null, null, s.availLeft || 0,
-       s.availWidth, s.availHeight);
+  rects.avail = NodeRect.Rect.tlwh
+      (s.availTop || 0, s.availLeft || 0, s.availWidth, s.availHeight);
   rects.avail.label = 'screen.avail';
 
   return rects;

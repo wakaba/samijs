@@ -80,18 +80,21 @@ function showTrace (rect, position) {
 } // showTrace
 
 NodeRectViewer.Box = function (rect, coords /* viewport or canvas */) {
-  var left = rect.getRenderedLeft ();
-  var top = rect.getRenderedTop ();
+  var self = this;
+
+  this.initialLeft = rect.getRenderedLeft ();
+  this.initialTop = rect.getRenderedTop ();
+  this.width = rect.width;
+  this.height = rect.height;
 
   var marker = document.createElement ('div');
   this.element = marker;
 
   setCSSPosition (marker.style, coords == 'viewport' ? 'fixed' : 'absolute');
   marker.style.zIndex = '99999';
-  marker.nrOriginalLeft = left;
-  marker.nrOriginalTop = top;
-  if (!isNaN (top)) marker.style.top = top + 'px';
-  if (!isNaN (left)) marker.style.left = left + 'px';
+  
+  this.setPosition (this.initialLeft, this.initialTop);
+
   var bw = 1;
   var diff = 0;
   if (document.all && document.compatMode == 'CSS1Compat') diff = bw * 2;
@@ -138,39 +141,55 @@ NodeRectViewer.Box = function (rect, coords /* viewport or canvas */) {
     document.nrDragging = true;
     event = event || window.event;
     this.style.cursor = 'move';
-    this.nrInitialX = parseFloat (this.style.left.slice (0, -2));
-    this.nrInitialY = parseFloat (this.style.top.slice (0, -2));
-    this.nrX = event.clientX;
-    this.nrY = event.clientY;
+    self.dragStartLeft = self.left;
+    self.dragStartTop = self.top;
+    self.dragStartX = event.clientX;
+    self.dragStartY = event.clientY;
   };
   marker.onmousemove = function (event) {
     if (this.style.cursor != 'move') return;
     event = event || window.event;
-    var diffX = event.clientX - this.nrX; 
-    var diffY = event.clientY - this.nrY;
-    this.style.left = (this.nrInitialX + diffX) + 'px';
-    this.style.top = (this.nrInitialY + diffY) + 'px';
+    var diffX = event.clientX - self.dragStartX; 
+    var diffY = event.clientY - self.dragStartY;
+    self.setPosition (self.dragStartLeft + diffX, self.dragStartTop + diffY);
   };
   marker.onmouseup = function (event) {
     document.nrDragging = false;
     this.style.cursor = 'default';
   };
   marker.ondblclick = function () {
-    this.style.top = this.nrOriginalTop + 'px';
-    this.style.left = this.nrOriginalLeft + 'px';
+    self.setPosition (self.initialLeft, self.initialTop);
   };
 
   var label = rect.getFullLabel ? rect.getFullLabel () : '';
-  marker.title = "*" + label + "* \n" + rect.toString ();
-
-  var text = marker.appendChild (document.createElement ('div'));
-  text.style.position = 'absolute';
-  if (!isNaN (rect.width)) text.style.left = (rect.width / 2) + 'px';
-  if (!isNaN (rect.height)) text.style.top = (rect.height / 2) + 'px';
-  text.style.fontSize = '20px';
-  text.appendChild (document.createTextNode (label));
-
+  this.setDescription (label, rect.toString ());
 }; // Box
+
+NodeRectViewer.Box.prototype.setPosition = function (left, top) {
+  if (!isNaN (top + 0)) {
+    this.element.style.top = top + 'px';
+    this.top = top;
+  }
+  if (!isNaN (left + 0)) {
+    this.element.style.left = left + 'px';
+    this.left = left;
+  }
+}; // setPosition
+
+NodeRectViewer.Box.prototype.setDescription = function (label, desc) {
+  this.element.innerHTML = '';
+
+  this.element.title = "*" + label + "* \n" + desc;
+
+  var textEl = this.element.ownerDocument.createElement ('div');
+  textEl.style.position = 'absolute';
+  if (!isNaN (this.width)) textEl.style.left = (this.width / 2) + 'px';
+  if (!isNaN (this.height)) textEl.style.top = (this.height / 2) + 'px';
+  textEl.style.fontSize = '20px';
+  textEl.appendChild (textEl.ownerDocument.createTextNode (label));
+
+  this.element.appendChild (textEl);
+}; // setDescription
 
 function setHighlight (rect, coords) {
   var marker = new NodeRectViewer.Box (rect, coords);
