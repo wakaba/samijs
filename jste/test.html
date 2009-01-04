@@ -102,7 +102,6 @@ function showElement (elements) {
   var leftEl;
   elements.forEach (function (el) {
     var rect = uu.element.rect (el);
-    alert([rect.y,el.offsetTop,el.offsetParent?el.offsetParent.nodeName:null,el.offsetParent?el.offsetParent.offsetTop:null]);
     if (rect.y < top) {
       top = rect.y;
       topEl = el;
@@ -122,7 +121,6 @@ function showElement (elements) {
   }
   
   if (leftEl || topEl) {
-  alert([top,left]);
     var od = (leftEl || topEl).ownerDocument;
     var point = od.createElement ('span');
     point.style.display = 'block';
