@@ -122,19 +122,18 @@ NodeRectViewer.Box = function (rect, coords /* viewport or canvas */) {
     marker.style[rect.upward ? 'borderTopStyle' : 'borderBottomStyle']
         = 'dotted';
   }
-  var colors = ['#FFFFCC', '#FFCCCC', '#CC99FF', '#99CCFF'];
-  marker.style.backgroundColor = colors[rect.index % colors.length];
-  marker.style.opacity = 0.3;
-  marker.style.filter = 'alpha(opacity=30)';
+
+  this.setColor (rect.index);
+  this.setOpacity (0.3);
+  this.setLabelColor ('black', 'transparent');
+
   marker.onmouseover = function () {
-    this.style.opacity = 0.7;
-    this.style.filter = 'alpha(opacity=70)';
-    this.firstChild.style.backgroundColor = 'white';
+    self.setOpacity (0.7);
+    self.setLabelColor ('black', 'white');
   };
   marker.onmouseout = function () {
-    this.style.opacity = 0.3;
-    this.style.filter = 'alpha(opacity=30)';
-    this.firstChild.style.backgroundColor = 'transparent';
+    self.setOpacity (0.3);
+    self.setLabelColor ('black', 'transparent');
   };
   marker.onmousedown = function (event) {
     self.setMaxZIndex ();
@@ -164,6 +163,25 @@ NodeRectViewer.Box.prototype.setPosition = function (left, top) {
     this.left = left;
   }
 }; // setPosition
+
+NodeRectViewer.Box.colors = ['#FFFFCC', '#FFCCCC', '#CC99FF', '#99CCFF'];
+
+NodeRectViewer.Box.prototype.setColor = function (index) {
+  var colors = NodeRectViewer.Box.colors;
+  this.element.style.backgroundColor = colors[index % colors.length];
+}; // setColor
+
+NodeRectViewer.Box.prototype.setOpacity = function (opacity) {
+  this.element.style.opacity = opacity;
+  this.element.style.filter = 'alpha(opacity=' + (opacity * 100) + ')';
+}; // setOpacity
+
+NodeRectViewer.Box.prototype.setLabelColor = function (fg, bg) {
+  var textEl = this.element.firstChild;
+  if (!textEl) return;
+  textEl.style.color = fg;
+  textEl.style.backgroundColor = bg;
+}; // setLabelColor
 
 NodeRectViewer.Box.prototype.setDescription = function (label, desc) {
   this.element.innerHTML = '';
