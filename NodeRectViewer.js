@@ -350,6 +350,8 @@ NodeRectViewer.Box.prototype.remove = function () {
 
 
 NodeRectViewer.Controller = function () {
+  var self = this;
+
   var vpRects = NodeRect.getViewportRects ();
   var icb = vpRects.icb;
 
@@ -364,7 +366,7 @@ NodeRectViewer.Controller = function () {
   controller.element.style.backgroundColor = '#FFCCFF';
   controller.element.style.whiteSpace = 'nowrap';
   controller.isClickable = function (target) {
-    return target.form;
+    return target !== self.box.element && target !== self.formElement;
   };
   controller.setOpacity = function () {
     this.constructor.prototype.setOpacity.apply (this, [1.0]);
@@ -372,7 +374,7 @@ NodeRectViewer.Controller = function () {
   controller.setOpacity (1.0);
 
   var cb = ' style="color: green" ';
-  controller.element.innerHTML = '<form><div \
+  controller.element.innerHTML = '<form onsubmit="return false"><div \
       style="width:98%;height:8em; overflow: auto;\
       border: groove 2px gray;\
       background-color:white;color:black;\
@@ -463,12 +465,6 @@ NodeRectViewer.Controller = function () {
   controller.element.style.height = 'auto';
   document.body.appendChild (controller.element);
 
-  this.selector = 'body';
-  this.selectorIndex = 0;
-  this.boxType = 'borderEdge';
-  this.boxCoord = 'canvas';
-  this.showChain = false;
-
   controller.setDimension
       (controller.element.offsetWidth, controller.element.offsetHeight);
   controller.setInitialPosition
@@ -477,9 +473,7 @@ NodeRectViewer.Controller = function () {
   this.formElement = controller.element.firstChild;
 
   this.logElement = this.formElement.firstChild;
-  this.logElement.form = true; // dummy for isClickable
 
-  var self = this;
   this.formElement.update = function (form) {
     self.updateProps (form);
     self.update ();
@@ -493,6 +487,13 @@ NodeRectViewer.Controller = function () {
     }
   };
 
+
+  this.selectorIndex = 0;
+  this.boxType = 'borderEdge';
+  this.boxCoord = 'canvas';
+  this.showChain = false;
+  this.selector = 'body';
+  this.addInputLog ('selector = body');
   this.updateForm ();
   this.update ();
 
@@ -582,6 +583,8 @@ NodeRectViewer.Controller.prototype.invokeCommand = function (commandStr) {
   if (m = commandStr.match (/^\s*(\S+)\s*=\s*(\S+)\s*$/)) {
     command.type = m[1];
     command.arg = m[2];
+  } else if (commandStr.match (/^\s*clear\s*$/)) {
+    command.type = 'clear';
   } else {
     command.type = 'selector';
     command.arg = commandStr;
@@ -605,7 +608,10 @@ NodeRectViewer.Controller.prototype.invokeCommand = function (commandStr) {
     this.update (this.formElement);
   } else if (command.type === 'selector') {
     this.selector = command.arg;
+    this.addInputLog (command.type + ' = ' + this[command.type]);
     this.update (this.formElement);
+  } else if (command.type === 'clear') {
+    this.logElement.innerHTML = '';
   } else {
     this.addOutputLog (command.type + ': Command not found');
   }
@@ -616,7 +622,6 @@ NodeRectViewer.Controller.prototype.addInputLog = function (s) {
   var entryEl = doc.createElement ('div');
   entryEl.style.color = 'blue';
   entryEl.appendChild (doc.createTextNode ('> ' + s));
-  entryEl.form = true; // dummy for isClickable
   this.logElement.appendChild (entryEl);
   this.logElement.scrollTop = this.logElement.scrollHeight;
 }; // addInputLog
@@ -629,7 +634,6 @@ NodeRectViewer.Controller.prototype.addOutputLog = function (s) {
     entryEl.appendChild (doc.createTextNode (lines[i]));
     entryEl.appendChild (doc.createElement ('br'));
   }
-  entryEl.form = true; // dummy for isClickable
   this.logElement.appendChild (entryEl);
   this.logElement.scrollTop = this.logElement.scrollHeight;
 }; // addOutputLog
