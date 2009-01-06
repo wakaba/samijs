@@ -482,7 +482,7 @@ NodeRectViewer.Controller = function () {
     if (event.keyCode == 13 || event.keyCode == 10) {
       self.invokeCommand (self.formElement.selector.value);
       self.formElement.selector.value = '';
-      event.preventDefault ();
+      if (event.preventDefault) event.preventDefault ();
       event.returnValue = false;
     }
   };
