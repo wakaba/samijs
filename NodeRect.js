@@ -9,13 +9,23 @@ NodeRect.getPixelWH = function (el, w, h) {
   testEl.style.margin = 0;
   testEl.style.borderWidth = 0;
   testEl.style.padding = 0;
+  var icw = testEl.clientWidth;
+  var ich = testEl.clientHeight;
+  var ws = 1;
+  w = (w + '').replace (/^-/, function () { ws = -1; return '' });
+  if (w == 'auto') w = 0;
+  var hs = 1;
+  h = (h + '').replace (/^-/, function () { hs = -1; return '' });
+  if (h == 'auto') h = 0;
   try {
     testEl.style.width = w;
     testEl.style.height = h;
   } catch (e) {
   }
   el.appendChild (testEl);
-  var px = {width: testEl.clientWidth, height: testEl.clientHeight};
+  var px = {width: testEl.clientWidth - icw, height: testEl.clientHeight - ich};
+  px.width *= ws;
+  px.height *= hs;
   el.removeChild (testEl);
   return px;
 }; // getPixelWH
@@ -61,31 +71,10 @@ NodeRect.Rect.trbl = function (t, r, b, l) {
   return o;
 }; // trbl
 
-var parseLength = function (s) {
-  /* TODO: parse any <length> supported by IE */
-  var m;
-  if (s == 'thin') {
-    return 4;
-  } else if (s == 'medium') {
-    return 8;
-  } else if (s == 'thick') {
-    return 16;
-  } else if (s == 'auto') {
-    return 0; /* Hard to compute, give up! */
-  } else if (m = s.match (/^(-?[0-9.]+)([A-Za-z%]+)$/)) {
-    if (m[2] == 'px') {
-      return parseFloat (m[1]);
-    } else {
-      return null;
-    }
-  } else {
-    return null;
-  }
-}; // parseLength
-
-NodeRect.Rect.trblIE = function (t, r, b, l) {
-  return NodeRect.Rect.trbl
-      (parseLength (t), parseLength (r), parseLength (b), parseLength (l));
+NodeRect.Rect.trblIE = function (el, t, r, b, l) {
+  var lt = NodeRect.getPixelWH (el, l, t);
+  var rb = NodeRect.getPixelWH (el, r, b);
+  return NodeRect.Rect.trbl (lt.height, rb.width, rb.height, lt.width);
 }; // trblIE
 
 NodeRect.Rect.tlwh = function (t, l, w, h) {
@@ -298,7 +287,7 @@ NodeRect.getCumulativeOffsetRect = function (oel) {
       var rects = NodeRect.getBoxAreaRects (docEl);
 
       if (docEl == oel) {
-        /* If viewport is not the root element, this should not be added. */
+        /* BUG: If viewport is not the root element, this should not be added. */
         rect = rects.padding;
       } else if (bodyEl == oel) {
         rect = rects.padding.addOffset (rects.border.addOffset (rects.margin));
@@ -402,12 +391,17 @@ NodeRect.getBoxAreaRects = function (el) {
   } else if (el.currentStyle) {
     var cs = el.currentStyle;
     rects.margin = NodeRect.Rect.trblIE
-        (cs.marginTop, cs.marginRight, cs.marginBottom, cs.marginLeft);
+        (el, cs.marginTop, cs.marginRight, cs.marginBottom, cs.marginLeft);
+    var bs = [cs.borderTopStyle, cs.borderRightStyle,
+              cs.borderBottomStyle, cs.borderLeftStyle];
     rects.border = NodeRect.Rect.trblIE
-        (cs.borderTopWidth, cs.borderRightWidth,
-         cs.borderBottomWidth, cs.borderLeftWidth);
+        (el,
+         bs[0] == 'none' ? 0 : cs.borderTopWidth,
+         bs[1] == 'none' ? 0 : cs.borderRightWidth,
+         bs[2] == 'none' ? 0 : cs.borderBottomWidth,
+         bs[3] == 'none' ? 0 : cs.borderLeftWidth);
     rects.padding = NodeRect.Rect.trblIE
-        (cs.paddingTop, cs.paddingRight, cs.paddingBottom, cs.paddingLeft);
+        (el, cs.paddingTop, cs.paddingRight, cs.paddingBottom, cs.paddingLeft);
   } else {
     rects.margin = NodeRect.Rect.nosupport ();
     rects.border = NodeRect.Rect.nosupport ();
