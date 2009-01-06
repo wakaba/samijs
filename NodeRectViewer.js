@@ -369,6 +369,7 @@ NodeRectViewer.Controller = function () {
   controller.setOpacity = function () {
     this.constructor.prototype.setOpacity.apply (this, [1.0]);
   };
+  controller.setOpacity (1.0);
 
   var cb = ' style="color: green" ';
   controller.element.innerHTML = '<form><div \
@@ -381,19 +382,16 @@ NodeRectViewer.Controller = function () {
       white-space: pre-wrap"></div>\
 \
 \
-  <input name=selector title="Target element selector" value=body \
+  <input name=selector title="Target element selector" \
       onkeypress=commandInputChanged(event) \
       style=width:70%>\
-  <input name=selectorIndex title="Target element index" value=0 \
-      onchange=update(form) onkeyup=update(form) \
-      style=width:3em>\
   <input type=checkbox name=trace title="Show box chain" onclick=update(form)>\
   <br>\
 \
   <button type=button onclick=update(form)>Update</button>\
   <select name=coords title="Layout box(es) with coordinate ..." \
       onchange=update(form)>\
-  <option selected value=canvas>Canvas\
+  <option value=canvas>Canvas\
   <option value=viewport>Viewport\
   </select>\
 \
@@ -410,7 +408,7 @@ NodeRectViewer.Controller = function () {
 \
   <optgroup label="Canvas coordinate">\
   <option value="marginEdge"' + cb + '>Margin edge</option>\
-  <option selected value="borderEdge"' + cb + '>Border edge</option>\
+  <option value="borderEdge"' + cb + '>Border edge</option>\
   <option value="cumulativeOffset">Cumulative offset</option>\
   <option value="paddingEdge">Padding edge</option>\
   <option value="cumulativeClient">Cumulative client</option>\
@@ -465,27 +463,40 @@ NodeRectViewer.Controller = function () {
   controller.element.style.height = 'auto';
   document.body.appendChild (controller.element);
 
+  this.selector = 'body';
+  this.selectorIndex = 0;
+  this.boxType = 'borderEdge';
+  this.boxCoord = 'canvas';
+  this.showChain = false;
+
   controller.setDimension
       (controller.element.offsetWidth, controller.element.offsetHeight);
   controller.setInitialPosition
       (icb.width - controller.width, icb.height - controller.height);
 
-  var form = controller.element.firstChild;
-  this.logElement = form.firstChild;
+  this.formElement = controller.element.firstChild;
+
+  this.logElement = this.formElement.firstChild;
   this.logElement.form = true; // dummy for isClickable
 
   var self = this;
-  form.update = function (form) {
-    self.update (form);
+  this.formElement.update = function (form) {
+    self.updateProps (form);
+    self.update ();
   };
-  form.commandInputChanged = function (event) {
+  this.formElement.commandInputChanged = function (event) {
     if (event.keyCode == 13 || event.keyCode == 10) {
-      self.invokeCommand (this);
+      self.invokeCommand (self.formElement.selector.value);
+      self.formElement.selector.value = '';
       event.preventDefault ();
       event.returnValue = false;
     }
   };
-  this.invokeCommand (form);
+
+  this.updateForm ();
+  this.update ();
+
+  this.formElement.selector.focus ();
 }; // Controller
 
 NodeRectViewer.Controller.prototype.remove = function () {
@@ -493,22 +504,48 @@ NodeRectViewer.Controller.prototype.remove = function () {
   this.box.remove ();
 }; // remove
 
-NodeRectViewer.Controller.prototype.update = function (form) {
+NodeRectViewer.Controller.prototype.updateForm = function () {
+  var form = this.formElement;
+  form.prop.value = this.boxType;
+  form.coords.value = this.boxCoord;
+  form.trace.checked = this.showChain;
+}; // updateForm
+
+NodeRectViewer.Controller.prototype.updateProps = function (form) {
+  var newBoxType = form.prop.value;
+  if (newBoxType != this.boxType) {
+    this.boxType = newBoxType;
+    this.addInputLog ("boxType = " + newBoxType);
+  }
+
+  var newShowChain = form.trace.checked;
+  if (this.showChain != newShowChain) {
+    this.showChain = newShowChain;
+    this.addInputLog ('showChain = ' + newShowChain);
+  }
+
+  var newBoxCoord = form.coords.value;
+  if (newBoxCoord != this.boxCoord) {
+    this.boxCoord = newBoxCoord;
+    this.addInputLog ('boxCoord = ' + newBoxCoord);
+  }
+}; // updateProps
+
+NodeRectViewer.Controller.prototype.update = function () {
   this.clearHighlight ();
 
-  var el = uu.css (this.selector)[parseInt (form.selectorIndex.value) || 0];
+  var el = uu.css (this.selector)[this.selectorIndex];
   if (el) {
     NodeRect.Rect.resetIndex ();
     var rect;
-    var position = form.coords.value;
-    var type = form.prop.value;
-    var rectClass = form.trace.checked ? NodeRect.Rect.Trace : null;
+    var position = this.boxCoord;
+    var type = this.boxType;
     if (type == '') {
       return;
     } else if (type == 'cumulativeOffset') {
-      rect = NodeRect.getCumulativeOffsetRect (el, rectClass);
+      rect = NodeRect.getCumulativeOffsetRect (el);
     } else if (type == 'cumulativeClient') {
-      rect = NodeRect.getCumulativeClientRect (el, rectClass);
+      rect = NodeRect.getCumulativeClientRect (el);
     } else if (type.substring (0, 3) === 'vp.') {
       var rects = NodeRect.getViewportRects (window);
       rect = rects[type.substring (3)];
@@ -522,8 +559,14 @@ NodeRectViewer.Controller.prototype.update = function (form) {
       var rects = NodeRect.getElementRects (el);
       rect = rects[type];
     }
+
+    if (!rect) {
+      rect = NodeRect.Rect.nosupport ();
+    }
+
     this.addOutputLog (rect.toString ());
-    if (form.trace.checked) {
+
+    if (this.showChain) {
       this.showTrace (rect, position);
     } else {
       this.setHighlight (rect, position);
@@ -533,12 +576,39 @@ NodeRectViewer.Controller.prototype.update = function (form) {
   }
 }; // update
 
-NodeRectViewer.Controller.prototype.invokeCommand = function (form) {
-  var command = form.selector.value;
-    this.addInputLog ('selector = ' + command);
-    this.selector = command;
-    this.update (form);
-  form.selector.value = '';
+NodeRectViewer.Controller.prototype.invokeCommand = function (commandStr) {
+  var command = {};
+  var m;
+  if (m = commandStr.match (/^\s*(\S+)\s*=\s*(\S+)\s*$/)) {
+    command.type = m[1];
+    command.arg = m[2];
+  } else {
+    command.type = 'selector';
+    command.arg = commandStr;
+  }
+
+  if (command.type === 'boxType' ||
+      command.type === 'boxCoord') {
+    this[command.type] = command.arg;
+    this.addInputLog (command.type + ' = ' + this[command.type]);
+    this.updateForm ();
+    this.update (this.formElement);
+  } else if (command.type === 'selectorIndex') {
+    this[command.type] = parseInt (command.arg) || 0;
+    this.addInputLog (command.type + ' = ' + this[command.type]);
+    this.updateForm ();
+    this.update (this.formElement);
+  } else if (command.type === 'showChain') {
+    this[command.type] = command.arg && command.arg != "false" ? true : false;
+    this.addInputLog (command.type + ' = ' + this[command.type]);
+    this.updateForm ();
+    this.update (this.formElement);
+  } else if (command.type === 'selector') {
+    this.selector = command.arg;
+    this.update (this.formElement);
+  } else {
+    this.addOutputLog (command.type + ': Command not found');
+  }
 }; // invokeCommand
 
 NodeRectViewer.Controller.prototype.addInputLog = function (s) {
