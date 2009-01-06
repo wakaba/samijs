@@ -580,7 +580,7 @@ NodeRectViewer.Controller.prototype.update = function () {
 NodeRectViewer.Controller.prototype.invokeCommand = function (commandStr) {
   var command = {};
   var m;
-  if (m = commandStr.match (/^\s*(\S+)\s*=\s*(\S+)\s*$/)) {
+  if (m = commandStr.match (/^\s*([a-zA-Z0-9]+)\s*=\s*(\S+)\s*$/)) {
     command.type = m[1];
     command.arg = m[2];
   } else if (commandStr.match (/^\s*clear\s*$/)) {
@@ -650,6 +650,9 @@ function (rect, position, refBox) {
     var b1 = this.showTrace (rect.prev1, position);
     this.showTrace (rect.prev2, position, b1);
   } else if (rect.prevOp === 'sub-vector') {
+    var b1 = this.showTrace (rect.prev1, position);
+    this.showTrace (rect.prev2, position, b1);
+  } else if (rect.prevOp === 'and') {
     var b1 = this.showTrace (rect.prev1, position);
     this.showTrace (rect.prev2, position, b1);
   } else if (rect.prevOp === 'in-edge') {

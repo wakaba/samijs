@@ -158,6 +158,19 @@ NodeRect.Rect.prototype.addBandOutside = function (r) {
   return o;
 }; // addBandOutside
 
+NodeRect.Rect.prototype.and = function (band) {
+  var o = new this.constructor
+      (band.top != 0 ? this.top : 0,
+       band.right != 0 ? this.right : 0,
+       band.bottom != 0 ? this.bottom : 0,
+       band.left != 0 ? this.left : 0);
+  o.prev1 = this;
+  o.prev2 = band;
+  o.prevOp = 'and';
+  o.supported = this.supported && band.supported;
+  return o;
+}; // and
+
 NodeRect.Rect.prototype.getTLVector = function () {
   var o = new NodeRect.Rect.Vector (this.left, this.top);
   o.prevOp = 'topleft';
@@ -283,6 +296,10 @@ NodeRect.getCumulativeOffsetRect = function (oel) {
     var docEl = el.ownerDocument.documentElement;
     var bodyEl = el.ownerDocument.body;
 
+    /* This correction does not always work when margin collapse
+       occurs - to take that effect into account, all children in the layout
+       structure have to be checked. */
+
     if (docEl) {
       var rects = NodeRect.getBoxAreaRects (docEl);
 
@@ -290,9 +307,15 @@ NodeRect.getCumulativeOffsetRect = function (oel) {
         /* BUG: If viewport is not the root element, this should not be added. */
         rect = rects.padding;
       } else if (bodyEl == oel) {
-        rect = rects.padding.addOffset (rects.border.addOffset (rects.margin));
+        rect = rects.border.addOffset (rects.margin);
+        rect.label = docEl.nodeName + ' margin + border';
+        rect = rects.padding.addOffset (rect);
+        rect.label = docEl.nodeName + ' margin + border + padding';
       } else {
         rect = rects.padding.addOffset (rects.border);
+        rect.label = docEl.nodeName + ' border + padding';
+        rect = rect.and (rects.border);
+        rect.label = docEl.nodeName + ' border ? border + padding : 0';
       }
     }
 
@@ -305,6 +328,9 @@ NodeRect.getCumulativeOffsetRect = function (oel) {
         rect = rect.addOffset (rects.border);
       }
     }
+
+    /* td:first-child's offsetTop might not be correct - no idea when this
+       occurs and how to fix this. */
   }
 
   rect = rect.getTLVector ();
