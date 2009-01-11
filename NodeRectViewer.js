@@ -22,15 +22,28 @@ NodeRectViewer.Box = function (rect, coords, refBox) {
   this.setInitialPosition (left, top);
   this.setMaxZIndex ();
 
-  if (rect instanceof NodeRect.Rect.Vector) {
-    this.setBorder (!rect.upward, !rect.leftward, rect.upward, rect.leftward);
+  if (rect instanceof NR.Vector) {
+    this.setBorder (rect.y < 0, rect.x < 0, rect.y >= 0, rect.x >= 0);
   } else {
     this.setBorder (true, true, true, true);
   }
 
-  this.setDimension (rect.width, rect.height);
+  this.setDimension (rect.getRenderedWidth (), rect.getRenderedHeight ());
 
-  if (rect instanceof NodeRect.Rect.Vector) {
+  this.sourceLeft = this.left;
+  this.sourceTop = this.top;
+  this.destLeft = this.left + this.width;
+  this.destTop = this.top + this.height;
+
+  if (rect instanceof NR.Vector) {
+    if (rect.x < 0) {
+      this.sourceLeft = this.left + this.width;
+      this.destLeft = this.left;
+    }
+    if (rect.y < 0) {
+      this.sourceTop = this.top + this.height;
+      this.destTop = this.top;
+    }
     this.addArrow (this.getSourceLeft (), this.getSourceTop (),
                    this.getDestinationLeft (), this.getDestinationTop ());
   }
@@ -91,19 +104,19 @@ NodeRectViewer.Box.prototype.setInitialPosition = function (left, top) {
 }; // setInitialPosition
 
 NodeRectViewer.Box.prototype.getSourceLeft = function () {
-  return this.left;
+  return this.sourceLeft;
 }; // getSourceLeft
 
 NodeRectViewer.Box.prototype.getSourceTop = function () {
-  return this.top;
+  return this.sourceTop;
 }; // getSourceTop
 
 NodeRectViewer.Box.prototype.getDestinationLeft = function () {
-  return this.left + this.width;
+  return this.destLeft;
 }; // getDestinationLeft
 
 NodeRectViewer.Box.prototype.getDestinationTop = function () {
-  return this.top + this.height;
+  return this.destTop;
 }; // getDestinationTop
 
 NodeRectViewer.Box.prototype.setPosition = function (left, top) {
@@ -427,13 +440,12 @@ NodeRectViewer.Box.prototype.addArrow = function (x1, y1, x2, y2) {
 NodeRectViewer.Controller = function () {
   var self = this;
 
-  var vpRects = NodeRect.getViewportRects ();
+  var vpRects = NR.View.getViewportRects (window);
   var icb = vpRects.icb;
 
-  var wh = NodeRect.Rect.whCSS (document.body, '20em', '11em');
+  var wh = NR.Rect.whCSS (document.body, '20em', '11em');
   var controllerRect
-      = new NodeRect.Rect
-          (0, icb.width, null, null, wh.width, wh.height);
+      = new NR.Rect (0, icb.width, null, null, wh.width, wh.height);
   controllerRect.label = 'NodeRect viewer';
 
   var controller = new NodeRectViewer.Box (controllerRect, 'viewport');
@@ -488,7 +500,6 @@ NodeRectViewer.Controller = function () {
   <option value="borderEdge"' + cb + '>Border edge</option>\
   <option value="cumulativeOffset">Cumulative offset</option>\
   <option value="paddingEdge">Padding edge</option>\
-  <option value="cumulativeClient">Cumulative client</option>\
   <option value=boxObject>getBoxObjectFor\
 \
   <optgroup label="Screen coordinate">\
@@ -612,32 +623,30 @@ NodeRectViewer.Controller.prototype.update = function () {
 
   var el = uu.css (this.selector)[this.selectorIndex];
   if (el) {
-    NodeRect.Rect.resetIndex ();
+    NR.resetIndex ();
     var rect;
     var position = this.boxCoord;
     var type = this.boxType;
     if (type == '') {
       return;
     } else if (type == 'cumulativeOffset') {
-      rect = NodeRect.getCumulativeOffsetRect (el);
-    } else if (type == 'cumulativeClient') {
-      rect = NodeRect.getCumulativeClientRect (el);
+      rect = NR.Element.getCumulativeOffsetRect (el, window);
     } else if (type.substring (0, 3) === 'vp.') {
-      var rects = NodeRect.getViewportRects (window);
+      var rects = NR.View.getViewportRects (window);
       rect = rects[type.substring (3)];
     } else if (type.substring (0, 4) === 'win.') {
-      var rects = NodeRect.getWindowRects (window);
+      var rects = NR.View.getWindowRects (window);
       rect = rects[type.substring (4)];
     } else if (type.substring (0, 7) === 'screen.') {
-      var rects = NodeRect.getScreenRects (window);
+      var rects = NR.View.getScreenRects (window);
       rect = rects[type.substring (7)];
     } else {
-      var rects = NodeRect.getElementRects (el);
+      var rects = NR.Element.getRects (el, window);
       rect = rects[type];
     }
 
     if (!rect) {
-      rect = NodeRect.Rect.nosupport ();
+      rect = NR.Rect.invalid;
     }
 
     this.addOutputLog (rect.toString ());
@@ -738,7 +747,7 @@ function (rect, position, refBox) {
     this.showTrace (rect.prev2, position, b1);
   } else if (rect.prevOp === 'topleft') {
     this.showTrace (rect.prev1, position);
-  } else if (rect.prevOp === 'topleft-negated') {
+  } else if (rect.prevOp === 'negate') {
     this.showTrace (rect.prev1, position);
   }
 
@@ -766,13 +775,13 @@ NodeRectViewer.Controller.prototype.clearHighlight = function () {
   }
 }; // clearHighlight
 
-function NodeRectOnLoad () {
+function NROnLoad () {
   if (NodeRectViewer.controller) {
     NodeRectViewer.controller.remove ();
   }
 
   NodeRectViewer.controller = new NodeRectViewer.Controller ();
-} // NodeRectOnLoad
+} // NROnLoad
 
 var s = document.createElement ('script');
 s.src = "http://uupaa-js.googlecode.com/svn/trunk/uupaa.js";
