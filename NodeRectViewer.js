@@ -6,6 +6,10 @@ NodeRectViewer.Box = function (rect, coords, refBox) {
   var marker = document.createElement ('div');
   this.element = marker;
 
+  marker.style.margin = 0;
+  marker.style.borderWidth = 0;
+  marker.style.padding = 0;
+
   var left = rect.getRenderedLeft ();
   var top = rect.getRenderedTop ();
 
@@ -25,6 +29,11 @@ NodeRectViewer.Box = function (rect, coords, refBox) {
   }
 
   this.setDimension (rect.width, rect.height);
+
+  if (rect instanceof NodeRect.Rect.Vector) {
+    this.addArrow (this.getSourceLeft (), this.getSourceTop (),
+                   this.getDestinationLeft (), this.getDestinationTop ());
+  }
 
   this.setColor (rect.index);
   this.setOpacity (0.3);
@@ -150,6 +159,8 @@ NodeRectViewer.Box.prototype.setBorder = function (t, r, b, l) {
     borderEl.style.position = 'absolute';
     borderEl.style.top = 0;
     borderEl.style.left = 0;
+    borderEl.style.margin = 0;
+    borderEl.style.padding = 0;
     borderEl.style.MozBoxSizing = 'border-box';
     borderEl.style.WebkitBoxSizing = 'border-box';
     borderEl.style.boxSizing = 'border-box';
@@ -346,6 +357,70 @@ NodeRectViewer.Box.prototype.isClickable = function (target) {
 NodeRectViewer.Box.prototype.remove = function () {
   this.element.parentNode.removeChild (this.element);
 }; // remove
+
+
+NodeRectViewer.Box.prototype._initCanvas = function () {
+  var canvas = this.element.ownerDocument.createElement ('canvas');
+  if (window.uuClass && uuClass.Canvas) {
+//    uuClass.Canvas (canvas);
+  }
+
+  canvas.width = this.width + 20;
+  canvas.height = this.height + 20;
+  canvas.style.display = 'block';
+  canvas.style.position = 'absolute';
+  canvas.style.top = 0;
+  canvas.style.left = 0;
+  canvas.style.zIndex = 10;
+  if (!canvas.getContext) {
+    this.canvas = {notSupported: true};
+    return;
+  }
+  var ctx = canvas.getContext ('2d');
+  this.canvas = ctx;
+  this.element.appendChild (canvas);
+}; // _initCanvas
+
+NodeRectViewer.Box.prototype.addArrow = function (x1, y1, x2, y2) {
+  if (!this.canvas) this._initCanvas ();
+  if (this.canvas.notSupported) return;
+  var ctx = this.canvas;
+
+  ctx.beginPath ();
+
+  ctx.moveTo (x1, y1);
+  ctx.lineTo (x2, y2);
+
+  var arrowHeadAngle = Math.PI / 12;
+  var arrowHeadLength = 40;
+
+  var t = Math.PI + Math.atan2 (y2 - y1, x2 - x1);
+
+  var ax = Math.cos (arrowHeadAngle);
+  var ay = Math.sin (arrowHeadAngle);
+
+  var ax_ = ax * Math.cos (t) - ay * Math.sin (t);
+  var ay_ = ax * Math.sin (t) + ay * Math.cos (t);
+
+  ax_ *= arrowHeadLength;
+  ay_ *= arrowHeadLength;
+
+  var bx = Math.cos (-arrowHeadAngle);
+  var by = Math.sin (-arrowHeadAngle);
+
+  var bx_ = bx * Math.cos (t) - by * Math.sin (t);
+  var by_ = bx * Math.sin (t) + by * Math.cos (t);
+
+  bx_ *= arrowHeadLength;
+  by_ *= arrowHeadLength;
+
+  ctx.lineTo (x2 + ax_, y2 + ay_);
+
+  ctx.moveTo (x2, y2);
+  ctx.lineTo (x2 + bx_, y2 + by_);
+
+  ctx.stroke ();
+}; // addArrow
 
 
 
@@ -702,6 +777,18 @@ function NodeRectOnLoad () {
 var s = document.createElement ('script');
 s.src = "http://uupaa-js.googlecode.com/svn/trunk/uupaa.js";
 document.body.appendChild (s);
+
+/*
+if (!window.uuClass) window.uuClass = {};
+
+var s = document.createElement ('script');
+s.src = "http://uupaa-js-spinoff.googlecode.com/svn/trunk/uupaa-color.js/uupaa-color.mini.js";
+document.body.appendChild (s);
+
+var s = document.createElement ('script');
+s.src = "http://uupaa-js-spinoff.googlecode.com/svn/trunk/uupaa-excanvas.js/uupaa-excanvas.js";
+document.body.appendChild (s);
+*/
 
 var s = document.createElement ('script');
 s.src = "http://suika.fam.cx/www/css/noderect/NodeRect.js?" + Math.random ();
