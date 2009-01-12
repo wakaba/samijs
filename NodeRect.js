@@ -58,6 +58,12 @@ NR.Rect.tlwh = function (t, l, w, h) {
   return new NR.Rect (t, null, null, l, w, h);
 }; // tlwh
 
+/* Box properties */
+
+NR.Rect.prototype.isZeroRect = function () {
+  return this.width == 0 && this.height == 0;
+}; // isZeroRect
+
 /* Box rendering properties */
 
 NR.Rect.prototype.getRenderedLeft = function () {
@@ -398,8 +404,6 @@ NR.Element.getPixelWH = function (el, w, h) {
   testEl.style.margin = 0;
   testEl.style.borderWidth = 0;
   testEl.style.padding = 0;
-  var icw = testEl.clientWidth;
-  var ich = testEl.clientHeight;
   var ws = 1;
   w = (w + '').replace (/^-/, function () { ws = -1; return '' });
   if (w == 'auto') w = 0;
@@ -407,10 +411,12 @@ NR.Element.getPixelWH = function (el, w, h) {
   h = (h + '').replace (/^-/, function () { hs = -1; return '' });
   if (h == 'auto') h = 0;
   try {
-    testEl.style.width = w;
-    testEl.style.height = h;
+    // TODO: border-width: medium and so on
+    testEl.style.left = w;
+    testEl.style.top = h;
   } catch (e) {
   }
+
   var parentEl = el;
   while (parentEl) {
     try {
@@ -420,9 +426,21 @@ NR.Element.getPixelWH = function (el, w, h) {
       parentEl = parentEl.parentNode || parentEl.ownerDocument.body;
     }
   }
-  var px = {width: testEl.clientWidth - icw, height: testEl.clientHeight - ich};
+  var px = {width: testEl.style.pixelLeft, height: testEl.style.pixelTop};
   px.width *= ws;
   px.height *= hs;
+
+  var iw = testEl.offsetWidth;
+  var ih = testEl.offsetHeight;
+  if (w == 'thin' || w == 'medium' || w == 'thick') {
+    testEl.style.borderLeft = 'solid black ' + w;
+    px.width += testEl.offsetWidth - iw;
+  }
+  if (h == 'thin' || h == 'medium' || h == 'thick') {
+    testEl.style.borderTop = h + ' solid black';
+    px.height += testEl.offsetHeight - ih;
+  }
+
   if (testEl.parentNode) testEl.parentNode.removeChild (testEl);
   return px;
 }; // getPixelWH
@@ -620,6 +638,17 @@ NR.Element.getRects = function (el, view) {
   rects.marginEdge = rects.borderEdge.add (rects.margin);
   rects.marginEdge.label = el.nodeName + ' margin edge';
 
+  rects.clientAbs = rects.client.add (rects.borderEdge.getTopLeft ());
+  rects.clientAbs.label = el.nodeName + '.client (canvas origin)';
+
+  if (rects.client.isZeroRect ()) {
+    // maybe inline or non-rendered element
+    rects.paddingEdge = rects.borderEdge.subtract (rects.border);
+    rects.paddingEdge.label = el.nodeName + ' border edge - border';
+  } else {
+    rects.paddingEdge = rects.clientAbs;
+  }
+
   return rects;
 }; // getRects
 
@@ -645,6 +674,30 @@ NR.Element.getRectsExtra = function (el) {
 /* --- NR.View --- */
 
 if (!NR.View) NR.View = {};
+
+NR.View.getBoundingClientRectOrigin = function (view, doc) {
+  var parentEl = doc.body || doc.documentElement;
+  var testEl = doc.createElement ('dov');
+
+  if (!testEl.getBoundingClientRect) return NR.Vector.invalid;
+
+  testEl.style.display = 'block';
+  testEl.style.position = 'absolute';
+  testEl.style.top = 0;
+  testEl.style.left = 0;
+  testEl.margin = 0;
+  testEl.borderWidth = 0;
+  testEl.padding = 0;
+  parentEl.appendChild (testEl);
+
+  var bc = testEl.getBoundingClientRect ();
+  var origin = new NR.Vector (-bc.left, -bc.top);
+  origin.label = 'Origin of getBoundingClientRect';
+
+  parentEl.removeChild (testEl);
+
+  return origin;
+}; // getBoundingRectOrigin
 
 NR.View.getViewportRects = function (view) {
   var doc = view.document;
@@ -703,9 +756,19 @@ NR.View.getViewportRects = function (view) {
        is no way to obtain ICB (content edge), AFAICT. */
 
     if (document.all) {
+      /*
+          This returns wrong value if the author does not specify the border
+          of the |body| element - default viewport border width is 2px, but
+          |document.body.currentStyle.borderWidth|'s default is |medium|, which
+          is interpreted as |4px| when it was specified by author.
+      
       var docElRects = NR.Element.getBoxAreas (bodyEl, view);
       rects.boundingClientOrigin = docElRects.border.getTopLeft ();
       rects.boundingClientOrigin.label = 'Viewport border offset';
+      */
+
+      rects.boundingClientOrigin
+          = NR.View.getBoundingClientRectOrigin (view, doc);
     }
   } else {
     if (document.all) {

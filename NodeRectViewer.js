@@ -500,6 +500,7 @@ NodeRectViewer.Controller = function () {
   <option value="borderEdge"' + cb + '>Border edge</option>\
   <option value="cumulativeOffset">Cumulative offset</option>\
   <option value="paddingEdge">Padding edge</option>\
+  <option value=clientAbs>Client (canvas coordinate)</option>\
   <option value=x.boxObject>getBoxObjectFor\
 \
   <optgroup label="Screen coordinate">\
@@ -523,7 +524,8 @@ NodeRectViewer.Controller = function () {
   <option value=vp.windowPageOffset>Page offset\
   <option value=vpx.windowScrollMax>Scroll maximum\
   <option value=vpx.windowInner>Window inner\
-  <option value=vp.boundingClientOrigin' + cb + '>Origin of getBoundingClientRect\
+  <option value=vp.boundingClientOrigin' + cb + '>Origin of getBoundingClientRect (calc)\
+  <option value=boundingClientOrigin>Origin of getBoundingClientRect (element)\
 \
   <option value=vpx.document>Document\
   <option value=vp.deOffset>documentElement.offset\
@@ -631,6 +633,8 @@ NodeRectViewer.Controller.prototype.update = function () {
       return;
     } else if (type == 'cumulativeOffset') {
       rect = NR.Element.getCumulativeOffsetRect (el, window);
+    } else if (type == 'boundingClientOrigin') {
+      rect = NR.View.getBoundingClientRectOrigin (window, document);
     } else if (type.substring (0, 3) === 'vp.') {
       var rects = NR.View.getViewportRects (window);
       rect = rects[type.substring (3)];
