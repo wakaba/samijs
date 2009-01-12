@@ -963,7 +963,7 @@ NR.View.getScreenRects = function (view) {
 
 if (!NR.Event) NR.Event = {};
 
-NR.Event.getRects = function (ev, view) {
+NR.Event.getRects = function (ev, view, vpRects /* optional */) {
   var rects = {};
 
   rects.client = new NR.Vector (ev.clientX, ev.clientY);
@@ -973,7 +973,7 @@ NR.Event.getRects = function (ev, view) {
   rects.offset = new NR.Vector (ev.offsetX, ev.offsetY);
   rects.offset.label = 'event.offset';
 
-  var vp = NR.View.getViewportRects (view);
+  var vp = vpRects || NR.View.getViewportRects (view);
 
   rects.viewport = rects.client.add (vp.canvasOrigin);
   rects.viewport.label = 'event (viewport origin)';
@@ -985,7 +985,7 @@ NR.Event.getRects = function (ev, view) {
   return rects;
 }; // getRects
 
-NR.Event.getRectsExtra = function (ev, view) {
+NR.Event.getRectsExtra = function (ev) {
   var rects = {};
 
   rects.screen = new NR.Vector (ev.screenX, ev.screenY);
