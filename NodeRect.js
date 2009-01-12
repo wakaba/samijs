@@ -959,6 +959,48 @@ NR.View.getScreenRects = function (view) {
   return rects;
 }; // getScreenRects
 
+/* --- NR.Event --- */
+
+if (!NR.Event) NR.Event = {};
+
+NR.Event.getRects = function (ev, view) {
+  var rects = {};
+
+  rects.screen = new NR.Vector (ev.screenX, ev.screenY);
+  rects.screen.label = 'event.screen';
+
+  /* Not supported by Gecko */
+  rects.wh = new NR.Vector (ev.width, ev.height);
+  rects.wh.label = 'event.width, event.height';
+
+  rects.page = new NR.Vector (ev.pageX, ev.pageY);
+  rects.page.label = 'event.page';
+
+  rects.layer = new NR.Vector (ev.layerX, ev.layerY);
+  rects.layer.label = 'event.layer';
+
+  rects.client = new NR.Vector (ev.clientX, ev.clientY);
+  rects.client.label = 'event.client';
+
+  /* Not supported by Gecko */
+  rects.xy = new NR.Vector (ev.x, ev.y);
+  rects.xy.label = 'event.x, event.y';
+
+  /* Not supported by Gecko */
+  rects.offset = new NR.Vector (ev.offsetX, ev.offsetY);
+  rects.offset.label = 'event.offset';
+
+  var vp = NR.View.getViewportRects (view);
+
+  rects.viewport = rects.client.add (vp.canvasOrigin);
+  rects.viewport.label = 'event (viewport origin)';
+
+  rects.canvas = rects.page.add (vp.canvasOrigin);
+  rects.canvas.label = 'event (canvas origin)';
+
+  return rects;
+}; // getRects
+
 
 
 if (self.NROnLoad) {

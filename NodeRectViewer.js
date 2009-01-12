@@ -486,6 +486,19 @@ NodeRectViewer.Controller = function () {
 \
   <select name=prop title="Show box(es) of ..." onchange=update(form)>\
 \
+  <optgroup label="Mouse event">\
+  <option value=ev.viewport>Viewport coordinate\
+  <option value=ev.canvas>Canvas coordinate\
+  <option value=ev.client>Client\
+  <option value=ev.xy>x, y\
+  <option value=ev.offset>Offset\
+  <option value=ev.layer>Layer\
+  <option value=ev.page>Page\
+  <option value=ev.wh>width, height\
+  <option value=ev.screen>Screen\
+\
+\ </optgroup><option value>---------\
+\
   <optgroup label="Element coordinate">\
   <option value=client title="client* attributes">client\
   <option value=scrollableArea title="scroll* attributes">scroll (width/height)\
@@ -574,7 +587,12 @@ NodeRectViewer.Controller = function () {
 
   this.formElement.update = function (form) {
     self.updateProps (form);
-    self.update ();
+    if (self.boxType.substring (0, 2) == 'ev') {
+      self.startCapture ();
+      self.addInputLog ('startCapture');
+    } else {
+      self.update ();
+    }
   };
   this.formElement.commandInputChanged = function (event) {
     if (event.keyCode == 13 || event.keyCode == 10) {
@@ -633,12 +651,13 @@ NodeRectViewer.Controller.prototype.updateProps = function (form) {
 NodeRectViewer.Controller.prototype.update = function () {
   this.clearHighlight ();
 
+  var type = this.boxType;
   var el = uu.css (this.selector)[this.selectorIndex];
-  if (el) {
+  if ((type.substring (0, 2) != 'ev' && el) ||
+      (type.substring (0, 2) == 'ev' && this.lastEvent)) {
     NR.resetIndex ();
     var rect;
     var position = this.boxCoord;
-    var type = this.boxType;
     if (type == '') {
       return;
     } else if (type == 'cumulativeOffset') {
@@ -660,6 +679,9 @@ NodeRectViewer.Controller.prototype.update = function () {
     } else if (type.substring (0, 2) === 'x.') {
       var rects = NR.Element.getRectsExtra (el, window);
       rect = rects[type.substring (2)];
+    } else if (type.substring (0, 3) === 'ev.' || !el) {
+      var rects = NR.Event.getRects (this.lastEvent, window);
+      rect = rects[type.substring (3)];
     } else {
       var rects = NR.Element.getRects (el, window);
       rect = rects[type];
@@ -687,8 +709,8 @@ NodeRectViewer.Controller.prototype.invokeCommand = function (commandStr) {
   if (m = commandStr.match (/^\s*([a-zA-Z0-9]+)\s*=\s*(\S+)\s*$/)) {
     command.type = m[1];
     command.arg = m[2];
-  } else if (commandStr.match (/^\s*clear\s*$/)) {
-    command.type = 'clear';
+  } else if (m = commandStr.match (/^\s*(clear|startCapture|endCapture)\s*$/)) {
+    command.type = m[1];
   } else if (commandStr == '') {
     return;
   } else {
@@ -716,6 +738,9 @@ NodeRectViewer.Controller.prototype.invokeCommand = function (commandStr) {
     this.selector = command.arg;
     this.addInputLog (command.type + ' = ' + this[command.type]);
     this.update (this.formElement);
+  } else if ({startCapture: true, endCapture: true}[command.type]) {
+    this.addInputLog (command.type);
+    this[command.type] ();
   } else if (command.type === 'clear') {
     this.logElement.innerHTML = '';
   } else {
@@ -796,6 +821,69 @@ NodeRectViewer.Controller.prototype.clearHighlight = function () {
     this.highlightElements = [];
   }
 }; // clearHighlight
+
+NodeRectViewer.Controller.prototype.startCapture = function () {
+  NodeRectViewer.addClickHandler ();
+}; // startCapture
+
+NodeRectViewer.Controller.prototype.endCapture = function () {
+  NodeRectViewer.removeClickHandler ();
+}; // endCapture
+
+NodeRectViewer.Controller.prototype.onclick = function (ev) {
+  var cbox = this.box.element;
+  var el = ev.target;
+  while (el) {
+    if (el == cbox) return;
+    el = el.parentNode;
+  }
+
+  this.lastEvent = ev;
+  this.update ();
+
+  this.endCapture ();
+  this.addInputLog ('endCapture');
+
+  ev.stopPropagation ();
+  ev.preventDefault ();
+}; // onclick
+
+if (!NodeRectViewer.activeHandlers) NodeRectViewer.activeHandlers = {};
+
+NodeRectViewer.removeClickHandler = function () {
+  if (NodeRectViewer.activeHandlers.clickHandler) {
+    if (window.removeEventListener) {
+      window.removeEventListener
+          ('click', NodeRectViewer.activeHandlers.clickHandler, true);
+    } else if (document.detachEvent) {
+      document.detachEvent
+          ('onclick', NodeRectViewer.activeHandlers.clickHandler);
+    }
+    delete NodeRectViewer.activeHandlers.clickHandler;
+  }
+}; // removeClickHandler
+NodeRectViewer.removeClickHandler ();
+
+NodeRectViewer.addClickHandler = function () {
+  if (NodeRectViewer.activeHandlers.clickHandler) {
+    NodeRectViewer.removeClickHandler ();
+  }
+  if (window.addEventListener) {
+    window.addEventListener ('click', NodeRectViewer.clickHandler, true);
+    NodeRectViewer.activeHandlers.clickHandler = NodeRectViewer.clickHandler;
+  } else if (document.attachEvent) {
+    document.attachEvent ('onclick', NodeRectViewer.clickHandler);
+    NodeRectViewer.activeHandlers.clickHandler = NodeRectViewer.clickHandler;
+  }
+}; // addClickHandler
+
+NodeRectViewer.clickHandler = function (event) {
+  if (NodeRectViewer.controller) {
+    NodeRectViewer.controller.onclick (event || window.event);
+  }
+}; // clickHandler
+
+
 
 function NROnLoad () {
   if (NodeRectViewer.controller) {
