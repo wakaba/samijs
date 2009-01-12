@@ -487,15 +487,15 @@ NodeRectViewer.Controller = function () {
   <select name=prop title="Show box(es) of ..." onchange=update(form)>\
 \
   <optgroup label="Mouse event">\
-  <option value=ev.viewport>Viewport coordinate\
-  <option value=ev.canvas>Canvas coordinate\
+  <option value=ev.viewport' + cb + '>Viewport coordinate\
+  <option value=ev.canvas' + cb + '>Canvas coordinate\
   <option value=ev.client>Client\
-  <option value=ev.xy>x, y\
+  <option value=evx.xy>x, y\
   <option value=ev.offset>Offset\
-  <option value=ev.layer>Layer\
-  <option value=ev.page>Page\
-  <option value=ev.wh>width, height\
-  <option value=ev.screen>Screen\
+  <option value=evx.layer>Layer\
+  <option value=evx.page>Page\
+  <option value=evx.wh>width, height\
+  <option value=evx.screen>Screen\
 \
 \ </optgroup><option value>---------\
 \
@@ -684,6 +684,9 @@ NodeRectViewer.Controller.prototype.update = function () {
     } else if (type.substring (0, 3) === 'ev.' || !el) {
       var rects = NR.Event.getRects (this.lastEvent, window);
       rect = rects[type.substring (3)];
+    } else if (type.substring (0, 4) === 'evx.' || !el) {
+      var rects = NR.Event.getRectsExtra (this.lastEvent, window);
+      rect = rects[type.substring (4)];
     } else {
       var rects = NR.Element.getRects (el, window);
       rect = rects[type];
