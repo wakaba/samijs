@@ -614,13 +614,13 @@ NR.Element.getRects = function (el, view) {
         = NR.Rect.trbl (bb.top, bb.right, bb.bottom, bb.left);
     rects.boundingClient.label = el.nodeName + '.boundingClient';
 
-    rects.borderEdge = rects.boundingClient.add (origin);
-    rects.borderEdge.label = el.nodeName + ' border edge';
+    rects.borderBox = rects.boundingClient.add (origin);
+    rects.borderBox.label = el.nodeName + ' border edge';
   } else {
     rects.boundingClient = NR.Rect.invalid;
     rects.boundingClient.label = el.nodeName + '.boundingClient';
 
-    rects.borderEdge = NR.Element.getCumulativeOffsetRect (el, view);
+    rects.borderBox = NR.Element.getCumulativeOffsetRect (el, view);
   }
 
   var elRects = NR.Element.getAttrRects (el);
@@ -635,20 +635,23 @@ NR.Element.getRects = function (el, view) {
   rects.padding = cssRects.padding;
 
   /* Wrong if |el| has multiple line boxes. */
-  rects.marginEdge = rects.borderEdge.add (rects.margin);
-  rects.marginEdge.label = el.nodeName + ' margin edge';
+  rects.marginBox = rects.borderBox.add (rects.margin);
+  rects.marginBox.label = el.nodeName + ' margin edge';
 
-  rects.clientAbs = rects.client.add (rects.borderEdge.getTopLeft ());
+  rects.clientAbs = rects.client.add (rects.borderBox.getTopLeft ());
   rects.clientAbs.label = el.nodeName + '.client (canvas origin)';
 
   if (rects.client.isZeroRect () ||
       (view.opera && (rects.client.width <= 0 || rects.client.height <= 0))) {
     // maybe inline or non-rendered element
-    rects.paddingEdge = rects.borderEdge.subtract (rects.border);
-    rects.paddingEdge.label = el.nodeName + ' border edge - border';
+    rects.paddingBox = rects.borderBox.subtract (rects.border);
+    rects.paddingBox.label = el.nodeName + ' border edge - border';
   } else {
-    rects.paddingEdge = rects.clientAbs;
+    rects.paddingBox = rects.clientAbs;
   }
+
+  rects.contentBox = rects.paddingBox.subtract (rects.padding);
+  rects.contentBox.label = el.nodeName + ' content box';
 
   return rects;
 }; // getRects

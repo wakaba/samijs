@@ -496,12 +496,13 @@ NodeRectViewer.Controller = function () {
   <option value="boundingClient">getBoundingClientRect</option>\
 \
   <optgroup label="Canvas coordinate">\
-  <option value="marginEdge"' + cb + '>Margin edge</option>\
-  <option value="borderEdge"' + cb + '>Border edge</option>\
+  <option value=marginBox' + cb + '>Margin box\
+  <option value=borderBox' + cb + '>Border box\
   <option value="cumulativeOffset">Cumulative offset</option>\
-  <option value="paddingEdge">Padding edge</option>\
-  <option value=clientAbs>Client (canvas coordinate)</option>\
   <option value=x.boxObject>getBoxObjectFor\
+  <option value=paddingBox' + cb + '>Padding box\
+  <option value=clientAbs>Client (canvas coordinate)</option>\
+  <option value=contentBox' + cb + '>Content box\
 \
   <optgroup label="Screen coordinate">\
   <option value=x.boxObjectScreen>getBoxObjectFor.screen\
@@ -577,7 +578,7 @@ NodeRectViewer.Controller = function () {
 
 
   this.selectorIndex = 0;
-  this.boxType = 'borderEdge';
+  this.boxType = 'borderBox';
   this.boxCoord = 'canvas';
   this.showChain = false;
   this.selector = 'body';
