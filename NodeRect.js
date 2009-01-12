@@ -641,7 +641,8 @@ NR.Element.getRects = function (el, view) {
   rects.clientAbs = rects.client.add (rects.borderEdge.getTopLeft ());
   rects.clientAbs.label = el.nodeName + '.client (canvas origin)';
 
-  if (rects.client.isZeroRect ()) {
+  if (rects.client.isZeroRect () ||
+      (view.opera && (rects.client.width <= 0 || rects.client.height <= 0))) {
     // maybe inline or non-rendered element
     rects.paddingEdge = rects.borderEdge.subtract (rects.border);
     rects.paddingEdge.label = el.nodeName + ' border edge - border';
