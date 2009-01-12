@@ -492,6 +492,14 @@ NodeRectViewer.Controller = function () {
   <option value=scrollableArea title="scroll* attributes">scroll (width/height)\
   <option value=scrollState title="scroll* attributes">scroll (top/left)\
 \
+  <optgroup label="Containing block coordinate">\
+  <option value=x.px>style.pixel\
+  <option value=x.pos>style.pos\
+  <option value=x.currentPx>currentStyle.pixel\
+  <option value=x.currentPos>currentStyle.pos\
+  <option value=x.computedPx>getComputedStyle.pixel\
+  <option value=x.computedPos>getComputedStyle.pos\
+\
   <optgroup label="Viewport coordinate">\
   <option value="boundingClient">getBoundingClientRect</option>\
 \
@@ -503,6 +511,7 @@ NodeRectViewer.Controller = function () {
   <option value=paddingBox' + cb + '>Padding box\
   <option value=clientAbs>Client (canvas coordinate)</option>\
   <option value=contentBox' + cb + '>Content box\
+  <option value=x.textRangeBounding>createTextRange ().bounding\
 \
   <optgroup label="Screen coordinate">\
   <option value=x.boxObjectScreen>getBoxObjectFor.screen\
@@ -649,7 +658,7 @@ NodeRectViewer.Controller.prototype.update = function () {
       var rects = NR.View.getScreenRects (window);
       rect = rects[type.substring (7)];
     } else if (type.substring (0, 2) === 'x.') {
-      var rects = NR.Element.getRectsExtra (el);
+      var rects = NR.Element.getRectsExtra (el, window);
       rect = rects[type.substring (2)];
     } else {
       var rects = NR.Element.getRects (el, window);

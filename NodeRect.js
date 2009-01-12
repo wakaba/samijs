@@ -656,7 +656,7 @@ NR.Element.getRects = function (el, view) {
   return rects;
 }; // getRects
 
-NR.Element.getRectsExtra = function (el) {
+NR.Element.getRectsExtra = function (el, view) {
   var rects = {};
 
   /* Gecko-only, deprecated */
@@ -669,6 +669,71 @@ NR.Element.getRectsExtra = function (el) {
   } else {
     rects.boxObject = NR.Rect.invalid;
     rects.boxObjectScreen = NR.Vector.invalid;
+  }
+
+  /* WinIE only */
+  if (el.createTextRange) {
+    var tr = el.createTextRange ();
+    rects.textRangeBounding
+        = NR.Rect.tlwh
+            (tr.boundingTop, tr.boundingLeft,
+             tr.boundingWidth, tr.boundingHeight);
+    rects.textRangeBounding.label = el.nodeName + '.createTextRange ().bounding';
+  } else {
+    rects.textRangeBounding = NR.Rect.invalid;
+  }
+
+  /* Not supported by Gecko */
+  if (el.style) {
+    var css = el.style;
+
+    rects.pos = new NR.Rect (css.posTop, css.posRight, css.posBottom, css.posLeft,
+                             css.posWidth, css.posHeight); // Unit is not pixel.
+    rects.pos.label = el.nodeName + '.style.pos';
+
+    rects.px = new NR.Rect (css.pixelTop, css.pixelRight,
+                            css.pixelBottom, css.pixelLeft,
+                            css.pixelWidth, css.pixelHeight);
+    rects.px.label = el.nodeName + '.style.pixel';
+  } else {
+    rects.pos = NR.Rect.invalid;
+    rects.pixel = NR.Rect.invalid;
+  }
+
+  /* Not supported by Gecko, WebKit, and WinIE */
+  if (el.currentStyle) {
+    var css = el.currentStyle;
+
+    rects.currentPos = new NR.Rect
+        (css.posTop, css.posRight, css.posBottom, css.posLeft,
+         css.posWidth, css.posHeight); // Unit is not pixel.
+    rects.currentPos.label = el.nodeName + '.currentStyle.pos';
+
+    rects.currentPx = new NR.Rect (css.pixelTop, css.pixelRight,
+                                   css.pixelBottom, css.pixelLeft,
+                                   css.pixelWidth, css.pixelHeight);
+    rects.currentPx.label = el.nodeName + '.currentStyle.pixel';
+  } else {
+    rects.currentPos = NR.Rect.invalid;
+    rects.currentPixel = NR.Rect.invalid;
+  }
+
+  /* Not supported by Gecko and WinIE */
+  if (view.getComputedStyle) {
+    var css = view.getComputedStyle (el, null);
+
+    rects.computedPos = new NR.Rect
+        (css.posTop, css.posRight, css.posBottom, css.posLeft,
+         css.posWidth, css.posHeight); // Unit is not pixel.
+    rects.computedPos.label = el.nodeName + ' computedStyle.pos';
+
+    rects.computedPx = new NR.Rect (css.pixelTop, css.pixelRight,
+                                    css.pixelBottom, css.pixelLeft,
+                                    css.pixelWidth, css.pixelHeight);
+    rects.computedPx.label = el.nodeName + ' computedStyle.pixel';
+  } else {
+    rects.computedPos = NR.Rect.invalid;
+    rects.computedPixel = NR.Rect.invalid;
   }
 
   return rects;
