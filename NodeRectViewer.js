@@ -500,10 +500,10 @@ NodeRectViewer.Controller = function () {
   <option value="borderEdge"' + cb + '>Border edge</option>\
   <option value="cumulativeOffset">Cumulative offset</option>\
   <option value="paddingEdge">Padding edge</option>\
-  <option value=boxObject>getBoxObjectFor\
+  <option value=x.boxObject>getBoxObjectFor\
 \
   <optgroup label="Screen coordinate">\
-  <option value=boxObjectScreen>getBoxObjectFor.screen\
+  <option value=x.boxObjectScreen>getBoxObjectFor.screen\
 \
   </optgroup><option value>----------\
 \
@@ -519,13 +519,13 @@ NodeRectViewer.Controller = function () {
   <option value=vp.contentBox' + cb + '>Content box\
   <option value=vp.icb' + cb + '>Initial containing block\
   <option value=vp.scrollState' + cb + '>Scroll state\
-  <option value=vp.windowScrollXY>Scroll (x, y)\
+  <option value=vpx.windowScrollXY>Scroll (x, y)\
   <option value=vp.windowPageOffset>Page offset\
-  <option value=vp.windowScrollMax>Scroll maximum\
-  <option value=vp.windowInner>Window inner\
+  <option value=vpx.windowScrollMax>Scroll maximum\
+  <option value=vpx.windowInner>Window inner\
   <option value=vp.boundingClientOrigin' + cb + '>Origin of getBoundingClientRect\
 \
-  <option value=vp.document>Document\
+  <option value=vpx.document>Document\
   <option value=vp.deOffset>documentElement.offset\
   <option value=vp.deClient>documentElement.client\
   <option value=vp.deScrollableArea>documentElement.scroll (width, height)\
@@ -634,12 +634,18 @@ NodeRectViewer.Controller.prototype.update = function () {
     } else if (type.substring (0, 3) === 'vp.') {
       var rects = NR.View.getViewportRects (window);
       rect = rects[type.substring (3)];
+    } else if (type.substring (0, 4) === 'vpx.') {
+      var rects = NR.View.getViewportRectsExtra (window);
+      rect = rects[type.substring (4)];
     } else if (type.substring (0, 4) === 'win.') {
       var rects = NR.View.getWindowRects (window);
       rect = rects[type.substring (4)];
     } else if (type.substring (0, 7) === 'screen.') {
       var rects = NR.View.getScreenRects (window);
       rect = rects[type.substring (7)];
+    } else if (type.substring (0, 2) === 'x.') {
+      var rects = NR.Element.getRectsExtra (el);
+      rect = rects[type.substring (2)];
     } else {
       var rects = NR.Element.getRects (el, window);
       rect = rects[type];
@@ -669,6 +675,8 @@ NodeRectViewer.Controller.prototype.invokeCommand = function (commandStr) {
     command.arg = m[2];
   } else if (commandStr.match (/^\s*clear\s*$/)) {
     command.type = 'clear';
+  } else if (commandStr == '') {
+    return;
   } else {
     command.type = 'selector';
     command.arg = commandStr;

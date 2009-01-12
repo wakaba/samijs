@@ -293,7 +293,7 @@ NR.Band = function (t, r, b, l) {
 NR.Band.css = function (el, t, r, b, l) {
   var lt = NR.Element.getPixelWH (el, l, t);
   var rb = NR.Element.getPixelWH (el, r, b);
-  return new NR.Band (lt.top, rb.right, rb.bottom, lt.left);
+  return new NR.Band (lt.height, rb.width, rb.height, lt.width);
 }; // css
 
 /* Box rendering properties */
@@ -411,11 +411,19 @@ NR.Element.getPixelWH = function (el, w, h) {
     testEl.style.height = h;
   } catch (e) {
   }
-  el.appendChild (testEl);
+  var parentEl = el;
+  while (parentEl) {
+    try {
+      parentEl.appendChild (testEl);
+      break;
+    } catch (e) { // if |el| is e.g. |img|
+      parentEl = parentEl.parentNode || parentEl.ownerDocument.body;
+    }
+  }
   var px = {width: testEl.clientWidth - icw, height: testEl.clientHeight - ich};
   px.width *= ws;
   px.height *= hs;
-  el.removeChild (testEl);
+  if (testEl.parentNode) testEl.parentNode.removeChild (testEl);
   return px;
 }; // getPixelWH
 
@@ -597,18 +605,6 @@ NR.Element.getRects = function (el, view) {
     rects.borderEdge = NR.Element.getCumulativeOffsetRect (el, view);
   }
 
-  /* Gecko-only, deprecated */
-  if (el.ownerDocument.getBoxObjectFor) {
-    var bo = el.ownerDocument.getBoxObjectFor (el);
-    rects.boxObject = NR.Rect.tlwh (bo.y, bo.x, bo.width, bo.height);
-    rects.boxObjectScreen = new NR.Vector (bo.screenX, bo.screenY);
-    rects.boxObject.label = el.nodeName + ' boxObject';
-    rects.boxObjectScreen.label = el.nodeName + ' boxObject.screen';
-  } else {
-    rects.boxObject = NR.Rect.invalid;
-    rects.boxObjectScreen = NR.Vector.invalid;
-  }
-
   var elRects = NR.Element.getAttrRects (el);
   rects.offset = elRects.offset;
   rects.client = elRects.client;
@@ -627,6 +623,24 @@ NR.Element.getRects = function (el, view) {
   return rects;
 }; // getRects
 
+NR.Element.getRectsExtra = function (el) {
+  var rects = {};
+
+  /* Gecko-only, deprecated */
+  if (el.ownerDocument.getBoxObjectFor) {
+    var bo = el.ownerDocument.getBoxObjectFor (el);
+    rects.boxObject = NR.Rect.tlwh (bo.y, bo.x, bo.width, bo.height);
+    rects.boxObjectScreen = new NR.Vector (bo.screenX, bo.screenY);
+    rects.boxObject.label = el.nodeName + ' boxObject';
+    rects.boxObjectScreen.label = el.nodeName + ' boxObject.screen';
+  } else {
+    rects.boxObject = NR.Rect.invalid;
+    rects.boxObjectScreen = NR.Vector.invalid;
+  }
+
+  return rects;
+}; // getRectsExtra
+
 
 /* --- NR.View --- */
 
@@ -641,26 +655,9 @@ NR.View.getViewportRects = function (view) {
   
   var rects = {};
 
-  /* Fx, WebKit, Opera: entire viewport (including scrollbars),
-     Not supported by WinIE */
-  rects.windowInner = NR.Rect.wh (view.innerWidth, view.innerHeight);
-  rects.windowInner.label = 'window.inner';
-
   /* Not supported by WinIE */
   rects.windowPageOffset = new NR.Vector (view.pageXOffset, view.pageYOffset);
   rects.windowPageOffset.label = 'window.pageOffset';
-
-  /* Fx3, WebKit: Same as page offset; Not supported by Opera, WinIE */
-  rects.windowScrollXY = new NR.Vector (view.scrollX, view.scrollY);
-  rects.windowScrollXY.label = 'window.scroll (x, y)';
-
-  /* Not supported by WebKit, Opera, WinIE */
-  rects.windowScrollMax = new NR.Vector (view.scrollMaxX, view.scrollMaxY);
-  rects.windowScrollMax.label = 'window.scrollMax';
-
-  /* Not supported by Opera, WinIE */
-  rects.document = NR.Rect.wh (doc.width, doc.height);
-  rects.document.label = 'Document';
 
   if (docEl) {
     var deRects = NR.Element.getAttrRects (docEl);
@@ -706,7 +703,7 @@ NR.View.getViewportRects = function (view) {
        is no way to obtain ICB (content edge), AFAICT. */
 
     if (document.all) {
-      var docElRects = NodeRect.getBoxAreas (bodyEl, view);
+      var docElRects = NR.Element.getBoxAreas (bodyEl, view);
       rects.boundingClientOrigin = docElRects.border.getTopLeft ();
       rects.boundingClientOrigin.label = 'Viewport border offset';
     }
@@ -770,6 +767,31 @@ NR.View.getViewportRects = function (view) {
   return rects;
 }; // getViewportRects
 
+NR.View.getViewportRectsExtra = function (view) {
+  var rects = {};
+
+  var doc = view.document;
+
+  /* Fx, WebKit, Opera: entire viewport (including scrollbars),
+     Not supported by WinIE */
+  rects.windowInner = NR.Rect.wh (view.innerWidth, view.innerHeight);
+  rects.windowInner.label = 'window.inner';
+
+  /* Fx3, WebKit: Same as page offset; Not supported by Opera, WinIE */
+  rects.windowScrollXY = new NR.Vector (view.scrollX, view.scrollY);
+  rects.windowScrollXY.label = 'window.scroll (x, y)';
+
+  /* Not supported by WebKit, Opera, WinIE */
+  rects.windowScrollMax = new NR.Vector (view.scrollMaxX, view.scrollMaxY);
+  rects.windowScrollMax.label = 'window.scrollMax';
+
+  /* Not supported by Opera, WinIE */
+  rects.document = NR.Rect.wh (doc.width, doc.height);
+  rects.document.label = 'Document';
+
+  return rects;
+}; // getViewportRectsExtra
+
 NR.View.getWindowRects = function (view) {
   var rects = {};
 
@@ -810,3 +832,10 @@ NR.View.getScreenRects = function (view) {
 if (self.NROnLoad) {
   NROnLoad ();
 }
+
+/* 
+
+Documentation: <http://suika.fam.cx/%7Ewakaba/wiki/sw/n/NodeRect%2Ejs>.
+
+*/
+
