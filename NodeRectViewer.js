@@ -588,8 +588,10 @@ NodeRectViewer.Controller = function () {
   this.formElement.update = function (form) {
     self.updateProps (form);
     if (self.boxType.substring (0, 2) == 'ev') {
-      self.startCapture ();
-      self.addInputLog ('startCapture');
+      setTimeout (function () {
+        self.startCapture ();
+        self.addInputLog ('startCapture');
+      }, 100); /* Wait a bit to avoid <option>.onclick being captured by IE */
     } else {
       self.update ();
     }
@@ -844,8 +846,9 @@ NodeRectViewer.Controller.prototype.onclick = function (ev) {
   this.endCapture ();
   this.addInputLog ('endCapture');
 
-  ev.stopPropagation ();
-  ev.preventDefault ();
+  ev.returnValue = false;
+  if (ev.stopPropagation) ev.stopPropagation ();
+  if (ev.preventDefault) ev.preventDefault ();
 }; // onclick
 
 if (!NodeRectViewer.activeHandlers) NodeRectViewer.activeHandlers = {};

@@ -969,13 +969,15 @@ NR.Event.getRects = function (ev, view) {
   rects.screen = new NR.Vector (ev.screenX, ev.screenY);
   rects.screen.label = 'event.screen';
 
-  /* Not supported by Gecko */
+  /* Not supported by Gecko, WebKit, Opera, WinIE (was supported by NC4) */
   rects.wh = new NR.Vector (ev.width, ev.height);
   rects.wh.label = 'event.width, event.height';
 
+  /* Not supported by WinIE */
   rects.page = new NR.Vector (ev.pageX, ev.pageY);
   rects.page.label = 'event.page';
 
+  /* Not supported by Opera, WinIE */
   rects.layer = new NR.Vector (ev.layerX, ev.layerY);
   rects.layer.label = 'event.layer';
 
@@ -995,7 +997,8 @@ NR.Event.getRects = function (ev, view) {
   rects.viewport = rects.client.add (vp.canvasOrigin);
   rects.viewport.label = 'event (viewport origin)';
 
-  rects.canvas = rects.page.add (vp.canvasOrigin);
+  //rects.canvas = rects.page.add (vp.canvasOrigin);
+  rects.canvas = rects.viewport.add (vp.scrollState);
   rects.canvas.label = 'event (canvas origin)';
 
   return rects;
