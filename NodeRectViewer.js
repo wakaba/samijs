@@ -487,12 +487,12 @@ NodeRectViewer.Controller = function () {
   <select name=prop title="Show box(es) of ..." onchange=update(form)>\
 \
   <optgroup label="Element coordinate">\
-  <option value=offset title="offset* attributes">offset\
   <option value=client title="client* attributes">client\
   <option value=scrollableArea title="scroll* attributes">scroll (width/height)\
   <option value=scrollState title="scroll* attributes">scroll (top/left)\
 \
   <optgroup label="Containing block coordinate">\
+  <option value=offset title="offset* attributes">offset\
   <option value=x.px>style.pixel\
   <option value=x.pos>style.pos\
   <option value=x.currentPx>currentStyle.pixel\
