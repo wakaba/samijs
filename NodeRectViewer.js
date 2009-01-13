@@ -532,6 +532,7 @@ NodeRectViewer.Controller = function () {
   <option value=clientAbs>Client (canvas coordinate)</option>\
   <option value=contentBox' + cb + '>Content box\
   <option value=x.textRangeBounding>createTextRange.bounding\
+  <option value=x.textRangeBoundingClient>createTextRange.boundingClient\
   <option value=x.textRangeOffset>createTextRange.offset\
 \
   <optgroup label="Screen coordinate">\

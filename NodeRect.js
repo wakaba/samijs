@@ -675,9 +675,11 @@ NR.Element.getRectsExtra = function (el, view) {
   if (el.createTextRange) {
     var trs = NR.Range.getRectsExtra (el.createTextRange (), view);
     rects.textRangeBounding = trs.bounding;
+    rects.textRangeBoundingClient = trs.boundingClient;
     rects.textRangeOffset = trs.offset;
   } else {
     rects.textRangeBounding = NR.Rect.invalid;
+    rects.textRangeBoundingClient = NR.Rect.invalid;
     rects.textRangeOffset = NR.Rect.invalid;
   }
 
