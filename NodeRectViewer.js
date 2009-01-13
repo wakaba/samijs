@@ -466,6 +466,7 @@ NodeRectViewer.Controller = function () {
       border: groove 2px gray;\
       background-color:white;color:black;\
       line-height: 1.1;\
+      text-align: left;\
       white-space: pre;\
       white-space: -moz-pre-wrap;\
       white-space: pre-wrap"></div>\
@@ -499,6 +500,12 @@ NodeRectViewer.Controller = function () {
 \
 \ </optgroup><option value>---------\
 \
+\ <optgroup label=Lines>\
+  <option value=lx.clients>getClientRects\
+  <option value=lx.rangeClients>Range.getClientRects\
+\
+\ </optgroup><option value>---------\
+\
   <optgroup label="Element coordinate">\
   <option value=client title="client* attributes">client\
   <option value=scrollableArea title="scroll* attributes">scroll (width/height)\
@@ -524,7 +531,8 @@ NodeRectViewer.Controller = function () {
   <option value=paddingBox' + cb + '>Padding box\
   <option value=clientAbs>Client (canvas coordinate)</option>\
   <option value=contentBox' + cb + '>Content box\
-  <option value=x.textRangeBounding>createTextRange ().bounding\
+  <option value=x.textRangeBounding>createTextRange.bounding\
+  <option value=x.textRangeOffset>createTextRange.offset\
 \
   <optgroup label="Screen coordinate">\
   <option value=x.boxObjectScreen>getBoxObjectFor.screen\
@@ -681,6 +689,9 @@ NodeRectViewer.Controller.prototype.update = function () {
     } else if (type.substring (0, 2) === 'x.') {
       var rects = NR.Element.getRectsExtra (el, window);
       rect = rects[type.substring (2)];
+    } else if (type.substring (0, 3) === 'lx.') {
+      var rects = NR.Element.getLineRects (el, window);
+      rect = rects[type.substring (3)];
     } else if (type.substring (0, 3) === 'ev.' || !el) {
       var rects = NR.Event.getRects (this.lastEvent, window);
       rect = rects[type.substring (3)];
@@ -696,12 +707,28 @@ NodeRectViewer.Controller.prototype.update = function () {
       rect = NR.Rect.invalid;
     }
 
-    this.addOutputLog (rect.toString ());
+    if (type.substring (0, 3) == 'lx.') {
+      this.addOutputLog ('Length: ' + rect.length);
 
-    if (this.showChain) {
-      this.showTrace (rect, position);
+      for (var i = 0; i < rect.length; i++) {
+        var r = rect[i];
+
+        this.addOutputLog (r.toString ());
+
+        if (this.showChain) {
+          this.showTrace (r, position);
+        } else {
+          this.setHighlight (r, position);
+        }
+      }
     } else {
-      this.setHighlight (rect, position);
+      this.addOutputLog (rect.toString ());
+
+      if (this.showChain) {
+        this.showTrace (rect, position);
+      } else {
+        this.setHighlight (rect, position);
+      }
     }
 
     this.box.setMaxZIndex ();

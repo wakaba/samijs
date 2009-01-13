@@ -673,14 +673,12 @@ NR.Element.getRectsExtra = function (el, view) {
 
   /* WinIE only */
   if (el.createTextRange) {
-    var tr = el.createTextRange ();
-    rects.textRangeBounding
-        = NR.Rect.tlwh
-            (tr.boundingTop, tr.boundingLeft,
-             tr.boundingWidth, tr.boundingHeight);
-    rects.textRangeBounding.label = el.nodeName + '.createTextRange ().bounding';
+    var trs = NR.Range.getRectsExtra (el.createTextRange (), view);
+    rects.textRangeBounding = trs.bounding;
+    rects.textRangeOffset = trs.offset;
   } else {
     rects.textRangeBounding = NR.Rect.invalid;
+    rects.textRangeOffset = NR.Rect.invalid;
   }
 
   /* Not supported by Gecko */
@@ -738,6 +736,87 @@ NR.Element.getRectsExtra = function (el, view) {
 
   return rects;
 }; // getRectsExtra
+
+// Don't use - these stuffs are not interoperable at all
+NR.Element.getLineRects = function (el, view) {
+  var rects = {};
+
+  /* Not supportedby WebKit */
+  rects.clients = [];
+  if (el.getClientRects) {
+    var crs = el.getClientRects ();
+    for (var i = 0; i < crs.length; i++) {
+      var cr = crs[i];
+      var rect = new NR.Rect (cr.top, cr.right, cr.bottom, cr.left,
+                              cr.width, cr.height);
+      rect.label = 'Range.getClientRects.' + i;
+      rects.clients.push (rect);
+    }
+  }
+
+  var doc = el.ownerDocument;
+
+  var range;
+  if (doc.createRange) {
+    /* Gecko, WebKit, Opera */
+    range = doc.createRange ();
+    range.selectNodeContents (el);
+  } else if (doc.body && doc.body.createTextRange) {
+    /* WinIE only */
+    range = doc.body.createTextRange ();
+    range.moveToElementText (el);
+  }
+  var rr = NR.Range.getRectsExtra (range, view);
+  rects.rangeClients = rr.clients;
+
+  return rects;
+}; // getLineRects
+
+
+
+/* --- NR.Range --- */
+
+if (!NR.Range) NR.Range = {};
+
+// Don't use - these stuffs are not interoperable at all
+NR.Range.getRectsExtra = function (range, view) {
+  var rects = {};
+
+  /* WinIE only */
+  rects.bounding = NR.Rect.tlwh
+      (range.boundingTop, range.boundingLeft,
+       range.boundingWidth, range.boundingHeight);
+  rects.bounding.label = 'Range.bounding';
+
+  /* WinIE only */
+  rects.offset = new NR.Vector (range.offsetLeft, range.offsetTop);
+  rects.offset.label = 'Range.offset';
+
+  /* WinIE only */
+  rects.clients = [];
+  if (range.getClientRects) {
+    var crs = range.getClientRects ();
+    for (var i = 0; i < crs.length; i++) {
+      var cr = crs[i];
+      var rect = new NR.Rect (cr.top, cr.right, cr.bottom, cr.left,
+                              cr.width, cr.height);
+      rect.label = 'Range.getClientRects.' + i;
+      rects.clients.push (rect);
+    }
+  }
+
+  /* WinIE only */
+  if (range.getBoundingClientRect) {
+    var bc = range.getBoundingClientRect ();
+    rects.boundingClient = NR.Rect.trbl (bc.top, bc.right, bc.bottom, bc.left);
+    rects.boundingClient.label = 'Range.getBoundingClientRect';
+  } else {
+    rects.boundingClient = NR.Rect.invalid;
+  }
+
+  return rects;
+}; // getRectsExtra
+
 
 
 /* --- NR.View --- */
