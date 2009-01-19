@@ -720,7 +720,7 @@ JSTE.Step = new JSTE.Class (function (id) {
   
 }); // Step
 
-/* Events: load, error */
+/* Events: load, error, cssomready */
 JSTE.Tutorial = new JSTE.Class (function (doc, course, args) {
   this._course = course;
   this._targetDocument = doc;
@@ -739,7 +739,11 @@ JSTE.Tutorial = new JSTE.Class (function (doc, course, args) {
     var e = new JSTE.Event ('load');
     this.dispatchEvent (e);
     
-    this._renderCurrentStep ();
+    var self = this;
+    new JSTE.Observer ('cssomready', this, function () {
+      self._renderCurrentStep ();
+    });
+    this._dispatchCSSOMReadyEvent ();
     return this;
   } else {
     return {};
@@ -837,8 +841,23 @@ JSTE.Tutorial = new JSTE.Class (function (doc, course, args) {
       this._currentStep = nextStep;
       this._renderCurrentStep ();
     }
-  } // next
-  
+  }, // next
+
+  // <http://twitter.com/waka/status/1129513097> 
+  _dispatchCSSOMReadyEvent: function () {
+    var self = this;
+    var e = new JSTE.Event ('cssomready');
+    if (window.opera && document.readyState != 'complete') {
+      new JSTE.Observer ('readystatechange', document, function () {
+        if (document.readyState == 'complete') {
+          self.dispatchEvent (e);
+        }
+      });
+    } else {
+      this.dispatchEvent (e);
+    }
+  } // dispatchCSSOMReadyEvent
+   
 }); // Tutorial
 
 /* ***** BEGIN LICENSE BLOCK *****

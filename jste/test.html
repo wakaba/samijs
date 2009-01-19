@@ -42,11 +42,28 @@ name=user-pass2 size=10 required pattern=".{4,}">
 
 <style>
 
-.balloon {
+section, article, menu {
+  display: block;
+}
+
+.sbs-container {
   display: block;
   position: absolute;
 }
+
+.sbs-container.sbs-without-refelement {
+  position: fixed;
+  bottom: 1em;
+  right: 1em;
+}
+
 .container {
+  display: block;
+  background-color: white;
+}
+
+
+xxx.container {
   display: block;
   position: relative;
   left: 49px;
@@ -59,7 +76,7 @@ name=user-pass2 size=10 required pattern=".{4,}">
   -moz-border-radius: 16px;
   -webkit-border-radius: 16px;
 }
-.pointer {
+xxx.pointer {
   display: block;
   position: absolute;
   left: -49px;
@@ -77,6 +94,8 @@ name=user-pass2 size=10 required pattern=".{4,}">
 <script type="text/javascript" src="uupaa-detect.mini.js"></script>
 <script type="text/javascript" src="uupaa-selector.js"></script>
 <script type="text/javascript" src="uupaa-selector+.js"></script>
+
+<script src="../../css/noderect/NodeRect.js"></script>
 
 <script id="uupaa.js" type="text/javascript" src="uupaa/uupaa.js"></script>
 
@@ -135,23 +154,62 @@ function showElement (elements) {
   }
 }
 
-var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
-  this.element = document.createElement ('article');
-  this.element.className = 'balloon';
+var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
+  this.element = document.createElement ('div');
+  this.element.className = 'sbs-container';
   this.element.appendChild (messageContainer);
-  document.documentElement.appendChild (this.element);
+  document.body.appendChild (this.element);
+
+  this.contentElement = messageContainer;
+
+  var msgRects = NR.Element.getRects (messageContainer, window);
+  var msgRect = msgRects.borderBox;
+
+  var SVGNS = 'http://www.w3.org/2000/svg';  
+  var box = document.createElementNS (SVGNS, 'svg');
+
+  box.style.display = 'block';
+  box.style.position = 'absolute';
+  box.style.top = '-10px';
+  box.style.left = '-10px';
+
+  var boxWidth = msgRect.width + 10 * 2;
+  var boxHeight = msgRect.height + 10 * 2;
+
+  messageContainer.style.position = 'relative';
+
+  box.setAttribute ('width', boxWidth);
+  box.setAttribute ('height', boxHeight);
+
+  var boxBorder = document.createElementNS (SVGNS, 'rect');
+  boxBorder.setAttribute ('x', 4);
+  boxBorder.setAttribute ('y', 4);
+  boxBorder.setAttribute ('width', boxWidth - 4 * 2);
+  boxBorder.setAttribute ('height', boxHeight - 4 * 2);
+  boxBorder.setAttribute ('stroke', 'red');
+  boxBorder.setAttribute ('stroke-width', 2);
+  boxBorder.setAttribute ('fill', this.getBackgroundColor ());
+
+  box.appendChild (boxBorder);
+
+  this.element.insertBefore (box, this.element.firstChild);
 
   if (refElement) {
-    var rect = uu.element.rect (refElement);
+    var rects = NR.Element.getRects (refElement, window);
+    var bb = rects.borderBox;
     
-    var left = rect.x + rect.ow;
-    var top = rect.y + rect.oh / 2;
-    
+    var left = bb.right;
+    var top = bb.top + bb.height / 2;
+
     this.element.style.top = top + 'px';
     this.element.style.left = left + 'px';
-
+    
     this.refElement = refElement;
     JSTE.Element.addClassName (refElement, 'selected');
+
+    JSTE.Element.addClassName (this.element, 'sbs-with-refelement');
+  } else {
+    JSTE.Element.addClassName (this.element, 'sbs-without-refelement');
   }
   
   var self = this;
@@ -163,8 +221,19 @@ var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
     if (this.refElement) {
       JSTE.Element.deleteClassName (this.refElement, 'selected');
     }
-  } // remove
-});
+  }, // remove
+
+  getBackgroundColor: function () {
+    var el = this.contentElement;
+    if (window.getComputedStyle) {
+      return getComputedStyle (el, null).backgroundColor;
+    } else if (el.currentStyle) {
+      return el.currentStyle.backgroundColor;
+    } else {
+      return 'white';
+    }
+  } // getBackgroundColor
+}); // SimpleBalloonSVG
 
 var MyMessage = new JSTE.Subclass (function () {
   return this._super.apply (this, arguments);
@@ -189,7 +258,7 @@ var MyMessage = new JSTE.Subclass (function () {
       container.appendChild (pointer);
     }
     
-    this._simpleBalloon = new SimpleBalloon (container, refElement);
+    this._simpleBalloon = new SimpleBalloonSVG (container, refElement);
     
     return this._simpleBalloon.element;
   }, // _render
