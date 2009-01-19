@@ -44,6 +44,8 @@ name=user-pass2 size=10 required pattern=".{4,}">
 
 section, article, menu {
   display: block;
+  margin: 0;
+  padding: 0;
 }
 
 .sbs-container {
@@ -59,7 +61,18 @@ section, article, menu {
 
 .container {
   display: block;
+  padding-bottom: 2em;
   background-color: white;
+  width: 20em;
+  min-height: 5em;
+}
+
+.container menu {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
 }
 
 
@@ -155,7 +168,7 @@ function showElement (elements) {
 }
 
 var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
-  this.element = document.createElement ('div');
+  this.element = document.createElement ('article');
   this.element.className = 'sbs-container';
   this.element.appendChild (messageContainer);
   document.body.appendChild (this.element);
@@ -203,7 +216,29 @@ var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
 
     this.element.style.top = top + 'px';
     this.element.style.left = left + 'px';
-    
+
+    var pointerBoxWidth = 20;
+    var pointerBoxHeight = 30;
+    var pointerBoxLeft = 20;
+
+    var pointerSVGElement = document.createElementNS (SVGNS, 'svg');
+    pointerSVGElement.setAttribute ('width', pointerBoxWidth);
+    pointerSVGElement.setAttribute ('height', pointerBoxHeight);
+    pointerSVGElement.style.display = 'block';
+    pointerSVGElement.style.position = 'absolute';
+    pointerSVGElement.style.top = -pointerBoxHeight + 'px';
+    pointerSVGElement.style.left = pointerBoxLeft + 'px';
+  
+    var pointerElement = document.createElementNS (SVGNS, 'path');
+    pointerElement.setAttribute ('d', ['M', pointerBoxWidth, pointerBoxHeight, 'L', pointerBoxWidth / 2, 0, 'L', 0, pointerBoxHeight].join (' '));
+    pointerElement.setAttribute ('stroke', 'red');
+    pointerElement.setAttribute ('stroke-width', '1');
+    pointerElement.setAttribute ('fill', this.getBackgroundColor ());
+
+    pointerSVGElement.appendChild (pointerElement);
+
+    this.element.appendChild (pointerSVGElement);
+ 
     this.refElement = refElement;
     JSTE.Element.addClassName (refElement, 'selected');
 
