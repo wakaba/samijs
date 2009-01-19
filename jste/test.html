@@ -181,26 +181,30 @@ var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
   var SVGNS = 'http://www.w3.org/2000/svg';  
   var box = document.createElementNS (SVGNS, 'svg');
 
+  var boxMargin = 1;
+  var boxBorderWidth = 5;
+  var boxBorderColor = 'green';
+  var boxPadding = 10;
+  var boxMBWidth = msgRect.width + (boxMargin + boxBorderWidth + boxPadding) * 2;
+  var boxMBHeight = msgRect.height + (boxMargin + boxBorderWidth + boxPadding) * 2;
+
   box.style.display = 'block';
   box.style.position = 'absolute';
-  box.style.top = '-10px';
-  box.style.left = '-10px';
-
-  var boxWidth = msgRect.width + 10 * 2;
-  var boxHeight = msgRect.height + 10 * 2;
+  box.style.top = -(boxMargin + boxBorderWidth + boxPadding) + 'px';
+  box.style.left = -(boxMargin + boxBorderWidth + boxPadding) + 'px';
 
   messageContainer.style.position = 'relative';
 
-  box.setAttribute ('width', boxWidth);
-  box.setAttribute ('height', boxHeight);
+  box.setAttribute ('width', boxMBWidth);
+  box.setAttribute ('height', boxMBHeight);
 
   var boxBorder = document.createElementNS (SVGNS, 'rect');
-  boxBorder.setAttribute ('x', 4);
-  boxBorder.setAttribute ('y', 4);
-  boxBorder.setAttribute ('width', boxWidth - 4 * 2);
-  boxBorder.setAttribute ('height', boxHeight - 4 * 2);
-  boxBorder.setAttribute ('stroke', 'red');
-  boxBorder.setAttribute ('stroke-width', 2);
+  boxBorder.setAttribute ('x', boxMargin + boxBorderWidth / 2);
+  boxBorder.setAttribute ('y', boxMargin + boxBorderWidth / 2);
+  boxBorder.setAttribute ('width', boxMBWidth - boxMargin * 2 - boxBorderWidth);
+  boxBorder.setAttribute ('height', boxMBHeight - boxMargin * 2 - boxBorderWidth);
+  boxBorder.setAttribute ('stroke', boxBorderColor);
+  boxBorder.setAttribute ('stroke-width', boxBorderWidth);
   boxBorder.setAttribute ('fill', this.getBackgroundColor ());
 
   box.appendChild (boxBorder);
@@ -226,13 +230,13 @@ var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
     pointerSVGElement.setAttribute ('height', pointerBoxHeight);
     pointerSVGElement.style.display = 'block';
     pointerSVGElement.style.position = 'absolute';
-    pointerSVGElement.style.top = -pointerBoxHeight + 'px';
+    pointerSVGElement.style.top = -(pointerBoxHeight + boxPadding) + 'px';
     pointerSVGElement.style.left = pointerBoxLeft + 'px';
   
     var pointerElement = document.createElementNS (SVGNS, 'path');
-    pointerElement.setAttribute ('d', ['M', pointerBoxWidth, pointerBoxHeight, 'L', pointerBoxWidth / 2, 0, 'L', 0, pointerBoxHeight].join (' '));
-    pointerElement.setAttribute ('stroke', 'red');
-    pointerElement.setAttribute ('stroke-width', '1');
+    pointerElement.setAttribute ('d', ['M', pointerBoxWidth, pointerBoxHeight, 'Q', pointerBoxWidth * 3 / 4, pointerBoxHeight, pointerBoxWidth / 2, 0, 'Q', pointerBoxWidth / 4, pointerBoxHeight, 0, pointerBoxHeight].join (' '));
+    pointerElement.setAttribute ('stroke', boxBorderColor);
+    pointerElement.setAttribute ('stroke-width', boxBorderWidth);
     pointerElement.setAttribute ('fill', this.getBackgroundColor ());
 
     pointerSVGElement.appendChild (pointerElement);
