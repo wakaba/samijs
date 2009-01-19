@@ -184,6 +184,8 @@ var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
   var boxMargin = 1;
   var boxBorderWidth = 5;
   var boxBorderColor = 'green';
+  var boxBorderRadiusHorizontal = 10;
+  var boxBorderRadiusVertical = 10;
   var boxPadding = 10;
   var boxMBWidth = msgRect.width + (boxMargin + boxBorderWidth + boxPadding) * 2;
   var boxMBHeight = msgRect.height + (boxMargin + boxBorderWidth + boxPadding) * 2;
@@ -198,11 +200,34 @@ var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
   box.setAttribute ('width', boxMBWidth);
   box.setAttribute ('height', boxMBHeight);
 
-  var boxBorder = document.createElementNS (SVGNS, 'rect');
-  boxBorder.setAttribute ('x', boxMargin + boxBorderWidth / 2);
-  boxBorder.setAttribute ('y', boxMargin + boxBorderWidth / 2);
-  boxBorder.setAttribute ('width', boxMBWidth - boxMargin * 2 - boxBorderWidth);
-  boxBorder.setAttribute ('height', boxMBHeight - boxMargin * 2 - boxBorderWidth);
+  var bbTop = boxMargin + boxBorderWidth / 2;
+  var bbRight = boxMBWidth - boxMargin * 2 - boxBorderWidth;
+  var bbLeft = boxMargin + boxBorderWidth / 2;
+  var bbBottom = boxMBHeight - boxMargin * 2 - boxBorderWidth;
+
+  var boxBorder = document.createElementNS (SVGNS, 'path');
+  boxBorder.setAttribute ('d', [
+    'M', bbLeft + boxBorderRadiusHorizontal, bbTop,
+    'L', bbRight - boxBorderRadiusHorizontal, bbTop,
+
+    'a', boxBorderRadiusHorizontal, boxBorderRadiusVertical, 0, 0, 1, 
+    boxBorderRadiusHorizontal, boxBorderRadiusVertical,
+
+    'L', bbRight, bbBottom - boxBorderRadiusVertical,
+
+    'a', boxBorderRadiusHorizontal, boxBorderRadiusVertical, 0, 0, 1,
+    -boxBorderRadiusHorizontal, boxBorderRadiusVertical,    
+
+    'L', bbLeft + boxBorderRadiusHorizontal, bbBottom,
+
+    'a', boxBorderRadiusHorizontal, boxBorderRadiusVertical, 0, 0, 1,
+    -boxBorderRadiusHorizontal, -boxBorderRadiusVertical,    
+
+    'L', bbLeft, bbTop + boxBorderRadiusVertical,
+
+    'a', boxBorderRadiusHorizontal, boxBorderRadiusVertical, 0, 0, 1,
+    boxBorderRadiusHorizontal, -boxBorderRadiusVertical
+  ].join (' '));
   boxBorder.setAttribute ('stroke', boxBorderColor);
   boxBorder.setAttribute ('stroke-width', boxBorderWidth);
   boxBorder.setAttribute ('fill', this.getBackgroundColor ());
