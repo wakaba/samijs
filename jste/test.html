@@ -3,6 +3,7 @@
 <meta charset=utf-8>
 <title>新しい利用者アカウントの作成</title>
 <link rel=stylesheet href="/admin/style/common">
+<body>
 <h1>新しい利用者アカウントの作成</h1>
 
 <form action=new-user accept-charset=utf-8 method=post>
@@ -12,14 +13,25 @@ maxlength=20 size=10 required pattern="[0-9a-z-]{4,20}"> (文字「a」〜「z�
 size=10 required pattern=".{4,}"> (最低4文字入力してください。)<p><strong>合言葉</strong> (もう一度): <input type=password
 name=user-pass2 size=10 required pattern=".{4,}">
 
-<p><input type=submit value="作成" class=create></form>
+<p><input type=submit value="作成" class=create></p></form>
 
 <section>
-<!DOCTYPE HTML>
 <html lang=en class=account-user-info>
 <title>さん</title>
-<link rel=stylesheet href="/admin/style/common">
-<h1>さん</h1><section id=groups><h2>グループ</h2><section id="groups-joined"><h3>参加中のグループ</h3><ul><li><form action="group.admin-groups" accept-charset=utf-8 method=post><a href="../../groups/admin-groups/">admin-groups</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.admin-users" accept-charset=utf-8 method=post><a href="../../groups/admin-users/">admin-users</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.helo" accept-charset=utf-8 method=post><a href="../../groups/helo/">helo</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.helo-admin" accept-charset=utf-8 method=post><a href="../../groups/helo-admin/">helo-admin</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.schema-db" accept-charset=utf-8 method=post><a href="../../groups/schema-db/">schema-db</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.spec-ja" accept-charset=utf-8 method=post><a href="../../groups/spec-ja/">spec-ja</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.spec-ja-admin" accept-charset=utf-8 method=post><a href="../../groups/spec-ja-admin/">spec-ja-admin</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.suikawiki" accept-charset=utf-8 method=post><a href="../../groups/suikawiki/">suikawiki</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.test-results" accept-charset=utf-8 method=post><a href="../../groups/test-results/">test-results</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form></ul></section><section id="groups-requested"><h3>参加申請中 (未許可) のグループ</h3><ul><li><form action="" accept-charset=utf-8 method=post><a href="../../groups//"></a> <input type=hidden name=action value=leave><input type=submit value="申請取消"></form></ul></section></section><section id=props><h2>特性</h2><p><em>これらの特性は管理者のみが見ることができますが、秘密の情報は記述しないことをお勧めします。</em><form action="prop" accept-charset=utf-8 method=post><input type=hidden name=name value="full_name"><p><label><strong>名前</strong>: <input type="text" name="value" value=""></label> <input type=submit value="保存"></form><form action="prop" accept-charset=utf-8 method=post><input type=hidden name=name value="mail_addr"><p><label><strong>メイル・アドレス</strong>: <input type="email" name="value" value=""></label> <input type=submit value="保存"></form><form action="prop" accept-charset=utf-8 method=post><input type=hidden name=name value="home_url"><p><label><strong>Web サイト URL</strong>: <input type="url" name="value" value=""></label> <input type=submit value="保存"></form></section><section id=password><h2>合言葉</h2>
+
+<h1>さん</h1><section id=groups><h2>グループ</h2><section id="groups-joined"><h3>参加中のグループ</h3><ul><li><form action="group.admin-groups" accept-charset=utf-8 method=post><a href="../../groups/admin-groups/">admin-groups</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.admin-users" accept-charset=utf-8 method=post><a href="../../groups/admin-users/">admin-users</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.helo" accept-charset=utf-8 method=post><a href="../../groups/helo/">helo</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.helo-admin" accept-charset=utf-8 method=post><a href="../../groups/helo-admin/">helo-admin</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.schema-db" accept-charset=utf-8 method=post><a href="../../groups/schema-db/">schema-db</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.spec-ja" accept-charset=utf-8 method=post><a href="../../groups/spec-ja/">spec-ja</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.spec-ja-admin" accept-charset=utf-8 method=post><a href="../../groups/spec-ja-admin/">spec-ja-admin</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.suikawiki" accept-charset=utf-8 method=post><a href="../../groups/suikawiki/">suikawiki</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form><li><form action="group.test-results" accept-charset=utf-8 method=post><a href="../../groups/test-results/">test-results</a> <input type=hidden name=action value=leave><input type=submit value="このグループから抜ける"></form></ul></section><section id="groups-requested"><h3>参加申請中 (未許可) のグループ</h3><ul><li><form action="" accept-charset=utf-8 method=post><a href="../../groups//"></a> <input type=hidden name=action value=leave><input type=submit value="申請取消"></form></ul></section></section><section id=props><h2>特性</h2><p><em>これらの特性は管理者のみが見ることができますが、秘密の情報は記述しないことをお勧めします。</em></p>
+
+<form action="prop" accept-charset=utf-8 method=post><input type=hidden name=name value="full_name"><p><label><strong>名前</strong>: <input type="text" name="value" value=""></label> <input type=submit value="保存">
+
+</p></form>
+
+<form action="prop" accept-charset=utf-8 method=post><input type=hidden name=name value="mail_addr"><p><label><strong>メイル・アドレス</strong>: <input type="email" name="value" value=""></label> <input type=submit value="保存">
+</p></form>
+
+<form action="prop" accept-charset=utf-8 method=post><input type=hidden name=name value="home_url"><p><label><strong>Web サイト URL</strong>: <input type="url" name="value" value=""></label> <input type=submit value="保存">
+</p>
+
+</form></section><section id=password><h2>合言葉</h2>
 
 <form action=password method=post accept-charset=utf-8>
 
@@ -27,14 +39,13 @@ name=user-pass2 size=10 required pattern=".{4,}">
 size=10 required pattern=".{4,}"> (最低4文字入力してください。) <p><strong>新しい合言葉</strong> (もう一度): <input type=password
 name=user-pass2 size=10 required pattern=".{4,}">
 
-<p><input type=submit value="変更">
+<p><input type=submit value="変更"></p>
 
 </form>
 </section>
 
 <section id=disable-account><h2>アカウントの無効化</h2>
 
-<form action=disabled method=post accept-charset=utf-8>
 
 <p><label><input type=checkbox name=action value=enable checked> このアカウントを有効にする</label>
 
@@ -79,6 +90,8 @@ section, article, menu {
   text-align: center;
 }
 </style>
+
+</p>
 
 <script type="text/javascript" src="uupaa-detect.mini.js"></script>
 <script type="text/javascript" src="uupaa-selector.js"></script>
@@ -143,7 +156,9 @@ function showElement (elements) {
   }
 }
 
-var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
+var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
+  if (!messageContainer) return;
+
   this.element = document.createElement ('article');
   this.element.className = 'sbs-container';
   document.body.appendChild (this.element);
@@ -343,7 +358,139 @@ var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
       return 'white';
     }
   } // getBackgroundColor
-}); // SimpleBalloonSVG
+}); // SimpleBalloon
+
+var SimpleBalloonVML = new JSTE.Subclass (function () {
+  if (document.namespaces._vml_) {
+    document.namespaces.add ('_vml_', 'urn:schemas-microsoft-com:vml');
+  }
+
+  var ss = document.createStyleSheet ();
+  ss.cssText = '_vml_\\:* { behavior: url(#default#VML) }';
+
+  this._super.apply (this, arguments);
+}, SimpleBalloon, {
+  _renderBorder: function () {
+    var msgRects = NR.Element.getRects (this.contentElement, window);
+    var msgRect = msgRects.borderBox;
+
+    var bb = this.getComputedStyle ();
+
+    var bwDelta = bb.marginLeft + bb.borderLeftWidth + bb.paddingLeft;
+    var bhDelta = bb.marginTop + bb.borderTopWidth + bb.paddingTop;
+    var boxMBWidth = msgRect.width + bwDelta
+        + bb.marginRight + bb.borderRightWidth + bb.paddingRight;
+    var boxMBHeight = msgRect.height + bhDelta
+        + bb.marginBottom + bb.borderBottomWidth + bb.paddingBottom;
+
+    var box = document.createElement ('_vml_:shape');
+    box.style.display = 'block';
+    box.style.position = 'absolute';
+    box.style.top = -bhDelta + 'px';
+    box.style.left = -bwDelta + 'px';
+
+    /* This is necessary to render the content element over the border SVG
+       element. */
+    this.contentElement.style.position = 'relative';
+
+    box.style.width = boxMBWidth + 'px';
+    box.style.height = boxMBHeight + 'px';
+
+    var bbTop = bb.marginTop + bb.borderTopWidth / 2;
+    var bbRight = boxMBWidth - bb.marginLeft - bb.borderLeftWidth / 2
+        - bb.marginRight - bb.borderRightWidth / 2;
+    var bbLeft = bb.marginLeft + bb.borderLeftWidth / 2;
+    var bbBottom = boxMBHeight - bb.marginTop - bb.marginBottom
+        - bb.borderTopWidth / 2 - bb.borderBottomWidth / 2;
+
+    var boxBorder = document.createElement ('_vml_:path');
+    boxBorder.setAttribute ('v', [
+      'm', bbLeft + bb.manakaiBorderTopLeftRadiusHorizontal, bbTop,
+
+      'l', bbRight - bb.manakaiBorderTopRightRadiusHorizontal, bbTop,
+/*
+      'a',
+      bb.manakaiBorderTopRightRadiusHorizontal,
+      bb.manakaiBorderTopRightRadiusVertical, 0, 0, 1, 
+      bb.manakaiBorderTopRightRadiusHorizontal,
+      bb.manakaiBorderTopRightRadiusVertical,
+*/
+      'l', bbRight, bbBottom - bb.manakaiBorderBottomRightRadiusVertical,
+/*
+      'a',
+      bb.manakaiBorderBottomRightRadiusHorizontal,
+      bb.manakaiBorderBottomRightRadiusVertical, 0, 0, 1,
+      -bb.manakaiBorderBottomRightRadiusHorizontal,
+      bb.manakaiBorderBottomRightRadiusVertical,    
+*/
+      'l', bbLeft + bb.manakaiBorderBottomLeftRadiusHorizontal, bbBottom,
+/*
+      'a',
+      bb.manakaiBorderBottomLeftRadiusHorizontal,
+      bb.manakaiBorderBottomLeftRadiusVertical, 0, 0, 1,
+      -bb.manakaiBorderBottomLeftRadiusHorizontal,
+      -bb.manakaiBorderBottomLeftRadiusVertical,    
+*/
+      'l', bbLeft, bbTop + bb.manakaiBorderTopLeftRadiusVertical,
+/*
+      'a',
+      bb.manakaiBorderTopLeftRadiusHorizontal,
+      bb.manakaiBorderTopLeftRadiusVertical, 0, 0, 1,
+      bb.manakaiBorderTopLeftRadiusHorizontal,
+      -bb.manakaiBorderTopLeftRadiusVertical,
+*/
+      'e'
+    ].join (' '));
+    boxBorder.setAttribute ('stroke', 'true');
+    boxBorder.setAttribute ('strokecolor', bb.borderColor);
+    boxBorder.setAttribute ('strokeweight', bb.borderWidth);
+    boxBorder.setAttribute ('fill', 'true');
+    boxBorder.setAttribute ('fillcolor', bb.backgroundColor);
+    boxBorder.setAttribute ('coordorigin', '0 0');
+    boxBorder.setAttribute ('coordsize', boxMBWidth + ' ' + boxMBHeight);
+
+    box.appendChild (boxBorder);
+
+    this.element.insertBefore (box, this.element.firstChild);
+  }, // _renderBorder
+  _renderPointer: function () {
+    var rects = NR.Element.getRects (this.refElement, window);
+    var rbb = rects.borderBox;
+
+    var bb = this.getComputedStyle ();
+    
+    var left = rbb.left + rbb.width * 3 / 4 - bb.manakaiPointerSource;
+    if (left < 0) left = bb.borderLeftWidth + bb.paddingLeft;
+    var top = rbb.bottom + bb.manakaiPointerOffset + bb.manakaiPointerHeight + bb.paddingTop;
+
+    this.element.style.top = top + 'px';
+    this.element.style.left = left + 'px';
+
+    var pointerSVGElement = document.createElementNS (this.SVGNS, 'svg');
+    pointerSVGElement.setAttribute ('width', bb.manakaiPointerWidth);
+    pointerSVGElement.setAttribute ('height', bb.manakaiPointerHeight);
+    pointerSVGElement.style.display = 'block';
+    pointerSVGElement.style.position = 'absolute';
+    pointerSVGElement.style.top = -(bb.manakaiPointerHeight + bb.paddingTop) + 'px';
+    pointerSVGElement.style.left = (bb.manakaiPointerSource - bb.manakaiPointerWidth / 2) + 'px';
+  
+    var pointerElement = document.createElementNS (this.SVGNS, 'path');
+    pointerElement.setAttribute ('d', [
+      'M', bb.manakaiPointerWidth, bb.manakaiPointerHeight,
+      'Q', bb.manakaiPointerWidth * 3 / 4, bb.manakaiPointerHeight,
+      bb.manakaiPointerWidth / 2, 0,
+      'Q', bb.manakaiPointerWidth / 4, bb.manakaiPointerHeight,
+      0, bb.manakaiPointerHeight].join (' '));
+    pointerElement.setAttribute ('stroke', bb.borderColor);
+    pointerElement.setAttribute ('stroke-width', bb.borderWidth);
+    pointerElement.setAttribute ('fill', bb.backgroundColor);
+
+    pointerSVGElement.appendChild (pointerElement);
+
+    this.element.appendChild (pointerSVGElement);
+  } // _renderPointer
+
+}); // SimpleBalloonVML
 
 var MyMessage = new JSTE.Subclass (function () {
   return this._super.apply (this, arguments);
@@ -358,7 +505,11 @@ var MyMessage = new JSTE.Subclass (function () {
     container.appendChild (buttonContainer);
     
     var refElement = JSTE.Node.querySelector (document, this.select);
-    this._simpleBalloon = new SimpleBalloonSVG (container, refElement);
+    if (document.all) {
+      this._simpleBalloon = new SimpleBalloonVML (container, refElement);
+    } else {
+      this._simpleBalloon = new SimpleBalloon (container, refElement);
+    }
     
     return this._simpleBalloon.element;
   }, // _render
@@ -377,7 +528,6 @@ JSTE.Course.createFromDocument (xhr.responseXML, document);
 
 document.b = 
 new JSTE.Tutorial (document, document.a, {messageClass: MyMessage});
-
 
 </script>
 
