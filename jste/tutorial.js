@@ -114,6 +114,18 @@ JSTE.List = new JSTE.Class (function (arrayLike) {
     }
     return null;
   }, // forEach
+
+  numberToInteger: function () {
+    var newList = [];
+    this.forEach (function (item) {
+      if (typeof item === "number") {
+        newList.push (Math.floor (item));
+      } else {
+        newList.push (item);
+      }
+    });
+    return new this.constructor (newList);
+  }, // numberToInteger
   
   clone: function () {
     var newList = [];

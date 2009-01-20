@@ -25,6 +25,8 @@ name=user-pass2 size=10 required pattern=".{4,}">
 
 </p></form>
 
+
+
 <form action="prop" accept-charset=utf-8 method=post><input type=hidden name=name value="mail_addr"><p><label><strong>メイル・アドレス</strong>: <input type="email" name="value" value=""></label> <input type=submit value="保存">
 </p></form>
 
@@ -361,7 +363,7 @@ var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
 }); // SimpleBalloon
 
 var SimpleBalloonVML = new JSTE.Subclass (function () {
-  if (document.namespaces._vml_) {
+  if (!document.namespaces._vml_) {
     document.namespaces.add ('_vml_', 'urn:schemas-microsoft-com:vml');
   }
 
@@ -383,18 +385,18 @@ var SimpleBalloonVML = new JSTE.Subclass (function () {
     var boxMBHeight = msgRect.height + bhDelta
         + bb.marginBottom + bb.borderBottomWidth + bb.paddingBottom;
 
-    var box = document.createElement ('_vml_:shape');
-    box.style.display = 'block';
-    box.style.position = 'absolute';
-    box.style.top = -bhDelta + 'px';
-    box.style.left = -bwDelta + 'px';
+    var vShape = document.createElement ('_vml_:shape');
+    vShape.style.display = 'block';
+    vShape.style.position = 'absolute';
+    vShape.style.top = -bhDelta + 'px';
+    vShape.style.left = -bwDelta + 'px';
 
     /* This is necessary to render the content element over the border SVG
        element. */
     this.contentElement.style.position = 'relative';
 
-    box.style.width = boxMBWidth + 'px';
-    box.style.height = boxMBHeight + 'px';
+    vShape.style.width = boxMBWidth + 'px';
+    vShape.style.height = boxMBHeight + 'px';
 
     var bbTop = bb.marginTop + bb.borderTopWidth / 2;
     var bbRight = boxMBWidth - bb.marginLeft - bb.borderLeftWidth / 2
@@ -403,55 +405,47 @@ var SimpleBalloonVML = new JSTE.Subclass (function () {
     var bbBottom = boxMBHeight - bb.marginTop - bb.marginBottom
         - bb.borderTopWidth / 2 - bb.borderBottomWidth / 2;
 
-    var boxBorder = document.createElement ('_vml_:path');
-    boxBorder.setAttribute ('v', [
+    var vPath = document.createElement ('_vml_:path');
+    vPath.setAttribute ('v', new JSTE.List ([
       'm', bbLeft + bb.manakaiBorderTopLeftRadiusHorizontal, bbTop,
 
       'l', bbRight - bb.manakaiBorderTopRightRadiusHorizontal, bbTop,
-/*
-      'a',
-      bb.manakaiBorderTopRightRadiusHorizontal,
-      bb.manakaiBorderTopRightRadiusVertical, 0, 0, 1, 
-      bb.manakaiBorderTopRightRadiusHorizontal,
-      bb.manakaiBorderTopRightRadiusVertical,
-*/
+
+      'qx',
+      bbRight,
+      bbTop + bb.manakaiBorderTopRightRadiusVertical,
+
       'l', bbRight, bbBottom - bb.manakaiBorderBottomRightRadiusVertical,
-/*
-      'a',
-      bb.manakaiBorderBottomRightRadiusHorizontal,
-      bb.manakaiBorderBottomRightRadiusVertical, 0, 0, 1,
-      -bb.manakaiBorderBottomRightRadiusHorizontal,
-      bb.manakaiBorderBottomRightRadiusVertical,    
-*/
+
+      'qy',
+      bbRight - bb.manakaiBorderBottomRightRadiusHorizontal,
+      bbBottom,
+
       'l', bbLeft + bb.manakaiBorderBottomLeftRadiusHorizontal, bbBottom,
-/*
-      'a',
-      bb.manakaiBorderBottomLeftRadiusHorizontal,
-      bb.manakaiBorderBottomLeftRadiusVertical, 0, 0, 1,
-      -bb.manakaiBorderBottomLeftRadiusHorizontal,
-      -bb.manakaiBorderBottomLeftRadiusVertical,    
-*/
+
+      'qx',
+      bbLeft,
+      bbBottom - bb.manakaiBorderBottomLeftRadiusVertical,
+
       'l', bbLeft, bbTop + bb.manakaiBorderTopLeftRadiusVertical,
-/*
-      'a',
-      bb.manakaiBorderTopLeftRadiusHorizontal,
-      bb.manakaiBorderTopLeftRadiusVertical, 0, 0, 1,
-      bb.manakaiBorderTopLeftRadiusHorizontal,
-      -bb.manakaiBorderTopLeftRadiusVertical,
-*/
+
+      'qy',
+      bbLeft + bb.manakaiBorderTopLeftRadiusHorizontal,
+      bbTop,
+
       'e'
-    ].join (' '));
-    boxBorder.setAttribute ('stroke', 'true');
-    boxBorder.setAttribute ('strokecolor', bb.borderColor);
-    boxBorder.setAttribute ('strokeweight', bb.borderWidth);
-    boxBorder.setAttribute ('fill', 'true');
-    boxBorder.setAttribute ('fillcolor', bb.backgroundColor);
-    boxBorder.setAttribute ('coordorigin', '0 0');
-    boxBorder.setAttribute ('coordsize', boxMBWidth + ' ' + boxMBHeight);
+    ]).numberToInteger ().list.join (' '));
+    vShape.setAttribute ('stroke', 'true');
+    vShape.setAttribute ('strokecolor', bb.borderColor);
+    vShape.setAttribute ('strokeweight', bb.borderWidth);
+    vShape.setAttribute ('fill', 'true');
+    vShape.setAttribute ('fillcolor', bb.backgroundColor);
+    vShape.setAttribute ('coordorigin', '0 0');
+    vShape.setAttribute ('coordsize', boxMBWidth + ' ' + boxMBHeight);
 
-    box.appendChild (boxBorder);
+    vShape.appendChild (vPath);
 
-    this.element.insertBefore (box, this.element.firstChild);
+    this.element.insertBefore (vShape, this.element.firstChild);
   }, // _renderBorder
   _renderPointer: function () {
     var rects = NR.Element.getRects (this.refElement, window);
@@ -461,33 +455,43 @@ var SimpleBalloonVML = new JSTE.Subclass (function () {
     
     var left = rbb.left + rbb.width * 3 / 4 - bb.manakaiPointerSource;
     if (left < 0) left = bb.borderLeftWidth + bb.paddingLeft;
-    var top = rbb.bottom + bb.manakaiPointerOffset + bb.manakaiPointerHeight + bb.paddingTop;
+    var top = rbb.bottom + bb.manakaiPointerOffset + bb.manakaiPointerHeight + bb.borderTopWidth + bb.paddingTop;
 
     this.element.style.top = top + 'px';
     this.element.style.left = left + 'px';
 
-    var pointerSVGElement = document.createElementNS (this.SVGNS, 'svg');
-    pointerSVGElement.setAttribute ('width', bb.manakaiPointerWidth);
-    pointerSVGElement.setAttribute ('height', bb.manakaiPointerHeight);
-    pointerSVGElement.style.display = 'block';
-    pointerSVGElement.style.position = 'absolute';
-    pointerSVGElement.style.top = -(bb.manakaiPointerHeight + bb.paddingTop) + 'px';
-    pointerSVGElement.style.left = (bb.manakaiPointerSource - bb.manakaiPointerWidth / 2) + 'px';
+    var vShape = document.createElement ('_vml_:shape');
+    vShape.style.width = bb.manakaiPointerWidth + 'px';
+    vShape.style.height = bb.manakaiPointerHeight + 'px';
+    vShape.style.display = 'block';
+    vShape.style.position = 'absolute';
+    vShape.style.top = -(bb.manakaiPointerHeight + bb.paddingTop + bb.borderTopWidth) + 'px';
+    vShape.style.left = (bb.manakaiPointerSource - bb.manakaiPointerWidth / 2) + 'px';
   
-    var pointerElement = document.createElementNS (this.SVGNS, 'path');
-    pointerElement.setAttribute ('d', [
-      'M', bb.manakaiPointerWidth, bb.manakaiPointerHeight,
-      'Q', bb.manakaiPointerWidth * 3 / 4, bb.manakaiPointerHeight,
+    var vPath = document.createElement ('_vml_:path');
+    vPath.setAttribute ('v', new JSTE.List ([
+'m 0 0 ',
+      'm', bb.manakaiPointerWidth, bb.manakaiPointerHeight,
+      'c',
+      bb.manakaiPointerWidth * 3 / 4, bb.manakaiPointerHeight,
+      bb.manakaiPointerWidth * 3 / 4, bb.manakaiPointerHeight,
       bb.manakaiPointerWidth / 2, 0,
-      'Q', bb.manakaiPointerWidth / 4, bb.manakaiPointerHeight,
-      0, bb.manakaiPointerHeight].join (' '));
-    pointerElement.setAttribute ('stroke', bb.borderColor);
-    pointerElement.setAttribute ('stroke-width', bb.borderWidth);
-    pointerElement.setAttribute ('fill', bb.backgroundColor);
+      'c',
+      bb.manakaiPointerWidth / 4, bb.manakaiPointerHeight,
+      bb.manakaiPointerWidth / 4, bb.manakaiPointerHeight,
+      0, bb.manakaiPointerHeight,
+      'e']).numberToInteger ().list.join (' '));
+    vShape.setAttribute ('stroke', 'true');
+    vShape.setAttribute ('strokecolor', bb.borderColor);
+    vShape.setAttribute ('strokeweight', bb.borderWidth);
+    vShape.setAttribute ('fill', 'true');
+    vShape.setAttribute ('fillcolor', bb.backgroundColor);
+    vShape.setAttribute ('coordorigin', '0 0');
+    vShape.setAttribute ('coordsize', bb.manakaiPointerWidth + ' ' + bb.manakaiPointerHeight);
 
-    pointerSVGElement.appendChild (pointerElement);
+    vShape.appendChild (vPath);
 
-    this.element.appendChild (pointerSVGElement);
+    this.element.appendChild (vShape);
   } // _renderPointer
 
 }); // SimpleBalloonVML
