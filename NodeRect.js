@@ -827,7 +827,7 @@ if (!NR.View) NR.View = {};
 
 NR.View.getBoundingClientRectOrigin = function (view, doc) {
   var parentEl = doc.body || doc.documentElement;
-  var testEl = doc.createElement ('dov');
+  var testEl = doc.createElement ('non-styled-element');
 
   if (!testEl.getBoundingClientRect) return NR.Vector.invalid;
 
@@ -847,7 +847,7 @@ NR.View.getBoundingClientRectOrigin = function (view, doc) {
   parentEl.removeChild (testEl);
 
   return origin;
-}; // getBoundingRectOrigin
+}; // getBoundingClientRectOrigin
 
 NR.View.getViewportRects = function (view) {
   var doc = view.document;
@@ -966,9 +966,13 @@ NR.View.getViewportRects = function (view) {
   rects.contentBox.label = 'Viewport content box';
 
   if (rects.boundingClientOrigin) {
-    rects.boundingClientOrigin
-        = rects.boundingClientOrigin.add (rects.scrollState);
-    rects.boundingClientOrigin.label = 'Bounding client rect origin';
+    if (document.all && quirks) {
+      //
+    } else {
+      rects.boundingClientOrigin
+          = rects.boundingClientOrigin.add (rects.scrollState);
+      rects.boundingClientOrigin.label = 'Bounding client rect origin';
+    }
   } else {
     rects.boundingClientOrigin = rects.scrollState;
   }
