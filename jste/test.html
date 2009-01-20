@@ -181,56 +181,71 @@ var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
   var SVGNS = 'http://www.w3.org/2000/svg';  
   var box = document.createElementNS (SVGNS, 'svg');
 
-  var boxMargin = 1;
-  var boxBorderWidth = 5;
-  var boxBorderColor = 'green';
-  var boxBorderRadiusHorizontal = 10;
-  var boxBorderRadiusVertical = 10;
-  var boxPadding = 10;
-  var boxMBWidth = msgRect.width + (boxMargin + boxBorderWidth + boxPadding) * 2;
-  var boxMBHeight = msgRect.height + (boxMargin + boxBorderWidth + boxPadding) * 2;
+  var bb = this.getComputedStyle (null);
+
+  var bwDelta = bb.marginLeft + bb.borderLeftWidth + bb.paddingLeft;
+  var bhDelta = bb.marginTop + bb.borderTopWidth + bb.paddingTop;
+  var boxMBWidth = msgRect.width + bwDelta
+      + bb.marginRight + bb.borderRightWidth + bb.paddingRight;
+  var boxMBHeight = msgRect.height + bhDelta
+      + bb.marginBottom + bb.borderBottomWidth + bb.paddingBottom;
 
   box.style.display = 'block';
   box.style.position = 'absolute';
-  box.style.top = -(boxMargin + boxBorderWidth + boxPadding) + 'px';
-  box.style.left = -(boxMargin + boxBorderWidth + boxPadding) + 'px';
+  box.style.top = -bhDelta + 'px';
+  box.style.left = -bwDelta + 'px';
 
   messageContainer.style.position = 'relative';
 
   box.setAttribute ('width', boxMBWidth);
   box.setAttribute ('height', boxMBHeight);
 
-  var bbTop = boxMargin + boxBorderWidth / 2;
-  var bbRight = boxMBWidth - boxMargin * 2 - boxBorderWidth;
-  var bbLeft = boxMargin + boxBorderWidth / 2;
-  var bbBottom = boxMBHeight - boxMargin * 2 - boxBorderWidth;
+  var bbTop = bb.marginTop + bb.borderTopWidth / 2;
+  var bbRight = boxMBWidth - bb.marginLeft - bb.borderLeftWidth / 2
+      - bb.marginRight - bb.borderRightWidth / 2;
+  var bbLeft = bb.marginLeft + bb.borderLeftWidth / 2;
+  var bbBottom = boxMBHeight - bb.marginTop - bb.marginBottom
+      - bb.borderTopWidth / 2 - bb.borderBottomWidth / 2;
 
   var boxBorder = document.createElementNS (SVGNS, 'path');
   boxBorder.setAttribute ('d', [
-    'M', bbLeft + boxBorderRadiusHorizontal, bbTop,
-    'L', bbRight - boxBorderRadiusHorizontal, bbTop,
+    'M', bbLeft + bb.manakaiBorderTopLeftRadiusHorizontal, bbTop,
 
-    'a', boxBorderRadiusHorizontal, boxBorderRadiusVertical, 0, 0, 1, 
-    boxBorderRadiusHorizontal, boxBorderRadiusVertical,
+    'L', bbRight - bb.manakaiBorderTopRightRadiusHorizontal, bbTop,
 
-    'L', bbRight, bbBottom - boxBorderRadiusVertical,
+    'a',
+    bb.manakaiBorderTopRightRadiusHorizontal,
+    bb.manakaiBorderTopRightRadiusVertical, 0, 0, 1, 
+    bb.manakaiBorderTopRightRadiusHorizontal,
+    bb.manakaiBorderTopRightRadiusVertical,
 
-    'a', boxBorderRadiusHorizontal, boxBorderRadiusVertical, 0, 0, 1,
-    -boxBorderRadiusHorizontal, boxBorderRadiusVertical,    
+    'L', bbRight, bbBottom - bb.manakaiBorderBottomRightRadiusVertical,
 
-    'L', bbLeft + boxBorderRadiusHorizontal, bbBottom,
+    'a',
+    bb.manakaiBorderBottomRightRadiusHorizontal,
+    bb.manakaiBorderBottomRightRadiusVertical, 0, 0, 1,
+    -bb.manakaiBorderBottomRightRadiusHorizontal,
+    bb.manakaiBorderBottomRightRadiusVertical,    
 
-    'a', boxBorderRadiusHorizontal, boxBorderRadiusVertical, 0, 0, 1,
-    -boxBorderRadiusHorizontal, -boxBorderRadiusVertical,    
+    'L', bbLeft + bb.manakaiBorderBottomLeftRadiusHorizontal, bbBottom,
 
-    'L', bbLeft, bbTop + boxBorderRadiusVertical,
+    'a',
+    bb.manakaiBorderBottomLeftRadiusHorizontal,
+    bb.manakaiBorderBottomLeftRadiusVertical, 0, 0, 1,
+    -bb.manakaiBorderBottomLeftRadiusHorizontal,
+    -bb.manakaiBorderBottomLeftRadiusVertical,    
 
-    'a', boxBorderRadiusHorizontal, boxBorderRadiusVertical, 0, 0, 1,
-    boxBorderRadiusHorizontal, -boxBorderRadiusVertical
+    'L', bbLeft, bbTop + bb.manakaiBorderTopLeftRadiusVertical,
+
+    'a',
+    bb.manakaiBorderTopLeftRadiusHorizontal,
+    bb.manakaiBorderTopLeftRadiusVertical, 0, 0, 1,
+    bb.manakaiBorderTopLeftRadiusHorizontal,
+    -bb.manakaiBorderTopLeftRadiusVertical
   ].join (' '));
-  boxBorder.setAttribute ('stroke', boxBorderColor);
-  boxBorder.setAttribute ('stroke-width', boxBorderWidth);
-  boxBorder.setAttribute ('fill', this.getBackgroundColor ());
+  boxBorder.setAttribute ('stroke', bb.borderColor);
+  boxBorder.setAttribute ('stroke-width', bb.borderWidth);
+  boxBorder.setAttribute ('fill', bb.backgroundColor);
 
   box.appendChild (boxBorder);
 
@@ -238,33 +253,33 @@ var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
 
   if (refElement) {
     var rects = NR.Element.getRects (refElement, window);
-    var bb = rects.borderBox;
-
-    var pointerBoxMargin = 5;
-    var pointerBoxWidth = 20;
-    var pointerBoxHeight = 40;
-    var pointerBoxLeft = 20;
+    var rbb = rects.borderBox;
     
-    var left = bb.left + bb.width * 3 / 4 - (pointerBoxLeft + pointerBoxWidth / 2);
-    if (left < 0) left = boxBorderWidth + boxPadding;
-    var top = bb.bottom + pointerBoxMargin + pointerBoxHeight + boxPadding;
+    var left = rbb.left + rbb.width * 3 / 4 - bb.manakaiPointerSource;
+    if (left < 0) left = bb.borderLeftWidth + bb.paddingLeft;
+    var top = rbb.bottom + bb.manakaiPointerOffset + bb.manakaiPointerHeight + bb.paddingTop;
 
     this.element.style.top = top + 'px';
     this.element.style.left = left + 'px';
 
     var pointerSVGElement = document.createElementNS (SVGNS, 'svg');
-    pointerSVGElement.setAttribute ('width', pointerBoxWidth);
-    pointerSVGElement.setAttribute ('height', pointerBoxHeight);
+    pointerSVGElement.setAttribute ('width', bb.manakaiPointerWidth);
+    pointerSVGElement.setAttribute ('height', bb.manakaiPointerHeight);
     pointerSVGElement.style.display = 'block';
     pointerSVGElement.style.position = 'absolute';
-    pointerSVGElement.style.top = -(pointerBoxHeight + boxPadding) + 'px';
-    pointerSVGElement.style.left = pointerBoxLeft + 'px';
+    pointerSVGElement.style.top = -(bb.manakaiPointerHeight + bb.paddingTop) + 'px';
+    pointerSVGElement.style.left = (bb.manakaiPointerSource - bb.manakaiPointerWidth / 2) + 'px';
   
     var pointerElement = document.createElementNS (SVGNS, 'path');
-    pointerElement.setAttribute ('d', ['M', pointerBoxWidth, pointerBoxHeight, 'Q', pointerBoxWidth * 3 / 4, pointerBoxHeight, pointerBoxWidth / 2, 0, 'Q', pointerBoxWidth / 4, pointerBoxHeight, 0, pointerBoxHeight].join (' '));
-    pointerElement.setAttribute ('stroke', boxBorderColor);
-    pointerElement.setAttribute ('stroke-width', boxBorderWidth);
-    pointerElement.setAttribute ('fill', this.getBackgroundColor ());
+    pointerElement.setAttribute ('d', [
+      'M', bb.manakaiPointerWidth, bb.manakaiPointerHeight,
+      'Q', bb.manakaiPointerWidth * 3 / 4, bb.manakaiPointerHeight,
+      bb.manakaiPointerWidth / 2, 0,
+      'Q', bb.manakaiPointerWidth / 4, bb.manakaiPointerHeight,
+      0, bb.manakaiPointerHeight].join (' '));
+    pointerElement.setAttribute ('stroke', bb.borderColor);
+    pointerElement.setAttribute ('stroke-width', bb.borderWidth);
+    pointerElement.setAttribute ('fill', bb.backgroundColor);
 
     pointerSVGElement.appendChild (pointerElement);
 
@@ -288,6 +303,49 @@ var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
       JSTE.Element.deleteClassName (this.refElement, 'selected');
     }
   }, // remove
+
+  getComputedStyle: function (pseudoEl) {
+    if (pseudoEl == null) {
+      var boxMargin = 1;
+      var boxBorderWidth = 5;
+      var boxBorderColor = 'green';
+      var boxBorderRadiusHorizontal = 10;
+      var boxBorderRadiusVertical = 10;
+      var boxPadding = 10;
+      var pointerBoxMargin = 5;
+      var pointerBoxWidth = 20;
+      var pointerBoxHeight = 40;
+      var pointerBoxLeft = 20;
+
+      return {
+        marginTop: boxMargin, marginRight: boxMargin, marginBottom: boxMargin,
+        marginLeft: boxMargin,
+        borderColor: boxBorderColor,
+        borderTopColor: boxBorderColor, borderRightColor: boxBorderColor,
+        borderBottomColor: boxBorderColor, borderLeftColor: boxBorderColor,
+        borderWidth: boxBorderWidth,
+        borderTopWidth: boxBorderWidth, borderRightWidth: boxBorderWidth,
+        borderBottomWidth: boxBorderWidth, borderLeftWidth: boxBorderWidth,
+        manakaiBorderTopLeftRadiusHorizontal: boxBorderRadiusHorizontal,
+        manakaiBorderTopLeftRadiusVertical: boxBorderRadiusVertical,
+        manakaiBorderTopRightRadiusHorizontal: boxBorderRadiusHorizontal,
+        manakaiBorderTopRightRadiusVertical: boxBorderRadiusVertical,
+        manakaiBorderBottomLeftRadiusHorizontal: boxBorderRadiusHorizontal,
+        manakaiBorderBottomLeftRadiusVertical: boxBorderRadiusVertical,
+        manakaiBorderBottomRightRadiusHorizontal: boxBorderRadiusHorizontal,
+        manakaiBorderBottomRightRadiusVertical: boxBorderRadiusVertical,
+        paddingTop: boxPadding, paddingRight: boxPadding,
+        paddingBottom: boxPadding, paddingLeft: boxPadding,
+        backgroundColor: this.getBackgroundColor (),
+        manakaiPointerWidth: pointerBoxWidth,
+        manakaiPointerHeight: pointerBoxHeight,
+        manakaiPointerOffset: pointerBoxMargin,
+        manakaiPointerSource: pointerBoxLeft
+      };
+    } else {
+      return {};
+    }
+  }, // getComputedStyle
 
   getBackgroundColor: function () {
     var el = this.contentElement;
