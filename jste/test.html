@@ -59,6 +59,10 @@ section, article, menu {
   right: 1em;
 }
 
+.sbs-selected {
+  outline: 2px blue dotted !important;
+}
+
 .container {
   display: block;
   padding-bottom: 2em;
@@ -73,34 +77,6 @@ section, article, menu {
   left: 0;
   right: 0;
   text-align: center;
-}
-
-
-xxx.container {
-  display: block;
-  position: relative;
-  left: 49px;
-  top: -22px /* -(10px + 34px) / 2 */;
-  min-height: 54px /* 10px + 34px + 10px */;
-  width: 20em;
-  padding: 1em;
-  background-color: rgb(128, 255, 255);
-  color: black;
-  -moz-border-radius: 16px;
-  -webkit-border-radius: 16px;
-}
-xxx.pointer {
-  display: block;
-  position: absolute;
-  left: -49px;
-  top: 10px;
-  width: 49px;
-  height: 34px;
-  background-image: url(test.png) /* 49x34 */;
-}
-
-.selected {
-  outline: 2px blue dotted !important;
 }
 </style>
 
@@ -168,92 +144,120 @@ function showElement (elements) {
 }
 
 var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
+  this.contentElement = messageContainer;
+  this.element.appendChild (messageContainer);
+
   this.element = document.createElement ('article');
   this.element.className = 'sbs-container';
-  this.element.appendChild (messageContainer);
   document.body.appendChild (this.element);
 
-  this.contentElement = messageContainer;
+  this._renderBorder ();
 
-  var msgRects = NR.Element.getRects (messageContainer, window);
-  var msgRect = msgRects.borderBox;
-
-  var SVGNS = 'http://www.w3.org/2000/svg';  
-  var box = document.createElementNS (SVGNS, 'svg');
-
-  var bb = this.getComputedStyle (null);
-
-  var bwDelta = bb.marginLeft + bb.borderLeftWidth + bb.paddingLeft;
-  var bhDelta = bb.marginTop + bb.borderTopWidth + bb.paddingTop;
-  var boxMBWidth = msgRect.width + bwDelta
-      + bb.marginRight + bb.borderRightWidth + bb.paddingRight;
-  var boxMBHeight = msgRect.height + bhDelta
-      + bb.marginBottom + bb.borderBottomWidth + bb.paddingBottom;
-
-  box.style.display = 'block';
-  box.style.position = 'absolute';
-  box.style.top = -bhDelta + 'px';
-  box.style.left = -bwDelta + 'px';
-
-  messageContainer.style.position = 'relative';
-
-  box.setAttribute ('width', boxMBWidth);
-  box.setAttribute ('height', boxMBHeight);
-
-  var bbTop = bb.marginTop + bb.borderTopWidth / 2;
-  var bbRight = boxMBWidth - bb.marginLeft - bb.borderLeftWidth / 2
-      - bb.marginRight - bb.borderRightWidth / 2;
-  var bbLeft = bb.marginLeft + bb.borderLeftWidth / 2;
-  var bbBottom = boxMBHeight - bb.marginTop - bb.marginBottom
-      - bb.borderTopWidth / 2 - bb.borderBottomWidth / 2;
-
-  var boxBorder = document.createElementNS (SVGNS, 'path');
-  boxBorder.setAttribute ('d', [
-    'M', bbLeft + bb.manakaiBorderTopLeftRadiusHorizontal, bbTop,
-
-    'L', bbRight - bb.manakaiBorderTopRightRadiusHorizontal, bbTop,
-
-    'a',
-    bb.manakaiBorderTopRightRadiusHorizontal,
-    bb.manakaiBorderTopRightRadiusVertical, 0, 0, 1, 
-    bb.manakaiBorderTopRightRadiusHorizontal,
-    bb.manakaiBorderTopRightRadiusVertical,
-
-    'L', bbRight, bbBottom - bb.manakaiBorderBottomRightRadiusVertical,
-
-    'a',
-    bb.manakaiBorderBottomRightRadiusHorizontal,
-    bb.manakaiBorderBottomRightRadiusVertical, 0, 0, 1,
-    -bb.manakaiBorderBottomRightRadiusHorizontal,
-    bb.manakaiBorderBottomRightRadiusVertical,    
-
-    'L', bbLeft + bb.manakaiBorderBottomLeftRadiusHorizontal, bbBottom,
-
-    'a',
-    bb.manakaiBorderBottomLeftRadiusHorizontal,
-    bb.manakaiBorderBottomLeftRadiusVertical, 0, 0, 1,
-    -bb.manakaiBorderBottomLeftRadiusHorizontal,
-    -bb.manakaiBorderBottomLeftRadiusVertical,    
-
-    'L', bbLeft, bbTop + bb.manakaiBorderTopLeftRadiusVertical,
-
-    'a',
-    bb.manakaiBorderTopLeftRadiusHorizontal,
-    bb.manakaiBorderTopLeftRadiusVertical, 0, 0, 1,
-    bb.manakaiBorderTopLeftRadiusHorizontal,
-    -bb.manakaiBorderTopLeftRadiusVertical
-  ].join (' '));
-  boxBorder.setAttribute ('stroke', bb.borderColor);
-  boxBorder.setAttribute ('stroke-width', bb.borderWidth);
-  boxBorder.setAttribute ('fill', bb.backgroundColor);
-
-  box.appendChild (boxBorder);
-
-  this.element.insertBefore (box, this.element.firstChild);
-
+  this.refElement = refElement;
   if (refElement) {
-    var rects = NR.Element.getRects (refElement, window);
+    JSTE.Element.addClassName (refElement, 'sbs-selected');
+    this._renderPointer ();
+
+    JSTE.Element.addClassName (this.element, 'sbs-with-refelement');
+  } else {
+    JSTE.Element.addClassName (this.element, 'sbs-without-refelement');
+  }
+  
+  var self = this;
+  //setTimeout (function () {
+    showElement (new JSTE.List ([refElement]).onlyNonNull ());
+  //}, 2000);
+}, {
+  SVGNS: 'http://www.w3.org/2000/svg',
+
+  remove: function () {
+    if (this.refElement) {
+      JSTE.Element.deleteClassName (this.refElement, 'sbs-selected');
+    }
+  }, // remove
+
+  _renderBorder: function () {
+    var msgRects = NR.Element.getRects (this.contentElement, window);
+    var msgRect = msgRects.borderBox;
+
+    var bb = this.getComputedStyle ();
+
+    var bwDelta = bb.marginLeft + bb.borderLeftWidth + bb.paddingLeft;
+    var bhDelta = bb.marginTop + bb.borderTopWidth + bb.paddingTop;
+    var boxMBWidth = msgRect.width + bwDelta
+        + bb.marginRight + bb.borderRightWidth + bb.paddingRight;
+    var boxMBHeight = msgRect.height + bhDelta
+        + bb.marginBottom + bb.borderBottomWidth + bb.paddingBottom;
+
+    var box = document.createElementNS (this.SVGNS, 'svg');
+    box.style.display = 'block';
+    box.style.position = 'absolute';
+    box.style.top = -bhDelta + 'px';
+    box.style.left = -bwDelta + 'px';
+
+    /* This is necessary to render the content element over the border SVG
+       element. */
+    this.contentElement.style.position = 'relative';
+
+    box.setAttribute ('width', boxMBWidth);
+    box.setAttribute ('height', boxMBHeight);
+
+    var bbTop = bb.marginTop + bb.borderTopWidth / 2;
+    var bbRight = boxMBWidth - bb.marginLeft - bb.borderLeftWidth / 2
+        - bb.marginRight - bb.borderRightWidth / 2;
+    var bbLeft = bb.marginLeft + bb.borderLeftWidth / 2;
+    var bbBottom = boxMBHeight - bb.marginTop - bb.marginBottom
+        - bb.borderTopWidth / 2 - bb.borderBottomWidth / 2;
+
+    var boxBorder = document.createElementNS (this.SVGNS, 'path');
+    boxBorder.setAttribute ('d', [
+      'M', bbLeft + bb.manakaiBorderTopLeftRadiusHorizontal, bbTop,
+
+      'L', bbRight - bb.manakaiBorderTopRightRadiusHorizontal, bbTop,
+
+      'a',
+      bb.manakaiBorderTopRightRadiusHorizontal,
+      bb.manakaiBorderTopRightRadiusVertical, 0, 0, 1, 
+      bb.manakaiBorderTopRightRadiusHorizontal,
+      bb.manakaiBorderTopRightRadiusVertical,
+
+      'L', bbRight, bbBottom - bb.manakaiBorderBottomRightRadiusVertical,
+  
+      'a',
+      bb.manakaiBorderBottomRightRadiusHorizontal,
+      bb.manakaiBorderBottomRightRadiusVertical, 0, 0, 1,
+      -bb.manakaiBorderBottomRightRadiusHorizontal,
+      bb.manakaiBorderBottomRightRadiusVertical,    
+
+      'L', bbLeft + bb.manakaiBorderBottomLeftRadiusHorizontal, bbBottom,
+
+      'a',
+      bb.manakaiBorderBottomLeftRadiusHorizontal,
+      bb.manakaiBorderBottomLeftRadiusVertical, 0, 0, 1,
+      -bb.manakaiBorderBottomLeftRadiusHorizontal,
+      -bb.manakaiBorderBottomLeftRadiusVertical,    
+
+      'L', bbLeft, bbTop + bb.manakaiBorderTopLeftRadiusVertical,
+
+      'a',
+      bb.manakaiBorderTopLeftRadiusHorizontal,
+      bb.manakaiBorderTopLeftRadiusVertical, 0, 0, 1,
+      bb.manakaiBorderTopLeftRadiusHorizontal,
+      -bb.manakaiBorderTopLeftRadiusVertical
+    ].join (' '));
+    boxBorder.setAttribute ('stroke', bb.borderColor);
+    boxBorder.setAttribute ('stroke-width', bb.borderWidth);
+    boxBorder.setAttribute ('fill', bb.backgroundColor);
+
+    box.appendChild (boxBorder);
+
+    this.element.insertBefore (box, this.element.firstChild);
+  }, // _renderBorder
+  _renderPointer: function () {
+    var rects = NR.Element.getRects (this.refElement, window);
     var rbb = rects.borderBox;
+
+    var bb = this.getComputedStyle ();
     
     var left = rbb.left + rbb.width * 3 / 4 - bb.manakaiPointerSource;
     if (left < 0) left = bb.borderLeftWidth + bb.paddingLeft;
@@ -262,7 +266,7 @@ var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
     this.element.style.top = top + 'px';
     this.element.style.left = left + 'px';
 
-    var pointerSVGElement = document.createElementNS (SVGNS, 'svg');
+    var pointerSVGElement = document.createElementNS (this.SVGNS, 'svg');
     pointerSVGElement.setAttribute ('width', bb.manakaiPointerWidth);
     pointerSVGElement.setAttribute ('height', bb.manakaiPointerHeight);
     pointerSVGElement.style.display = 'block';
@@ -270,7 +274,7 @@ var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
     pointerSVGElement.style.top = -(bb.manakaiPointerHeight + bb.paddingTop) + 'px';
     pointerSVGElement.style.left = (bb.manakaiPointerSource - bb.manakaiPointerWidth / 2) + 'px';
   
-    var pointerElement = document.createElementNS (SVGNS, 'path');
+    var pointerElement = document.createElementNS (this.SVGNS, 'path');
     pointerElement.setAttribute ('d', [
       'M', bb.manakaiPointerWidth, bb.manakaiPointerHeight,
       'Q', bb.manakaiPointerWidth * 3 / 4, bb.manakaiPointerHeight,
@@ -284,25 +288,7 @@ var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
     pointerSVGElement.appendChild (pointerElement);
 
     this.element.appendChild (pointerSVGElement);
- 
-    this.refElement = refElement;
-    JSTE.Element.addClassName (refElement, 'selected');
-
-    JSTE.Element.addClassName (this.element, 'sbs-with-refelement');
-  } else {
-    JSTE.Element.addClassName (this.element, 'sbs-without-refelement');
-  }
-  
-  var self = this;
-  //setTimeout (function () {
-    showElement (new JSTE.List ([refElement]).onlyNonNull ());
-  //}, 2000);
-}, {
-  remove: function () {
-    if (this.refElement) {
-      JSTE.Element.deleteClassName (this.refElement, 'selected');
-    }
-  }, // remove
+  }, // _renderPointer
 
   getComputedStyle: function (pseudoEl) {
     if (pseudoEl == null) {
