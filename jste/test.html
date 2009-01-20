@@ -239,16 +239,18 @@ var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
   if (refElement) {
     var rects = NR.Element.getRects (refElement, window);
     var bb = rects.borderBox;
+
+    var pointerBoxMargin = 5;
+    var pointerBoxWidth = 20;
+    var pointerBoxHeight = 40;
+    var pointerBoxLeft = 20;
     
-    var left = bb.right;
-    var top = bb.top + bb.height / 2;
+    var left = bb.left + bb.width * 3 / 4 - (pointerBoxLeft + pointerBoxWidth / 2);
+    if (left < 0) left = boxBorderWidth + boxPadding;
+    var top = bb.bottom + pointerBoxMargin + pointerBoxHeight + boxPadding;
 
     this.element.style.top = top + 'px';
     this.element.style.left = left + 'px';
-
-    var pointerBoxWidth = 20;
-    var pointerBoxHeight = 30;
-    var pointerBoxLeft = 20;
 
     var pointerSVGElement = document.createElementNS (SVGNS, 'svg');
     pointerSVGElement.setAttribute ('width', pointerBoxWidth);
