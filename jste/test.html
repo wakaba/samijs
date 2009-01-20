@@ -63,7 +63,7 @@ section, article, menu {
   outline: 2px blue dotted !important;
 }
 
-.container {
+.mm-container {
   display: block;
   padding-bottom: 2em;
   background-color: white;
@@ -71,7 +71,7 @@ section, article, menu {
   min-height: 5em;
 }
 
-.container menu {
+.mm-container menu {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -144,12 +144,12 @@ function showElement (elements) {
 }
 
 var SimpleBalloonSVG = new JSTE.Class (function (messageContainer, refElement) {
-  this.contentElement = messageContainer;
-  this.element.appendChild (messageContainer);
-
   this.element = document.createElement ('article');
   this.element.className = 'sbs-container';
   document.body.appendChild (this.element);
+
+  this.contentElement = messageContainer;
+  this.element.appendChild (messageContainer);
 
   this._renderBorder ();
 
@@ -352,22 +352,12 @@ var MyMessage = new JSTE.Subclass (function () {
     var doc = this._targetDocument;
     
     var container = doc.createElement ('section');
-    container.className = 'container';
-    var style = doc.createElement ('style');
-    style.textContent = this.select + ' { outline: red 2px solid }';
-    container.appendChild (style);
+    container.className = 'mm-container';
     
     container.appendChild (msgContainer);
     container.appendChild (buttonContainer);
     
     var refElement = JSTE.Node.querySelector (document, this.select);
-    
-    if (refElement) {
-      var pointer = doc.createElement ('span');
-      pointer.className = 'pointer';
-      container.appendChild (pointer);
-    }
-    
     this._simpleBalloon = new SimpleBalloonSVG (container, refElement);
     
     return this._simpleBalloon.element;
