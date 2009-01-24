@@ -171,10 +171,9 @@ var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
   this._renderBorder ();
 
   this.refElement = refElement;
+  this._renderPointer ();
   if (refElement) {
     JSTE.Element.addClassName (refElement, 'sbs-selected');
-    this._renderPointer ();
-
     JSTE.Element.addClassName (this.element, 'sbs-with-refelement');
   } else {
     JSTE.Element.addClassName (this.element, 'sbs-without-refelement');
@@ -271,17 +270,20 @@ var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
     this.element.insertBefore (box, this.element.firstChild);
   }, // _renderBorder
   _renderPointer: function () {
-    var rects = NR.Element.getRects (this.refElement, window);
-    var rbb = rects.borderBox;
-
     var bb = this.getComputedStyle ();
-    
-    var left = rbb.left + rbb.width * 3 / 4 - bb.manakaiPointerSource;
-    if (left < 0) left = bb.borderLeftWidth + bb.paddingLeft;
-    var top = rbb.bottom + bb.manakaiPointerOffset + bb.manakaiPointerHeight + bb.paddingTop;
 
-    this.element.style.top = top + 'px';
-    this.element.style.left = left + 'px';
+    if (this.refElement) {
+      var rects = NR.Element.getRects (this.refElement, window);
+      var rbb = rects.borderBox;
+
+      var left = rbb.left + rbb.width * 3 / 4 - bb.manakaiPointerSource;
+      if (left < 0) left = bb.borderLeftWidth + bb.paddingLeft;
+      var top = rbb.bottom + bb.manakaiPointerOffset
+          + bb.manakaiPointerHeight + bb.paddingTop;
+
+      this.element.style.top = top + 'px';
+      this.element.style.left = left + 'px';
+    }
 
     var pointerSVGElement = document.createElementNS (this.SVGNS, 'svg');
     pointerSVGElement.setAttribute ('width', bb.manakaiPointerWidth);
@@ -292,12 +294,20 @@ var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
     pointerSVGElement.style.left = (bb.manakaiPointerSource - bb.manakaiPointerWidth / 2) + 'px';
   
     var pointerElement = document.createElementNS (this.SVGNS, 'path');
-    pointerElement.setAttribute ('d', [
-      'M', bb.manakaiPointerWidth, bb.manakaiPointerHeight,
-      'Q', bb.manakaiPointerWidth * 3 / 4, bb.manakaiPointerHeight,
-      bb.manakaiPointerWidth / 2, 0,
-      'Q', bb.manakaiPointerWidth / 4, bb.manakaiPointerHeight,
-      0, bb.manakaiPointerHeight].join (' '));
+    if (this.refElement) {
+      pointerElement.setAttribute ('d', [
+        'M', bb.manakaiPointerWidth, bb.manakaiPointerHeight,
+        'Q', bb.manakaiPointerWidth * 3 / 4, bb.manakaiPointerHeight,
+        bb.manakaiPointerWidth / 2, 0,
+        'Q', bb.manakaiPointerWidth / 4, bb.manakaiPointerHeight,
+        0, bb.manakaiPointerHeight].join (' '));
+    } else {
+      pointerElement.setAttribute ('d', [
+        'M', 0, bb.manakaiPointerHeight,
+        'L', bb.manakaiPointerWidth, bb.manakaiPointerHeight
+      ].join (' '));
+    }
+
     pointerElement.setAttribute ('stroke', bb.borderColor);
     pointerElement.setAttribute ('stroke-width', bb.borderWidth);
     pointerElement.setAttribute ('fill', bb.backgroundColor);
@@ -310,12 +320,12 @@ var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
   getComputedStyle: function (pseudoEl) {
     if (pseudoEl == null) {
       var boxMargin = 1;
-      var boxBorderWidth = 5;
+      var boxBorderWidth = 4; // use even number to avoid use of non-integer pixels not supported by VML
       var boxBorderColor = 'green';
       var boxBorderRadiusHorizontal = 10;
       var boxBorderRadiusVertical = 10;
       var boxPadding = 10;
-      var pointerBoxMargin = 5;
+      var pointerBoxMargin = 6;
       var pointerBoxWidth = 20;
       var pointerBoxHeight = 40;
       var pointerBoxLeft = 20;
@@ -407,7 +417,7 @@ var SimpleBalloonVML = new JSTE.Subclass (function () {
 
     var vPath = document.createElement ('_vml_:path');
     vPath.setAttribute ('v', new JSTE.List ([
-      'm', bbLeft + bb.manakaiBorderTopLeftRadiusHorizontal, bbTop,
+      'm', bb.marginLeft + bb.borderLeftWidth + bb.paddingLeft + bb.manakaiPointerSource + bb.manakaiPointerWidth / 2, bbTop,
 
       'l', bbRight - bb.manakaiBorderTopRightRadiusHorizontal, bbTop,
 
@@ -433,12 +443,14 @@ var SimpleBalloonVML = new JSTE.Subclass (function () {
       bbLeft + bb.manakaiBorderTopLeftRadiusHorizontal,
       bbTop,
 
+      'l', bb.marginLeft + bb.borderLeftWidth + bb.paddingLeft + bb.manakaiPointerSource - bb.manakaiPointerWidth / 2, bbTop,
+
       'e'
     ]).numberToInteger ().list.join (' '));
     vShape.setAttribute ('stroke', 'true');
     vShape.setAttribute ('strokecolor', bb.borderColor);
     vShape.setAttribute ('strokeweight', bb.borderWidth);
-    vShape.setAttribute ('fill', 'true');
+    vShape.setAttribute ('filled', 'true');
     vShape.setAttribute ('fillcolor', bb.backgroundColor);
     vShape.setAttribute ('coordorigin', '0 0');
     vShape.setAttribute ('coordsize', boxMBWidth + ' ' + boxMBHeight);
@@ -448,43 +460,53 @@ var SimpleBalloonVML = new JSTE.Subclass (function () {
     this.element.insertBefore (vShape, this.element.firstChild);
   }, // _renderBorder
   _renderPointer: function () {
-    var rects = NR.Element.getRects (this.refElement, window);
-    var rbb = rects.borderBox;
-
     var bb = this.getComputedStyle ();
-    
-    var left = rbb.left + rbb.width * 3 / 4 - bb.manakaiPointerSource;
-    if (left < 0) left = bb.borderLeftWidth + bb.paddingLeft;
-    var top = rbb.bottom + bb.manakaiPointerOffset + bb.manakaiPointerHeight + bb.borderTopWidth + bb.paddingTop;
+      
+    if (this.refElement) {
+      var rects = NR.Element.getRects (this.refElement, window);
+      var rbb = rects.borderBox;
 
-    this.element.style.top = top + 'px';
-    this.element.style.left = left + 'px';
+      var left = rbb.left + rbb.width * 3 / 4 - bb.manakaiPointerSource;
+      if (left < 0) left = bb.borderLeftWidth + bb.paddingLeft;
+      var top = rbb.bottom + bb.manakaiPointerOffset
+          + bb.manakaiPointerHeight + bb.borderTopWidth + bb.paddingTop;
+
+      this.element.style.top = top + 'px';
+      this.element.style.left = left + 'px';
+    }
 
     var vShape = document.createElement ('_vml_:shape');
     vShape.style.width = bb.manakaiPointerWidth + 'px';
     vShape.style.height = bb.manakaiPointerHeight + 'px';
     vShape.style.display = 'block';
     vShape.style.position = 'absolute';
-    vShape.style.top = -(bb.manakaiPointerHeight + bb.paddingTop + bb.borderTopWidth) + 'px';
+    vShape.style.top = -(bb.manakaiPointerHeight + bb.paddingTop + bb.borderTopWidth / 2) + 'px';
     vShape.style.left = (bb.manakaiPointerSource - bb.manakaiPointerWidth / 2) + 'px';
   
     var vPath = document.createElement ('_vml_:path');
-    vPath.setAttribute ('v', new JSTE.List ([
-'m 0 0 ',
-      'm', bb.manakaiPointerWidth, bb.manakaiPointerHeight,
-      'c',
-      bb.manakaiPointerWidth * 3 / 4, bb.manakaiPointerHeight,
-      bb.manakaiPointerWidth * 3 / 4, bb.manakaiPointerHeight,
-      bb.manakaiPointerWidth / 2, 0,
-      'c',
-      bb.manakaiPointerWidth / 4, bb.manakaiPointerHeight,
-      bb.manakaiPointerWidth / 4, bb.manakaiPointerHeight,
-      0, bb.manakaiPointerHeight,
-      'e']).numberToInteger ().list.join (' '));
+    if (this.refElement) {
+      vPath.setAttribute ('v', new JSTE.List ([
+        'm', bb.manakaiPointerWidth, bb.manakaiPointerHeight,
+        'c',
+        bb.manakaiPointerWidth * 3 / 4, bb.manakaiPointerHeight,
+        bb.manakaiPointerWidth * 3 / 4, bb.manakaiPointerHeight,
+        bb.manakaiPointerWidth / 2, 0,
+        'c',
+        bb.manakaiPointerWidth / 4, bb.manakaiPointerHeight,
+        bb.manakaiPointerWidth / 4, bb.manakaiPointerHeight,
+        0, bb.manakaiPointerHeight,
+        'e']).numberToInteger ().list.join (' '));
+    } else {
+      vPath.setAttribute ('v', new JSTE.List ([
+        'm', 0, bb.manakaiPointerHeight,
+        'l', bb.manakaiPointerWidth, bb.manakaiPointerHeight,
+        'e']).numberToInteger ().list.join (' '));
+    }
+
     vShape.setAttribute ('stroke', 'true');
     vShape.setAttribute ('strokecolor', bb.borderColor);
     vShape.setAttribute ('strokeweight', bb.borderWidth);
-    vShape.setAttribute ('fill', 'true');
+    vShape.setAttribute ('filled', 'true');
     vShape.setAttribute ('fillcolor', bb.backgroundColor);
     vShape.setAttribute ('coordorigin', '0 0');
     vShape.setAttribute ('coordsize', bb.manakaiPointerWidth + ' ' + bb.manakaiPointerHeight);
