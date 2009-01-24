@@ -178,6 +178,8 @@ var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
   } else {
     JSTE.Element.addClassName (this.element, 'sbs-without-refelement');
   }
+
+  this.forceRedraw ();
   
   var self = this;
   //setTimeout (function () {
@@ -369,8 +371,28 @@ var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
     } else {
       return 'white';
     }
-  } // getBackgroundColor
+  }, // getBackgroundColor
+
+  forceRedraw: function () {
+    // Safari 3.2.1 for Windows Vista (Aero enabled) does not always paint
+    // SVG borders correctly.  (Chrome does, however.)
+    if (SimpleBalloon.isSafari) {
+      var rects = NR.View.getViewportRects (window);
+      var vp = rects.contentBox;
+      var el = document.createElement ('non-styled-element');
+      el.style.display = 'block';
+      el.style.position = 'absolute';
+      el.style.top = vp.top + 'px';
+      el.style.left = vp.left + 'px';
+      el.style.width = vp.width + 'px';
+      el.style.height = vp.height + 'px';
+      document.body.appendChild (el);
+      setTimeout (function () { document.body.removeChild (el) }, 1);
+    }
+  } // forceRedraw
 }); // SimpleBalloon
+
+SimpleBalloon.isSafari = navigator.userAgent.indexOf ("Safari") > -1;
 
 var SimpleBalloonVML = new JSTE.Subclass (function () {
   if (!document.namespaces._vml_) {
