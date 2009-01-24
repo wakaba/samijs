@@ -97,11 +97,9 @@ section, article, menu {
 
 <script type="text/javascript" src="uupaa-detect.mini.js"></script>
 <script type="text/javascript" src="uupaa-selector.js"></script>
-<script type="text/javascript" src="uupaa-selector+.js"></script>
+<!--<script type="text/javascript" src="uupaa-selector+.js"></script>-->
 
 <script src="../../css/noderect/NodeRect.js"></script>
-
-<script id="uupaa.js" type="text/javascript" src="uupaa/uupaa.js"></script>
 
 <script src=tutorial.js></script>
 
@@ -124,37 +122,36 @@ function showElement (elements) {
   var topEl;
   var leftEl;
   elements.forEach (function (el) {
-    var rect = uu.element.rect (el);
-    if (rect.y < top) {
-      top = rect.y;
+    var rect = NR.Element.getRects (el, window).borderBox;
+    if (rect.top < top) {
+      top = rect.top;
       topEl = el;
     }
-    if (rect.x < left) {
-      left = rect.x;
+    if (rect.left < left) {
+      left = rect.left;
       leftEl = el;
     }
   });
   
-  var rect = uu.viewport.rect ();
-  if (rect.sh <= top && top <= rect.sh + rect.h) {
-    top = rect.sh;
+  var rect = NR.View.getViewportRects (window, document).contentBox;
+  if (rect.top <= top && top <= rect.bottom) {
+    top = rect.top;
   }
-  if (rect.sw <= left && left <= rect.sw + rect.w) {
-    left = rect.sw;
+  if (rect.left <= left && left <= rect.right) {
+    left = rect.left;
   }
-  
+
   if (leftEl || topEl) {
-    var od = (leftEl || topEl).ownerDocument;
-    var point = od.createElement ('span');
-    point.style.display = 'block';
-    point.style.position = 'absolute';
-    point.style.top = top + 'px';
-    point.style.left = left + 'px';
-    point.style.width = 0;
-    point.style.height = 0;
-    od.documentElement.appendChild (point);
-    point.scrollIntoView (true);
-    point.parentNode.removeChild (point);
+    /*
+      Set scroll* of both <html> and <body> elements, to support all of 
+      four browsers and two (or three) rendering modes.  This might result
+      in confusing the user if both <html> and <body> elements have their
+      'overflow' properties specified to 'scroll'.
+    */
+    document.body.scrollTop = top;
+    document.body.scrollLeft = left;
+    document.documentElement.scrollTop = top;
+    document.documentElement.scrollLeft = left;
   }
 }
 
@@ -377,7 +374,7 @@ var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
     // Safari 3.2.1 for Windows Vista (Aero enabled) does not always paint
     // SVG borders correctly.  (Chrome does, however.)
     if (SimpleBalloon.isSafari) {
-      var rects = NR.View.getViewportRects (window);
+      var rects = NR.View.getViewportRects (window, document);
       var vp = rects.contentBox;
       var el = document.createElement ('non-styled-element');
       el.style.display = 'block';
