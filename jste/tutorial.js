@@ -560,35 +560,39 @@ JSTE.Message = new JSTE.Class (function (doc, template, commandTarget) {
 
 JSTE.Message.Button =
 new JSTE.Class (function (labelText, commandTarget, commandName, commandArgs) {
-  labelText = labelText != null ? labelText : "";
-  var className;
+  this._labelText = labelText != null ? labelText : "";
+
   if (commandTarget && commandTarget instanceof Function) {
     this._command = commandTarget;
+    this._classNames = new JSTE.List;
   } else if (commandTarget) {
     this._command = function () {
       return commandTarget.executeCommand.apply
           (commandTarget, [commandName, commandArgs]);
     };
-    className = 'jste-command-' + commandName;
+    this._classNames = new JSTE.List (['jste-command-' + commandName]);
   } else {
     this._command = function () { };
+    this._classNames = new JSTE.List;
   }
   
-  try {
-    this.element = document.createElement ('button');
-    this.element.setAttribute ('type', 'button');
-  } catch (e) {
-    this.element = document.createElement ('<button type=button>');
-  }
-  JSTE.Element.appendText (this.element, labelText);
-  if (className) this.element.className = className;
-  
-  var self = this;
-  new JSTE.Observer ("click", this.element, function (e) {
-    self._command.apply (self, [e]);
-  });
+  this._createElement ();
 }, {
+  _createElement: function () {
+    try {
+      this.element = document.createElement ('button');
+      this.element.setAttribute ('type', 'button');
+    } catch (e) {
+      this.element = document.createElement ('<button type=button>');
+    }
+    JSTE.Element.appendText (this.element, this._labelText);
+    this.element.className = this._classNames.list.join (' ');
   
+    var self = this;
+    new JSTE.Observer ("click", this.element, function (e) {
+      self._command (e);
+    });
+  } // _createElement
 }); // Button
 
 JSTE.Course = new JSTE.Class (function (doc) {
