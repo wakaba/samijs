@@ -9,6 +9,10 @@ This script requires NR.js
 var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
   if (!messageContainer) return;
 
+  if (document.all && this.constructor === SimpleBalloon) {
+    return new SimpleBalloonVML (messageContainer, refElement);
+  }
+
   this.element = document.createElement ('article');
   this.element.className = 'sbs-container';
   document.body.appendChild (this.element);

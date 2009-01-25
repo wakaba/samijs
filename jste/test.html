@@ -116,11 +116,7 @@ var MyMessage = new JSTE.Subclass (function () {
     container.appendChild (buttonContainer);
     
     var refElement = JSTE.Node.querySelector (document, this.select);
-    if (document.all) {
-      this._simpleBalloon = new SimpleBalloonVML (container, refElement);
-    } else {
-      this._simpleBalloon = new SimpleBalloon (container, refElement);
-    }
+    this._simpleBalloon = new SimpleBalloon (container, refElement);
     
     return this._simpleBalloon.element;
   }, // _render
