@@ -95,6 +95,10 @@ JSTE.Observer = new JSTE.Class (function (eventType, target, onevent) {
   } // stop
 }); // Observer
 
+new JSTE.Observer ('load', window, function () {
+  JSTE.windowLoaded = true;
+});
+
 JSTE.List = new JSTE.Class (function (arrayLike) {
   this.list = arrayLike || [];
 }, {
@@ -400,8 +404,65 @@ JSTE.Class.addClassMethods (JSTE.Element, {
   
   getIds: function (el) {
     return new JSTE.List (el.id != "" ? [el.id] : []);
-  } // getIds
+  }, // getIds
+
+  /* 
+    NR.js <http://suika.fam.cx/www/css/noderect/NodeRect.js> must be loaded
+    before the invocation.
+  */  
+  scroll: function (elements) {
+    if (!JSTE.windowLoaded) {
+      new JSTE.Observer ('load', window, function () {
+        JSTE.Element.scroll (elements);
+      });
+      return;
+    }
+
+    var top = Infinity;
+    var left = Infinity;
+    var topEl;
+    var leftEl;
+    elements.forEach (function (el) {
+      var rect = NR.Element.getRects (el, window).borderBox;
+      if (rect.top < top) {
+        top = rect.top;
+        topEl = el;
+      }
+      if (rect.left < left) {
+        left = rect.left;
+        leftEl = el;
+      }
+    });
+
+    if (!leftEl && !topEl) {
+      return;
+    }
+
+    var doc = (leftEl || topEl).ownerDocument;
   
+    var rect = NR.View.getViewportRects (window, doc).contentBox;
+    if (rect.top <= top && top <= rect.bottom) {
+      top = rect.top;
+    }
+    if (rect.left <= left && left <= rect.right) {
+      left = rect.left;
+    }
+
+    /*
+      Set scroll* of both <html> and <body> elements, to support all of 
+      four browsers and two (or three) rendering modes.  This might result
+      in confusing the user if both <html> and <body> elements have their
+      'overflow' properties specified to 'scroll'.
+
+      Note that this code does not do a good job if the |el| is within an
+      |overflow: scroll| element.
+    */
+    doc.body.scrollTop = top;
+    doc.body.scrollLeft = left;
+    doc.documentElement.scrollTop = top;
+    doc.documentElement.scrollLeft = left;
+  } // scroll
+
 }); // JSTE.Element
 
 /* Events: load, close, shown, hidden */
@@ -871,6 +932,16 @@ JSTE.Tutorial = new JSTE.Class (function (doc, course, args) {
   } // dispatchCSSOMReadyEvent
    
 }); // Tutorial
+
+if (JSTE.onLoadFunctions) {
+  new JSTE.List (JSTE.onLoadFunctions).forEach (function (code) {
+    code ();
+  });
+}
+
+if (JSTE.isDynamicallyLoaded) {
+  JSTE.windowLoaded = true;
+}
 
 /* ***** BEGIN LICENSE BLOCK *****
  * Copyright 2008-2009 Wakaba <w@suika.fam.cx>.  All rights reserved.
