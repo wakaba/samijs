@@ -486,13 +486,17 @@ JSTE.Message = new JSTE.Class (function (doc, template, commandTarget) {
     
     var buttonContainer = doc.createElement ('menu');
     
-    var backButton = new JSTE.Message.Button
-        ("Back", this._commandTarget, "back");
-    buttonContainer.appendChild (backButton.element);
+    if (this._commandTarget.canBack ()) {
+      var backButton = new JSTE.Message.Button
+          ("Back", this._commandTarget, "back");
+      buttonContainer.appendChild (backButton.element);
+    }
     
-    var nextButton = new JSTE.Message.Button
-        ("Next", this._commandTarget, "next");
-    buttonContainer.appendChild (nextButton.element);
+    if (this._commandTarget.canNext ()) {
+      var nextButton = new JSTE.Message.Button
+          ("Next", this._commandTarget, "next");
+      buttonContainer.appendChild (nextButton.element);
+    }
     
     this._outermostElement = this._render (msgContainer, buttonContainer);
     
@@ -557,6 +561,8 @@ JSTE.Message = new JSTE.Class (function (doc, template, commandTarget) {
   }
   
 }); // Message
+
+/* TODO: button label text should refer message catalog */
 
 JSTE.Message.Button =
 new JSTE.Class (function (labelText, commandTarget, commandName, commandArgs) {
@@ -884,6 +890,19 @@ JSTE.Tutorial = new JSTE.Class (function (doc, course, args) {
       return null;
     }
   }, // executeCommand
+  canExecuteCommand: function (commandName, commandArgs) {
+    if (this[commandName]) {
+      var can = this['can' + commandName.substring (0, 1).toUpperCase ()
+          + commandName.substring (1)];
+      if (can) {
+        return can.apply (this, arguments);
+      } else {
+        return true;
+      }
+    } else {
+      return false;
+    }
+  }, // canExecuteCommand
 
   startTutorial: function () {
     this.resetVisited ();
@@ -909,6 +928,9 @@ JSTE.Tutorial = new JSTE.Class (function (doc, course, args) {
       this._renderCurrentStep ();
     }
   }, // back
+  canBack: function () {
+    return this._prevStepUids.list.length > 0;
+  }, // canBack
   next: function () {
     var nextStepUid = this._currentStep.getNextStepUid (this._targetDocument);
     var nextStep = this._getStepOrError (nextStepUid);
@@ -919,6 +941,9 @@ JSTE.Tutorial = new JSTE.Class (function (doc, course, args) {
       this._renderCurrentStep ();
     }
   }, // next
+  canNext: function () {
+    return this._currentStep.getNextStepUid (this._targetDocument) != null;
+  }, // canNext
 
   // <http://twitter.com/waka/status/1129513097> 
   _dispatchCSSOMReadyEvent: function () {
