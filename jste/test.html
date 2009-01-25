@@ -147,6 +147,9 @@ function showElement (elements) {
       four browsers and two (or three) rendering modes.  This might result
       in confusing the user if both <html> and <body> elements have their
       'overflow' properties specified to 'scroll'.
+
+      Note that this code does not do a good job if the |el| is within an
+      |overflow: scroll| element.
     */
     document.body.scrollTop = top;
     document.body.scrollLeft = left;
@@ -178,10 +181,7 @@ var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
 
   this.forceRedraw ();
   
-  var self = this;
-  //setTimeout (function () {
-    showElement (new JSTE.List ([refElement]).onlyNonNull ());
-  //}, 2000);
+  showElement (new JSTE.List ([refElement]).onlyNonNull ());
 }, {
   SVGNS: 'http://www.w3.org/2000/svg',
 
