@@ -132,6 +132,14 @@ var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
       var top = rbb.bottom + bb.manakaiPointerOffset
           + bb.manakaiPointerHeight + bb.paddingTop;
 
+      var elbb = NR.Element.getRects (this.element, window).borderBox;
+      var elbbWidth = /* bb.borderLeftWidth + bb.paddingLeft + */ elbb.width
+          + bb.paddingRight + bb.borderRightWidth;
+      var vp = NR.View.getViewportRects (window, document).contentBox;
+      if (vp.right < left + elbbWidth && rbb.left <= vp.right - elbbWidth) {
+        left = vp.right - elbbWidth;
+      }
+
       this.element.style.top = top + 'px';
       this.element.style.left = left + 'px';
     }
@@ -344,6 +352,14 @@ var SimpleBalloonVML = new JSTE.Subclass (function () {
       if (left < 0) left = bb.borderLeftWidth + bb.paddingLeft;
       var top = rbb.bottom + bb.manakaiPointerOffset
           + bb.manakaiPointerHeight + bb.borderTopWidth + bb.paddingTop;
+
+      var elbb = NR.Element.getRects (this.element, window).borderBox;
+      var elbbWidth = /* bb.borderLeftWidth + bb.paddingLeft + */ elbb.width
+          + bb.paddingRight + bb.borderRightWidth;
+      var vp = NR.View.getViewportRects (window, document).contentBox;
+      if (vp.right < left + elbbWidth && rbb.left <= vp.right - elbbWidth) {
+        left = vp.right - elbbWidth;
+      }
 
       this.element.style.top = top + 'px';
       this.element.style.left = left + 'px';
