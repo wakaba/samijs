@@ -465,6 +465,60 @@ JSTE.Class.addClassMethods (JSTE.Element, {
 
 }); // JSTE.Element
 
+JSTE.XHR = new JSTE.Class (function (url, onsuccess, onerror) {
+  try {
+    this._xhr = new XMLHttpRequest ();
+  } catch (e) {
+    try {
+      this._xhr = new ActiveXObject ('Msxml2.XMLHTTP');
+    } catch (e) {
+      try {
+        this._xhr = new ActiveXObject ('Microsoft.XMLHTTP');
+      } catch (e) {
+        try {
+          this._xhr = new ActiveXObject ('Msxml2.XMLHTTP.4.0');
+        } catch (e) {
+          this._xhr = null;
+        }
+      }
+    }
+  }
+
+  this._url = url;
+  this._onsuccess = onsuccess || function () { };
+  this._onerror = onerror || function () { };
+}, {
+  get: function () {
+    if (!this._xhr) return;
+
+    var self = this;
+    this._xhr.open ('GET', this._url, true);
+    this._xhr.onreadystatechange = function () {
+      self._onreadystatechange ();
+    }; // onreadystatechange
+    this._xhr.send (null);
+  }, // get
+
+  _onreadystatechange: function () {
+    if (this._xhr.readyState == 4) {
+      if (this.succeeded ()) {
+        this._onsuccess ();
+      } else {
+        this._onerror ();
+      }
+    }
+  }, // _onreadystatechange
+
+  succeeded: function () {
+    return (this._xhr.status < 400);
+  }, // succeeded
+
+  getDocument: function () {
+    return this._xhr.responseXML;
+  } // getDocument
+}); // XHR
+
+
 /* Events: load, close, shown, hidden */
 JSTE.Message = new JSTE.Class (function (doc, template, commandTarget) {
   if (!doc) return;
@@ -745,14 +799,23 @@ JSTE.Course = new JSTE.Class (function (doc) {
   } // getStep
 }); // Course
 
-JSTE.Course.createFromDocument = function (doc, targetDoc) {
-  var course = new JSTE.Course (targetDoc);
-  var docEl = doc.documentElement;
-  if (!docEl) return course;
-  if (!JSTE.Element.match (docEl, JSTE.WATNS, 'course')) return course;
-  course._processStepsContent (docEl);
-  return course;
-}; // createFromDocument
+JSTE.Class.addClassMethods (JSTE.Course, {
+  createFromDocument: function (doc, targetDoc) {
+    var course = new JSTE.Course (targetDoc);
+    var docEl = doc.documentElement;
+    if (!docEl) return course;
+    if (!JSTE.Element.match (docEl, JSTE.WATNS, 'course')) return course;
+    course._processStepsContent (docEl);
+    return course;
+  }, // createFromDocument
+  createFromURL: function (url, targetDoc, onload, onerror) {
+    new JSTE.XHR (url, function () {
+      var course = JSTE.Course.createFromDocument
+          (this.getDocument (), targetDoc);
+      if (onload) onload (course);
+    }, onerror).get ();
+  } // creatFromURL
+}); // Course class methods
 
 JSTE.Step = new JSTE.Class (function (id) {
   if (id != null && id != '') {
@@ -812,7 +875,7 @@ JSTE.Step = new JSTE.Class (function (id) {
 }); // Step
 
 /* Events: load, error, cssomready */
-JSTE.Tutorial = new JSTE.Class (function (doc, course, args) {
+JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
   this._course = course;
   this._targetDocument = doc;
   this._messageClass = JSTE.Message;
@@ -969,6 +1032,16 @@ JSTE.Tutorial = new JSTE.Class (function (doc, course, args) {
   } // dispatchCSSOMReadyEvent
    
 }); // Tutorial
+
+JSTE.Class.addClassMethods (JSTE.Tutorial, {
+  createFromURL: function (url, doc, args) {
+    JSTE.Course.createFromURL (url, doc, function (course) {
+      new JSTE.Tutorial (course, doc, args);
+    });
+  } // createFromURL
+}); // Tutorial class methods
+
+
 
 if (JSTE.onLoadFunctions) {
   new JSTE.List (JSTE.onLoadFunctions).forEach (function (code) {

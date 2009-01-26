@@ -127,17 +127,7 @@ var MyMessage = new JSTE.Subclass (function () {
   } // _remove
 });
 
-  var xhr = new XMLHttpRequest ();
-  xhr.open ('GET', 'test.xml', false);
-  xhr.send (null);
-
-
-document.a =
-JSTE.Course.createFromDocument (xhr.responseXML, document);
-
-document.b = 
-new JSTE.Tutorial (document, document.a, {messageClass: MyMessage});
-
+JSTE.Tutorial.createFromURL ('test.xml', document, {messageClass: MyMessage});
 </script>
 
 <!--
