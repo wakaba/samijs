@@ -842,7 +842,7 @@ JSTE.Course = new JSTE.Class (function (doc) {
       step.setMessageTemplate (msg);
     }
     var nextEls = JSTE.Element.getChildElements (e, JSTE.WATNS, 'next-step');
-    if (nextEls.length) {
+    if (nextEls.list.length) {
       nextEls.forEach (function (nextEl) {
         step.addNextStep
             (nextEl.getAttribute ('if'), nextEl.getAttribute ('step'));
@@ -983,7 +983,7 @@ JSTE.Step = new JSTE.Class (function (id) {
   }, // createMessage
   
   addNextStep: function (condition, stepId) {
-    this._nextSteps.push ([condition, stepId]);
+    if (stepId != null) this._nextSteps.push ([condition, stepId]);
   }, // addNextStep
   setPreviousStep: function (prevStep) {
     if (!prevStep) return;
