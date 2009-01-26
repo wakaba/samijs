@@ -422,6 +422,25 @@ JSTE.Class.addClassMethods (JSTE.Element, {
     });
     return r;
   }, // getChildrenClassifiedByType
+
+  isEmpty: function (el) {
+    // HTML5 definition of "empty"
+    return !new JSTE.List (el.childNodes).forEach (function (n) {
+      var nt = n.nodeType;
+      if (nt == 1) {
+        return new JSTE.List.Return (true /* not empty */);
+      } else if (nt == 3 || nt == 4) {
+        if (/[^\u0009\u000A\u000C\u000D\u0020]/.test (n.data)) {
+          return new JSTE.List.Return (true /* not empty */);
+        }
+      } else if (nt == 7 || nt == 8) { // comment/pi
+        // does not affect emptyness
+      } else {
+        // We don't support EntityReference.
+        return new JSTE.List.Return (true /* not empty */);
+      }
+    });
+  }, // isEmpty
   
   appendText: function (el, s) {
     return el.appendChild (el.ownerDocument.createTextNode (s));
@@ -539,8 +558,7 @@ JSTE.Class.addClassMethods (JSTE.Element, {
     doc.documentElement.scrollTop = top;
     doc.documentElement.scrollLeft = left;
   } // scroll
-
-}); // JSTE.Element
+}); // Element
 
 JSTE.ElementHash = new JSTE.Class (function () {
   this.items = [];
@@ -623,13 +641,13 @@ JSTE.XHR = new JSTE.Class (function (url, onsuccess, onerror) {
 
 
 /* Events: load, close, shown, hidden */
-JSTE.Message = new JSTE.Class (function (doc, template, commandTarget) {
+JSTE.Message = new JSTE.Class (function (doc, template, commandTarget, availCommands) {
   if (!doc) return;
   this._targetDocument = doc;
   this._template = template || doc.createDocumentFragment ();
 
   this._commandTarget = commandTarget;
-  this._availCommands = new JSTE.List;
+  this._availCommands = availCommands || new JSTE.List;
 
   this.hidden = true;
   this.select = "";
@@ -672,10 +690,16 @@ JSTE.Message = new JSTE.Class (function (doc, template, commandTarget) {
   }, // _render
   createCommandButtons: function () {
     var self = this;
-    var buttonContainer = this._targetDocument.createElement ('menu');
+    var doc = this._targetDocument;
+    var buttonContainer = doc.createElement ('menu');
     this._availCommands.forEach (function (cmd) {
+      var label = cmd.name;
+      if (cmd.labelTemplate) {
+        label = JSTE.Element.createTemplate (doc, cmd.labelTemplate);
+      }
+
       var button = new JSTE.Message.Button
-          (cmd.name, self._commandTarget, cmd.name);
+          (label, self._commandTarget, cmd.name, cmd.args);
       buttonContainer.appendChild (button.element);
     });
     return buttonContainer;
@@ -730,8 +754,8 @@ JSTE.Message = new JSTE.Class (function (doc, template, commandTarget) {
 /* TODO: button label text should refer message catalog */
 
 JSTE.Message.Button =
-new JSTE.Class (function (labelText, commandTarget, commandName, commandArgs) {
-  this._labelText = labelText != null ? labelText : "";
+new JSTE.Class (function (label, commandTarget, commandName, commandArgs) {
+  this._label = label != null ? label : "";
 
   if (commandTarget && commandTarget instanceof Function) {
     this._command = commandTarget;
@@ -756,7 +780,11 @@ new JSTE.Class (function (labelText, commandTarget, commandName, commandArgs) {
     } catch (e) {
       this.element = document.createElement ('<button type=button>');
     }
-    JSTE.Element.appendText (this.element, this._labelText);
+    if (this._label.nodeType) {
+      this.element.appendChild (this._label);
+    } else {
+      JSTE.Element.appendText (this.element, this._label);
+    }
     this.element.className = this._classNames.list.join (' ');
   
     var self = this;
@@ -867,6 +895,8 @@ JSTE.Course = new JSTE.Class (function (doc) {
   }, // findEntryPoint
   
   _processStepElement: function (e, parentSteps) {
+    var self = this;
+
     var step = new JSTE.Step (e.getAttribute ('id'));
     step.parentSteps = parentSteps;
     step.setPreviousStep (this._stepsState.getLast ().prevStep);
@@ -892,6 +922,19 @@ JSTE.Course = new JSTE.Class (function (doc) {
     } else {
       this._stepsState.getLast ().prevStep = step;
     }
+
+    cs.get (JSTE.WATNS, 'button').forEach (function (bEl) {
+      var cmd = {
+        name: bEl.getAttribute ('command') || 'gotoStep'
+      };
+      if (cmd.name == 'gotoStep') {
+        cmd.args = ['id-' + bEl.getAttribute ('step')];
+      }
+      if (!JSTE.Element.isEmpty (bEl)) {
+        cmd.labelTemplate = JSTE.Element.createTemplate (self._targetDocument, bEl);
+      }
+      step.availCommands.push (cmd);
+    });
 
     /* TODO: @save */
 
@@ -1004,6 +1047,7 @@ JSTE.Step = new JSTE.Class (function (id) {
   }
   this._nextSteps = new JSTE.List;
   this.nextEvents = new JSTE.List;
+  this.availCommands = new JSTE.List;
   this.select = "";
 }, {
   setMessageTemplate: function (msg) {
@@ -1016,7 +1060,7 @@ JSTE.Step = new JSTE.Class (function (id) {
     var msg;
     if (this._messageTemplate) {
       var clone = JSTE.Element.createTemplate (doc, this._messageTemplate);
-      msg = new msg (doc, clone, commandTarget);
+      msg = new msg (doc, clone, commandTarget, this.availCommands.clone ());
     } else {
       msg = new msg (doc, null, commandTarget);
     }

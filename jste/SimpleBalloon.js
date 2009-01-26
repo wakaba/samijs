@@ -134,7 +134,8 @@ var SimpleBalloon = new JSTE.Class (function (messageContainer, refElement) {
 
       var elbb = NR.Element.getRects (this.element, window).borderBox;
       var elbbWidth = /* bb.borderLeftWidth + bb.paddingLeft + */ elbb.width
-          + bb.paddingRight + bb.borderRightWidth;
+          + bb.paddingRight + bb.borderRightWidth
+          + bb.marginRight /* to avoid horizontal scrollbar */;
       var vp = NR.View.getViewportRects (window, document).contentBox;
       if (vp.right < left + elbbWidth && rbb.left <= vp.right - elbbWidth) {
         left = vp.right - elbbWidth;
@@ -355,7 +356,8 @@ var SimpleBalloonVML = new JSTE.Subclass (function () {
 
       var elbb = NR.Element.getRects (this.element, window).borderBox;
       var elbbWidth = /* bb.borderLeftWidth + bb.paddingLeft + */ elbb.width
-          + bb.paddingRight + bb.borderRightWidth;
+          + bb.paddingRight + bb.borderRightWidth
+          + bb.marginRight /* to avoid horizontal scrollbar */;
       var vp = NR.View.getViewportRects (window, document).contentBox;
       if (vp.right < left + elbbWidth && rbb.left <= vp.right - elbbWidth) {
         left = vp.right - elbbWidth;
