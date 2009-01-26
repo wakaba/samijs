@@ -411,6 +411,17 @@ JSTE.Class.addClassMethods (JSTE.Element, {
       return JSTE.Element.match (item, ns, ln);
     });
   }, // getChildElements
+  getChildrenClassifiedByType: function (el) {
+    var r = new JSTE.ElementHash;
+    new JSTE.List (el.childNodes).forEach (function (n) {
+      if (n.nodeType == 1) {
+        r.getOrCreate (n.namespaceURI, JSTE.Element.getLocalName (n)).push (n);
+      } else {
+        r.getOrCreate (null, n.nodeType).push (n);
+      }
+    });
+    return r;
+  }, // getChildrenClassifiedByType
   
   appendText: function (el, s) {
     return el.appendChild (el.ownerDocument.createTextNode (s));
@@ -530,6 +541,32 @@ JSTE.Class.addClassMethods (JSTE.Element, {
   } // scroll
 
 }); // JSTE.Element
+
+JSTE.ElementHash = new JSTE.Class (function () {
+  this.items = [];
+}, {
+  get: function (ns, ln) {
+    ns = ns || '';
+    if (this.items[ns]) {
+      return this.items[ns].getNamedItem (ln) || new JSTE.List;
+    } else {
+      return new JSTE.List;
+    }
+  }, // get
+  getOrCreate: function (ns, ln) {
+    ns = ns || '';
+    if (this.items[ns]) {
+      var l = this.items[ns].getNamedItem (ln);
+      if (!l) this.items[ns].setNamedItem (ln, l = new JSTE.List);
+      return l;
+    } else {
+      var l;
+      this.items[ns] = new JSTE.Hash;
+      this.items[ns].setNamedItem (ln, l = new JSTE.List);
+      return l;
+    }
+  } // getOrCreate
+}); // ElementHash
 
 JSTE.XHR = new JSTE.Class (function (url, onsuccess, onerror) {
   try {
@@ -836,12 +873,16 @@ JSTE.Course = new JSTE.Class (function (doc) {
     step.select = e.getAttribute ('select') || "";
     step.nextEvents.append
         (JSTE.List.spaceSeparated (e.getAttribute ('next-event')));
-    var msgEl = JSTE.Element.getChildElement (e, JSTE.WATNS, 'message');
+
+    var cs = JSTE.Element.getChildrenClassifiedByType (e);
+
+    var msgEl = cs.get (JSTE.WATNS, 'message').list[0];
     if (msgEl) {
       var msg = JSTE.Element.createTemplate (this._targetDocument, msgEl);
       step.setMessageTemplate (msg);
     }
-    var nextEls = JSTE.Element.getChildElements (e, JSTE.WATNS, 'next-step');
+
+    var nextEls = cs.get (JSTE.WATNS, 'next-step');
     if (nextEls.list.length) {
       nextEls.forEach (function (nextEl) {
         step.addNextStep
@@ -851,6 +892,7 @@ JSTE.Course = new JSTE.Class (function (doc) {
     } else {
       this._stepsState.getLast ().prevStep = step;
     }
+
     /* TODO: @save */
 
     var evs = JSTE.List.spaceSeparated (e.getAttribute ('entry-event'));

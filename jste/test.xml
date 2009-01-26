@@ -33,7 +33,7 @@
     </c:step>
     <c:step id="can-join-group" select="#groups-can-join, #groups-can-request" save="join-group">
       <c:message>「参加できるグループ」の欄にあなたが参加できるグループが表示されています。参加したいグループの横の「このグループに入る」ボタンを押してください。</c:message>
-      <c:button step="no-group">参加したいグループがない場合</c:button>
+      <c:button command="gotoStep" step="no-group">参加したいグループがない場合</c:button>
       <c:next-step/>
     </c:step>
     <c:step id="no-group">
