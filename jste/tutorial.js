@@ -923,9 +923,9 @@ JSTE.Course = new JSTE.Class (function (doc) {
       this._stepsState.getLast ().prevStep = step;
     }
 
-    cs.get (JSTE.WATNS, 'button').forEach (function (bEl) {
+    cs.get (JSTE.WATNS, 'command').forEach (function (bEl) {
       var cmd = {
-        name: bEl.getAttribute ('command') || 'gotoStep'
+        name: bEl.getAttribute ('name') || 'gotoStep'
       };
       if (cmd.name == 'gotoStep') {
         cmd.args = ['id-' + bEl.getAttribute ('step')];
