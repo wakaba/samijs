@@ -421,7 +421,7 @@ JSTE.Class.addClassMethods (JSTE.Element, {
     new JSTE.List (node.childNodes).forEach (function (n) {
       if (n.nodeType == 1) {
         var c = doc.createElement (JSTE.Element.getLocalName (n));
-        new JSTE.List (c.attributes).forEach (function (n) {
+        new JSTE.List (n.attributes).forEach (function (n) {
           c.setAttribute (n.name, n.value);
         });
         c.appendChild (JSTE.Element.createTemplate (doc, n));
