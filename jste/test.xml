@@ -1,6 +1,6 @@
 <c:course name="account" xmlns:c="http://suika.fam.cx/ns/wat"
     xmlns="http://www.w3.org/1999/xhtml">
-  <c:entry url="http://suika.fam.cx/~wakaba/pbin/accounts/add/new-user" step="new-user"/>
+  <c:entryPoint url="http://suika.fam.cx/~wakaba/pbin/accounts/add/new-user" step="new-user"/>
   <c:steps>
     <c:step id="new-user">
       <c:message>新しいアカウントの作成を開始します。</c:message>
@@ -24,7 +24,7 @@
     </c:step>
   </c:steps>
   
-  <c:entry class="account-user-info" step="join-group"/>
+  <c:entryPoint root-class="account-user-info" step="join-group"/>
   <c:steps>
     <c:step id="join-group">
       <c:message>グループに参加しましょう。</c:message>

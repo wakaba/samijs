@@ -751,7 +751,7 @@ JSTE.Course = new JSTE.Class (function (doc) {
         steps: function (n) { self._processStepsElement (n, parentSteps) },
         step: function (n) { self._processStepElement (n, parentSteps) },
         jump: function (n) { self._processJumpElement (n, parentSteps) },
-        entry: function (n) { self._processEntryElement (n, parentSteps) }
+        entryPoint: function (n) { self._processEntryPointElement (n, parentSteps) }
       })
     );
   }, // _processStepsContent
@@ -764,7 +764,7 @@ JSTE.Course = new JSTE.Class (function (doc) {
     this._stepsState.pop ();
   }, // _processStepsElement
 
-  _processEntryElement: function (e, parentSteps) {
+  _processEntryPointElement: function (e, parentSteps) {
     if (JSTE.Element.hasAttribute (e, 'url')) {
       this.setEntryPointByURL
           (e.getAttribute ('url'), e.getAttribute ('step'));
@@ -775,7 +775,7 @@ JSTE.Course = new JSTE.Class (function (doc) {
       this.setEntryPointByClassName
           (e.getAttribute ('root-class'), e.getAttribute ('step'));
     }
-  }, // _processEntryElement
+  }, // _processEntryPointElement
   setEntryPointByURL: function (url, stepName) {
     this._entryPointsByURL[url] = stepName || '';
   }, // setEntryPointByURL
