@@ -102,7 +102,7 @@ JSTE.Observer = new JSTE.Class (function (eventType, target, onevent) {
     if (this.target.removeEventListener) {
       this.target.removeEventListener (this.eventType, this.code, false);
       this.disabled = true;
-    } else if (this.detachEvent) {
+    } else if (this.target.detachEvent) {
       this.target.detachEvent ("on" + this.eventType, this.code);
       this.disabled = true;
     }
@@ -194,6 +194,20 @@ JSTE.List = new JSTE.Class (function (arrayLike) {
       return item != null; /* Intentionally "!=" */
     });
   }, // onlyNonNull
+
+  uniq: function (eq) {
+    if (!eq) eq = function (i1, i2) { return i1 === i2 };
+    var prevItems = [];
+    return this.grep (function (item) {
+      for (var i = 0; i < prevItems.length; i++) {
+        if (eq (item, prevItems[i])) {
+          return false;
+        }
+      }
+      prevItems.push (item);
+      return true;
+    });
+  }, // uniq
   
   getFirstMatch: function (code) {
     return this.forEach (function (item) {
@@ -264,7 +278,7 @@ JSTE.Class.addClassMethods (JSTE.List, {
   }, // spaceSeparated
 
   getCommonItems: function (l1, l2, cb, eq) {
-    if (!eq) eq = function (i1, i2) { return i1 == i2 };
+    if (!eq) eq = function (i1, i2) { return i1 === i2 };
 
     var common = new JSTE.List;
 
@@ -345,7 +359,7 @@ JSTE.Class.addClassMethods (JSTE.Node, {
       return new JSTE.List (nl);
     } else if (window.uu && uu.css) {
       if (selectors != "") {
-        /* NOTE: uu.css return all elements for "" or ",xxx" */
+        /* NOTE: uu.css return all elements for "" or ",xxx". */
         return new JSTE.List (uu.css (selectors, node));
       } else {
         return new JSTE.List;
