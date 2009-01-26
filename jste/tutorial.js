@@ -74,23 +74,37 @@ JSTE.Event = new JSTE.Class (function (eventType, canBubble, cancelable) {
 
 JSTE.Observer = new JSTE.Class (function (eventType, target, onevent) {
   this.eventType = eventType;
+  this.target = target;
   if (target.addEventListener) {
-    this.target = target;
     this.code = onevent;
-    target.addEventListener (eventType, this.code, false);
   } else if (target.attachEvent) {
     this.code = function () {
       onevent (event);
     };
-    this.target = target;
-    target.attachEvent ("on" + eventType, this.code);
+  } else {
+    this.code = onevent;
   }
+  this.disabled = true;
+  this.start ();
 }, {
+  start: function () {
+    if (!this.disabled) return;
+    if (this.target.addEventListener) {
+      this.target.addEventListener (this.eventType, this.code, false);
+      this.disabled = false;
+    } else if (this.target.attachEvent) {
+      this.target.attachEvent ("on" + this.eventType, this.code);
+      this.disabled = false;
+    }
+  }, // start
   stop: function () {
+    if (this.disabled) return;
     if (this.target.removeEventListener) {
       this.target.removeEventListener (this.eventType, this.code, false);
+      this.disabled = true;
     } else if (this.detachEvent) {
       this.target.detachEvent ("on" + this.eventType, this.code);
+      this.disabled = true;
     }
   } // stop
 }); // Observer
@@ -98,6 +112,33 @@ JSTE.Observer = new JSTE.Class (function (eventType, target, onevent) {
 new JSTE.Observer ('load', window, function () {
   JSTE.windowLoaded = true;
 });
+
+
+JSTE.Hash = new JSTE.Class (function (hash) {
+  this.hash = hash || {};
+}, {
+  forEach: function (code) {
+    for (var n in this.hash) {
+      var r = code (n, this.hash[n]);
+      if (r && r.stop) break;
+    }
+  }, // forEach
+  clone: function (code) {
+    var newHash = {};
+    this.forEach (function (n, v) {
+      newHash[n] = v;
+    });
+    return new this.constructor (newHash);
+  }, // clone
+  
+  getNamedItem: function (n) {
+    return this.hash[n];
+  }, // getNamedItem
+  setNamedItem: function (n, v) {
+    return this.hash[n] = v;
+  } // setNamedItem
+});
+
 
 JSTE.List = new JSTE.Class (function (arrayLike) {
   this.list = arrayLike || [];
@@ -173,22 +214,31 @@ JSTE.List = new JSTE.Class (function (arrayLike) {
     });
   }, // switchByElementType
   
+  // destructive
   push: function (item) {
     this.list.push (item);
   }, // push
+
+  // destructive
   pushCloneOfLast: function () {
     this.list.push (this.getLast ().clone ());
   }, // pushCloneOfLast
+
+  // destructive
   append: function (list) {
     var self = this;
     list.forEach (function (n) {
       self.list.push (n);
     });
+    return this;
   }, // append
   
+  // destructive
   pop: function () {
     return this.list.pop ();
   }, // pop
+
+  // destructive
   remove: function (removedItem) {
     var length = this.list.length;
     for (var i = length - 1; i >= 0; --i) {
@@ -198,11 +248,43 @@ JSTE.List = new JSTE.Class (function (arrayLike) {
       }
     }
   }, // remove
+
+  // destructive
   clear: function () {
     this.list.splice (0, this.list.length);
   } // clear
   
 }); // List
+
+JSTE.Class.addClassMethods (JSTE.List, {
+  spaceSeparated: function (v) {
+    return new JSTE.List ((v || '').split (JSTE.SpaceChars)).grep (function (v) {
+      return v.length;
+    });
+  }, // spaceSeparated
+
+  getCommonItems: function (l1, l2, cb, eq) {
+    if (!eq) eq = function (i1, i2) { return i1 == i2 };
+
+    var common = new JSTE.List;
+
+    l1 = l1.grep (function (i1) {
+      var hasI1;
+      l2 = l2.grep (function (i2) {
+        if (eq (i1, i2)) {
+          common.push (i1);
+          hasI1 = true;
+          return false;
+        } else {
+          return true;
+        }
+      });
+      return !hasI1;
+    });
+
+    cb (common, l1, l2);
+  } // getCommonItems
+}); // List class methods
 
 JSTE.List.Return = new JSTE.Class (function (rv) {
   this.stop = true;
@@ -210,12 +292,6 @@ JSTE.List.Return = new JSTE.Class (function (rv) {
 }, {
   
 }); // Return
-
-JSTE.List.SpaceSeparated = function (v) {
-  return new JSTE.List ((v || '').split (JSTE.SpaceChars)).grep (function (v) {
-    return v.length;
-  });
-}; // SpaceSeparated
 
 JSTE.List.SwitchByLocalName = new JSTE.Class (function (ns, cases, ow) {
   this.namespaceURI = ns;
@@ -232,30 +308,6 @@ JSTE.List.SwitchByLocalName = new JSTE.Class (function (ns, cases, ow) {
   }
 });
 
-JSTE.Hash = new JSTE.Class (function (hash) {
-  this.hash = hash || {};
-}, {
-  forEach: function (code) {
-    for (var n in this.hash) {
-      var r = code (n, this.hash[n]);
-      if (r && r.stop) break;
-    }
-  }, // forEach
-  clone: function (code) {
-    var newHash = {};
-    this.forEach (function (n, v) {
-      newHash[n] = v;
-    });
-    return new this.constructor (newHash);
-  }, // clone
-  
-  getNamedItem: function (n) {
-    return this.hash[n];
-  }, // getNamedItem
-  setNamedItem: function (n, v) {
-    return this.hash[n] = v;
-  } // setNamedItem
-});
 
 if (!JSTE.Node) JSTE.Node = {};
 
@@ -678,25 +730,27 @@ JSTE.Course = new JSTE.Class (function (doc) {
   this._steps.setNamedItem (nullState.uid, nullState);
   this._initialStepUid = nullState.uid;
 }, {
-  _processStepsContent: function (el) {
+  _processStepsContent: function (el, parentSteps) {
     var self = this;
     new JSTE.List (el.childNodes).switchByElementType (
       new JSTE.List.SwitchByLocalName (JSTE.WATNS, {
-        steps: function (n) { self._processStepsElement (n) },
-        step: function (n) { self._processStepElement (n) },
-        jump: function (n) { self._processJumpElement (n) },
-        entry: function (n) { self._processEntryElement (n) }
+        steps: function (n) { self._processStepsElement (n, parentSteps) },
+        step: function (n) { self._processStepElement (n, parentSteps) },
+        jump: function (n) { self._processJumpElement (n, parentSteps) },
+        entry: function (n) { self._processEntryElement (n, parentSteps) }
       })
     );
   }, // _processStepsContent
-  _processStepsElement: function (e) {
+  _processStepsElement: function (e, parentSteps) {
+    var steps = new JSTE.Steps ();
+    steps.parentSteps = parentSteps;
     this._stepsState.pushCloneOfLast ();
     this._stepsState.getLast ().prevStep = null;
-    this._processStepsContent (e);
+    this._processStepsContent (e, steps);
     this._stepsState.pop ();
   }, // _processStepsElement
 
-  _processEntryElement: function (e) {
+  _processEntryElement: function (e, parentSteps) {
     if (JSTE.Element.hasAttribute (e, 'url')) {
       this.setEntryPointByURL
           (e.getAttribute ('url'), e.getAttribute ('step'));
@@ -761,12 +815,13 @@ JSTE.Course = new JSTE.Class (function (doc) {
     return this._initialStepUid;
   }, // findEntryPoint
   
-  _processStepElement: function (e) {
+  _processStepElement: function (e, parentSteps) {
     var step = new JSTE.Step (e.getAttribute ('id'));
+    step.parentSteps = parentSteps;
     step.setPreviousStep (this._stepsState.getLast ().prevStep);
     step.select = e.getAttribute ('select') || "";
     step.nextEvents.append
-        (JSTE.List.SpaceSeparated (e.getAttribute ('next-event')));
+        (JSTE.List.spaceSeparated (e.getAttribute ('next-event')));
     var msgEl = JSTE.Element.getChildElement (e, JSTE.WATNS, 'message');
     if (msgEl) {
       var msg = JSTE.Element.createTemplate (this._targetDocument, msgEl);
@@ -790,8 +845,13 @@ JSTE.Course = new JSTE.Class (function (doc) {
     }
   }, // _processStepElement
   
-  _processJumpElement: function (e) {
-  
+  _processJumpElement: function (e, parentSteps) {
+    var target = e.getAttribute ('target') || '';
+    var evs = JSTE.List.spaceSeparated (e.getAttribute ('event'));
+    var stepName = e.getAttribute ('step') || '';
+
+    var jump = new JSTE.Jump (target, evs, 'id-' + stepName);
+    if (parentSteps) parentSteps._jumps.push (jump);
   }, // _processJumpElement
   
   getStep: function (uid) {
@@ -805,7 +865,7 @@ JSTE.Class.addClassMethods (JSTE.Course, {
     var docEl = doc.documentElement;
     if (!docEl) return course;
     if (!JSTE.Element.match (docEl, JSTE.WATNS, 'course')) return course;
-    course._processStepsContent (docEl);
+    course._processStepsContent (docEl, null);
     return course;
   }, // createFromDocument
   createFromURL: function (url, targetDoc, onload, onerror) {
@@ -816,6 +876,63 @@ JSTE.Class.addClassMethods (JSTE.Course, {
     }, onerror).get ();
   } // creatFromURL
 }); // Course class methods
+
+JSTE.Jump = new JSTE.Class (function (selectors, eventNames, stepUid) {
+  this.selectors = selectors;
+  this.eventNames = eventNames;
+  this.stepUid = stepUid;
+  // this.parentSteps
+}, {
+  startObserver: function (doc, commandTarget) {
+    var self = this;
+    var observers = new JSTE.List;
+
+    var onev = function () {
+      commandTarget.gotoStep (self.stepUid);
+    };
+
+    JSTE.Node.querySelectorAll (doc, this.selectors).forEach
+    (function (el) {
+      self.eventNames.forEach (function (evName) {
+        var ob = new JSTE.Observer (evName, el, onev);
+        ob._stepUid = self.stepUid;
+        observers.push (ob);
+      });
+    });
+
+    return observers;
+  } // startObserver
+}); // Jump
+
+JSTE.Steps = new JSTE.Class (function () {
+  this._jumps = new JSTE.List;
+  this._jumpHandlers = new JSTE.List;
+}, {
+  setCurrentStepByUid: function (uid) {
+    this._jumpHandlers.forEach (function (jh) {
+      if (jh._stepUid != uid && jh.disabled) {
+        jh.start ();
+      } else if (jh._stepUid == uid && !jh.disabled) {
+        jh.stop ();
+      }
+    });
+  }, // setCurrentStepByUid
+
+  installJumps: function (doc, commandTarget) {
+    if (this._jumpHandlers.list.length) return;
+    var self = this;
+    this._jumps.forEach (function (j) {
+      self._jumpHandlers.append (j.startObserver (doc, commandTarget));
+    });
+  }, // installJumps
+
+  uninstallJumps: function () {
+    this._jumpHandlers.forEach (function (jh) {
+      jh.stop ();
+    });
+    this._jumpHandlers.clear ();
+  } // uninstallJumps
+}); // Steps
 
 JSTE.Step = new JSTE.Class (function (id) {
   if (id != null && id != '') {
@@ -870,8 +987,17 @@ JSTE.Step = new JSTE.Class (function (id) {
     } else {
       return null;
     }
-  } // getNextStepUid
-  
+  }, // getNextStepUid
+
+  getAncestorStepsObjects: function () {
+    var steps = new JSTE.List;
+    var s = this.parentSteps;
+    while (s != null) {
+      steps.push (s);
+      s = s.parentSteps;
+    }
+    return steps;
+  } // getAncestorStepsObjects
 }); // Step
 
 /* Events: load, error, cssomready */
@@ -886,6 +1012,7 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
   this._currentMessages = new JSTE.List;
   this._currentObservers = new JSTE.List;
   this._prevStepUids = new JSTE.List;
+  this._currentStepsObjects = new JSTE.List;
   
   var stepUid = this._course.findEntryPoint (document);
   this._currentStep = this._getStepOrError (stepUid);
@@ -938,6 +1065,21 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
             (new JSTE.Observer (eventType, node, handler));
       });
     });
+
+    JSTE.List.getCommonItems (this._currentStepsObjects,
+                              step.getAncestorStepsObjects (), 
+    function (common, onlyInOld, onlyInNew) {
+      common.forEach (function (item) {
+        item.setCurrentStepByUid (step.uid);
+      });
+      onlyInOld.forEach (function (item) {
+        item.uninstallJumps ();
+      });
+      onlyInNew.forEach (function (item) {
+        item.installJumps (self._targetDocument, self);
+      });
+      self._currentStepsObjects = common.append (onlyInNew);
+    });
   }, // _renderCurrentStep
   clearMessages: function () {
     this._currentMessages.forEach (function (msg) {
@@ -950,6 +1092,12 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
     });
     this._currentObservers.clear ();
   }, // clearMessages
+  clearStepsHandlers: function () {
+    this._currentStepsObjects.forEach (function (item) {
+      item.uninstallJumps ();
+    });
+    this._currentStepsObjects.clear ();
+  }, // clearStepsHandlers
   
   executeCommand: function (commandName, commandArgs) {
     if (this[commandName]) {
@@ -1015,6 +1163,15 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
   canNext: function () {
     return this._currentStep.getNextStepUid (this._targetDocument) != null;
   }, // canNext
+  gotoStep: function (uid) {
+    var nextStep = this._getStepOrError (uid);
+    if (nextStep) {
+      this._prevStepUids.push (this._currentStep.uid);
+      this.clearMessages ();
+      this._currentStep = nextStep;
+      this._renderCurrentStep ();
+    }
+  }, // gotoStep
 
   // <http://twitter.com/waka/status/1129513097> 
   _dispatchCSSOMReadyEvent: function () {
