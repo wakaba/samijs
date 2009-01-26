@@ -470,7 +470,10 @@ JSTE.Message = new JSTE.Class (function (doc, template, commandTarget) {
   if (!doc) return;
   this._targetDocument = doc;
   this._template = template || doc.createDocumentFragment ();
+
   this._commandTarget = commandTarget;
+  this._availCommands = new JSTE.List;
+
   this.hidden = true;
   this.select = "";
   
@@ -484,21 +487,15 @@ JSTE.Message = new JSTE.Class (function (doc, template, commandTarget) {
     var msgContainer = doc.createElement ('section');
     msgContainer.appendChild (this._template);
     
-    var buttonContainer = doc.createElement ('menu');
-    
     if (this._commandTarget.canBack ()) {
-      var backButton = new JSTE.Message.Button
-          ("Back", this._commandTarget, "back");
-      buttonContainer.appendChild (backButton.element);
+      this._availCommands.push ({name: 'back'});
     }
     
     if (this._commandTarget.canNext ()) {
-      var nextButton = new JSTE.Message.Button
-          ("Next", this._commandTarget, "next");
-      buttonContainer.appendChild (nextButton.element);
+      this._availCommands.push ({name: 'next'});
     }
     
-    this._outermostElement = this._render (msgContainer, buttonContainer);
+    this._outermostElement = this._render (msgContainer);
     
     this.show ();
   }, // render
@@ -506,16 +503,27 @@ JSTE.Message = new JSTE.Class (function (doc, template, commandTarget) {
     var doc = this._targetDocument;
     
     var container = doc.createElement ('article');
-    var style = doc.createElement ('style');
-    style.innerHTML = this.select + ' { outline: red 2px solid }';
-    container.appendChild (style);
     
     container.appendChild (msgContainer);
+
+    var buttonContainer = this.createCommandButtons ();
     container.appendChild (buttonContainer);
+
     doc.documentElement.appendChild (container);
     
     return container;
   }, // _render
+  createCommandButtons: function () {
+    var self = this;
+    var buttonContainer = this._targetDocument.createElement ('menu');
+    this._availCommands.forEach (function (cmd) {
+      var button = new JSTE.Message.Button
+          (cmd.name, self._commandTarget, cmd.name);
+      buttonContainer.appendChild (button.element);
+    });
+    return buttonContainer;
+  }, // createCommandButtons
+
   remove: function () {
     this.hide ();
     

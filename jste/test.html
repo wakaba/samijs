@@ -106,13 +106,15 @@ section, article, menu {
 var MyMessage = new JSTE.Subclass (function () {
   return this._super.apply (this, arguments);
 }, JSTE.Message, {
-  _render: function (msgContainer, buttonContainer) {
+  _render: function (msgContainer) {
     var doc = this._targetDocument;
     
-    var container = doc.createElement ('section');
+    var container = doc.createElement ('article');
     container.className = 'mm-container';
     
     container.appendChild (msgContainer);
+
+    var buttonContainer = this.createCommandButtons ();
     container.appendChild (buttonContainer);
     
     var refElement = JSTE.Node.querySelector (document, this.select);
