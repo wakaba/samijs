@@ -362,6 +362,11 @@ function CSSSelectorJS(expr, context, really) {
       for (r = [], ri = -1, gd = {}, ii = 0, iz = cx.length; ii < iz; ++ii) {
         for (n1 = cx[ii].getElementsByTagName(E), jj = 0, jz = n1.length; jj < jz; ++jj) {
           cn = n1[jj];
+          try {
+            cn.nodeType;
+          } catch (e) {
+            continue;
+          }
           if (!f1 || cn.nodeType === 1) {
             if (f1 || cn.tagName === E) {
               !((uuid = cn[_U] || (cn[_U] = ++_uuid)) in gd) && (r[++ri] = cn, gd[uuid] = 1);

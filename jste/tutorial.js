@@ -1205,9 +1205,10 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
 }); // Tutorial
 
 JSTE.Class.addClassMethods (JSTE.Tutorial, {
-  createFromURL: function (url, doc, args) {
+  createFromURL: function (url, doc, args, onload) {
     JSTE.Course.createFromURL (url, doc, function (course) {
-      new JSTE.Tutorial (course, doc, args);
+      var tutorial = new JSTE.Tutorial (course, doc, args);
+      if (onload) onload (tutorial);
     });
   } // createFromURL
 }); // Tutorial class methods

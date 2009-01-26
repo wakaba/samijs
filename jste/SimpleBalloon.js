@@ -248,8 +248,11 @@ var SimpleBalloonVML = new JSTE.Subclass (function () {
     document.namespaces.add ('_vml_', 'urn:schemas-microsoft-com:vml');
   }
 
-  var ss = document.createStyleSheet ();
-  ss.cssText = '_vml_\\:* { behavior: url(#default#VML) }';
+  if (!SimpleBalloonVML.vmlEnabled) {
+    SimpleBalloonVML.vmlEnabled = true;
+    var ss = document.createStyleSheet ();
+    ss.cssText = '_vml_\\:* { behavior: url(#default#VML) }';
+  }
 
   this._super.apply (this, arguments);
 }, SimpleBalloon, {
