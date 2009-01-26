@@ -852,6 +852,12 @@ JSTE.Course = new JSTE.Class (function (doc) {
       this._stepsState.getLast ().prevStep = step;
     }
     /* TODO: @save */
+
+    var evs = JSTE.List.spaceSeparated (e.getAttribute ('entry-event'));
+    if (evs.list.length) {
+      var jump = new JSTE.Jump (step.select, evs, step.uid);
+      if (parentSteps) parentSteps._jumps.push (jump);
+    }
     
     this._steps.setNamedItem (step.uid, step);
     if (!this._initialStepUid) {

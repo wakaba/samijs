@@ -5,16 +5,16 @@
     <c:step id="new-user">
       <c:message>新しいアカウントの作成を開始します。</c:message>
     </c:step>
-    <c:jump target="input[name=user-id]" event="focus" step="name"/>
-    <c:step select="input[name=user-id]" next-event="change" id="name">
+    <c:step select="input[name=user-id]" next-event="change"
+        entry-event="focus">
       <c:message>アカウント名を記入してください。</c:message>
     </c:step>
-    <c:jump target="input[name=user-pass]" event="focus" step="pass"/>
-    <c:step select="input[name=user-pass]" next-event="change" id="pass">
+    <c:step select="input[name=user-pass]" next-event="change"
+        entry-event="focus">
       <c:message>パスワードを記入してください。</c:message>
     </c:step>
-    <c:jump target="input[name=user-pass2]" event="focus" step="pass2"/>
-    <c:step select="input[name=user-pass2]" next-event="change" id="pass2">
+    <c:step select="input[name=user-pass2]" next-event="change"
+        entry-event="focus">
       <c:message>確認のためパスワードをもう一度記入してください。</c:message>
     </c:step>
     <c:jump target="[type=submit].create" event="mouseover focus" step="submit"/>
