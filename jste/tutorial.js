@@ -1229,21 +1229,6 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
       return false;
     }
   }, // canExecuteCommand
-
-  startTutorial: function () {
-    this.resetVisited ();
-  
-  }, // startTutorial
-  continueTutorial: function () {
-  
-  }, // continueTutorial
-  
-  saveVisited: function () {
-  
-  }, // saveVisited
-  resetVisited: function () {
-  
-  }, // resetVisited
   
   back: function () {
     var prevStepUid = this._prevStepUids.pop ();
