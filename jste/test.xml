@@ -30,10 +30,15 @@
       <c:message>グループに参加しましょう。</c:message>
       <c:next-step if="#groups-can-join, #groups-can-request" step="can-join-group"/>
       <c:next-step step="cannot-join-group"/>
+
+      <c:command type="back"/>
+      <c:command type="next"/>
+      <c:command type="close">チュートリアルを実行しない</c:command>
     </c:step>
     <c:step id="can-join-group" select="#groups-can-join, #groups-can-request" save="join-group">
       <c:message>「参加できるグループ」の欄にあなたが参加できるグループが表示されています。参加したいグループの横の「このグループに入る」ボタンを押してください。</c:message>
-      <c:command name="gotoStep" step="no-group">参加したいグループがない場合</c:command>
+      <c:command type="back"/>
+      <c:command type="gotoStep" step="no-group">参加したいグループがない場合</c:command>
       <c:next-step/>
     </c:step>
     <c:step id="no-group">

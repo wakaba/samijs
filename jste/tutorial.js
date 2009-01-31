@@ -661,14 +661,15 @@ JSTE.Message = new JSTE.Class (function (doc, template, commandTarget, availComm
     
     var msgContainer = doc.createElement ('section');
     msgContainer.appendChild (this._template);
-    
-    if (this._commandTarget.canBack ()) {
+
+    if (!this._availCommands.list.length) {   
       this._availCommands.push ({name: 'back'});
-    }
-    
-    if (this._commandTarget.canNext ()) {
       this._availCommands.push ({name: 'next'});
     }
+ 
+    this._availCommands = this._availCommands.grep(function (item) {
+      return self._commandTarget.canExecuteCommand (item.name, item.args);
+    });
     
     this._outermostElement = this._render (msgContainer);
     
@@ -925,7 +926,7 @@ JSTE.Course = new JSTE.Class (function (doc) {
 
     cs.get (JSTE.WATNS, 'command').forEach (function (bEl) {
       var cmd = {
-        name: bEl.getAttribute ('name') || 'gotoStep'
+        name: bEl.getAttribute ('type') || 'gotoStep'
       };
       if (cmd.name == 'gotoStep') {
         cmd.args = ['id-' + bEl.getAttribute ('step')];
@@ -1278,6 +1279,10 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
       this._renderCurrentStep ();
     }
   }, // gotoStep
+
+  close: function () {
+    this.clearMessages ();
+  }, // close
 
   // <http://twitter.com/waka/status/1129513097> 
   _dispatchCSSOMReadyEvent: function () {
