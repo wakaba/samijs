@@ -136,8 +136,20 @@ JSTE.Hash = new JSTE.Class (function (hash) {
   }, // getNamedItem
   setNamedItem: function (n, v) {
     return this.hash[n] = v;
-  } // setNamedItem
-});
+  }, // setNamedItem
+
+  getByNames: function (names) {
+    var self = this;
+    return names.forEach (function (name) {
+      var value = self.getNamedItem (name);
+      if (value != null) {
+        return new JSTE.List.Return (value);
+      } else {
+        return null;
+      }
+    });
+  } // getByNames
+}); // Hash
 
 
 JSTE.List = new JSTE.Class (function (arrayLike) {
@@ -639,6 +651,34 @@ JSTE.XHR = new JSTE.Class (function (url, onsuccess, onerror) {
   } // getDocument
 }); // XHR
 
+// An abstract class
+JSTE.Storage = new JSTE.Class (function () {
+  
+}, {
+
+}); // Storage
+
+JSTE.Storage.PageLocal = new JSTE.Subclass (function () {
+  
+}, JSTE.Storage, {
+  get: function (name) {
+    return this['value-' + name];
+  }, // get
+  set: function (name, value) {
+    this['value-' + name] = value;
+  }, // set
+
+  getNames: function () {
+    var names = new JSTE.List;
+    for (var n in this) {
+      if (/^value-/.test (n)) {
+        names.push (n.substring (6));
+      }
+    }
+    return names;
+  } // getNames
+});
+
 
 /* Events: load, close, shown, hidden */
 JSTE.Message = new JSTE.Class (function (doc, template, commandTarget, availCommands) {
@@ -798,6 +838,9 @@ new JSTE.Class (function (label, commandTarget, commandName, commandArgs) {
 JSTE.Course = new JSTE.Class (function (doc) {
   this._targetDocument = doc;
 
+  this._entryPointsByStateName = new JSTE.Hash;
+  this._entryPointsByStateName.setNamedItem ('done', '');
+
   this._entryPointsByURL = {};
   this._entryPointsById = {};
   this._entryPointsByClassName = {};
@@ -831,7 +874,10 @@ JSTE.Course = new JSTE.Class (function (doc) {
   }, // _processStepsElement
 
   _processEntryPointElement: function (e, parentSteps) {
-    if (JSTE.Element.hasAttribute (e, 'url')) {
+    if (JSTE.Element.hasAttribute (e, 'state')) {
+      this.setEntryPointByStateName
+          (e.getAttribute ('state'), e.getAttribute ('step'));
+    } else if (JSTE.Element.hasAttribute (e, 'url')) {
       this.setEntryPointByURL
           (e.getAttribute ('url'), e.getAttribute ('step'));
     } else if (JSTE.Element.hasAttribute (e, 'root-id')) {
@@ -842,6 +888,9 @@ JSTE.Course = new JSTE.Class (function (doc) {
           (e.getAttribute ('root-class'), e.getAttribute ('step'));
     }
   }, // _processEntryPointElement
+  setEntryPointByStateName: function (stateName, stepName) {
+    this._entryPointsByStateName.setNamedItem (stateName, stepName || '');
+  }, // setEntryPointByStateName
   setEntryPointByURL: function (url, stepName) {
     this._entryPointsByURL[url] = stepName || '';
   }, // setEntryPointByURL
@@ -851,10 +900,15 @@ JSTE.Course = new JSTE.Class (function (doc) {
   setEntryPointByClassName: function (className, stepName) {
     this._entryPointsByClassName[className] = stepName || '';
   }, // setEntryPointByClassName
-  findEntryPoint: function (doc) {
+  findEntryPoint: function (doc, states) {
     var self = this;
     var td = this._targetDocument;
     var stepName;
+
+    if (states) {
+      stepName = self._entryPointsByStateName.getByNames (states.getNames ());
+      if (stepName) return stepName;
+    }
     
     var url = doc.URL;
     if (url) {
@@ -935,9 +989,13 @@ JSTE.Course = new JSTE.Class (function (doc) {
         cmd.labelTemplate = JSTE.Element.createTemplate (self._targetDocument, bEl);
       }
       step.availCommands.push (cmd);
-    });
+    }); // wat:command
 
-    /* TODO: @save */
+    cs.get (JSTE.WATNS, 'save-state').forEach (function (bEl) {
+      var ss = new JSTE.SaveState
+          (bEl.getAttribute ('name'), bEl.getAttribute ('value'));
+      step.saveStates.push (ss);
+    }); // wat:save-state
 
     var evs = JSTE.List.spaceSeparated (e.getAttribute ('entry-event'));
     if (evs.list.length) {
@@ -1049,6 +1107,7 @@ JSTE.Step = new JSTE.Class (function (id) {
   this._nextSteps = new JSTE.List;
   this.nextEvents = new JSTE.List;
   this.availCommands = new JSTE.List;
+  this.saveStates = new JSTE.List;
   this.select = "";
 }, {
   setMessageTemplate: function (msg) {
@@ -1107,21 +1166,32 @@ JSTE.Step = new JSTE.Class (function (id) {
   } // getAncestorStepsObjects
 }); // Step
 
-/* Events: load, error, cssomready */
+JSTE.SaveState = new JSTE.Class (function (name, value) {
+  this.name = name || '';
+  this.value = value || '';
+}, {
+  save: function (states) {
+    states.set (this.name, this.value);
+  } // save
+}); // SaveState
+
+/* Events: load, error, cssomready, close */
 JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
   this._course = course;
   this._targetDocument = doc;
   this._messageClass = JSTE.Message;
   if (args) {
     if (args.messageClass) this._messageClass = args.messageClass;
+    if (args.states) this._states = args.states;
   }
+  if (!this._states) this._states = new JSTE.Storage.PageLocal;
   
   this._currentMessages = new JSTE.List;
   this._currentObservers = new JSTE.List;
   this._prevStepUids = new JSTE.List;
   this._currentStepsObjects = new JSTE.List;
   
-  var stepUid = this._course.findEntryPoint (document);
+  var stepUid = this._course.findEntryPoint (document, this._states);
   this._currentStep = this._getStepOrError (stepUid);
   if (this._currentStep) {
     var e = new JSTE.Event ('load');
@@ -1141,6 +1211,8 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
     var step = this._course.getStep (stepUid);
     if (step) {
       return step;
+    } else if (stepUid == 'special-none') {
+      return null;
     } else {
       var e = new JSTE.Event ('error');
       e.errorMessage = 'Step not found';
@@ -1153,6 +1225,8 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
   _renderCurrentStep: function () {
     var self = this;
     var step = this._currentStep;
+
+    step.saveStates.forEach (function (ss) { ss.save (self._states) });
     
     /* Message */
     var msg = step.createMessage
@@ -1267,6 +1341,8 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
 
   close: function () {
     this.clearMessages ();
+    var e = new JSTE.Event ('closed');
+    this.dispatchEvent (e);
   }, // close
 
   // <http://twitter.com/waka/status/1129513097> 

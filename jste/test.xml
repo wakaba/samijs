@@ -35,10 +35,11 @@
       <c:command type="next"/>
       <c:command type="close">チュートリアルを実行しない</c:command>
     </c:step>
-    <c:step id="can-join-group" select="#groups-can-join, #groups-can-request" save="join-group">
+    <c:step id="can-join-group" select="#groups-can-join, #groups-can-request">
       <c:message>「参加できるグループ」の欄にあなたが参加できるグループが表示されています。参加したいグループの横の「このグループに入る」ボタンを押してください。</c:message>
       <c:command type="back"/>
       <c:command type="gotoStep" step="no-group">参加したいグループがない場合</c:command>
+      <c:save-state name="done"/>
       <c:next-step/>
     </c:step>
     <c:step id="no-group">
