@@ -138,6 +138,14 @@ JSTE.Hash = new JSTE.Class (function (hash) {
     return this.hash[n] = v;
   }, // setNamedItem
 
+  getNames: function () {
+    var r = new JSTE.List;
+    for (var n in this.hash) {
+      r.push (n);
+    }
+    return r;
+  }, // getNames
+
   getByNames: function (names) {
     var self = this;
     return names.forEach (function (name) {
@@ -171,6 +179,23 @@ JSTE.List = new JSTE.Class (function (arrayLike) {
     }
     return null;
   }, // forEach
+  map: function (code) {
+    var newList = new this.constructor;
+    var length = this.list.length;
+    for (var i = 0; i < length; i++) {
+      newList.push (code (this.list[i]));
+    }
+    return newList;
+  }, // map
+  mapToHash: function (code) {
+    var newHash = new JSTE.Hash;
+    var length = this.list.length;
+    for (var i = 0; i < length; i++) {
+      var nv = code (this.list[i]);
+      newHash.setNamedItem (nv[0], nv[1]);
+    }
+    return newHash;
+  }, // mapToHash
 
   numberToInteger: function () {
     var newList = [];
@@ -183,7 +208,7 @@ JSTE.List = new JSTE.Class (function (arrayLike) {
     });
     return new this.constructor (newList);
   }, // numberToInteger
-  
+    
   clone: function () {
     var newList = [];
     this.forEach (function (item) {
@@ -655,7 +680,16 @@ JSTE.XHR = new JSTE.Class (function (url, onsuccess, onerror) {
 JSTE.Storage = new JSTE.Class (function () {
   
 }, {
-
+  get: function (name) {
+    throw "not implemented";
+  }, // get
+  set: function (name, value) {
+    throw "not implemented";
+  }, // set
+  
+  getNames: function () {
+    throw "not implemented";
+  } // getNames
 }); // Storage
 
 JSTE.Storage.PageLocal = new JSTE.Subclass (function () {
@@ -677,7 +711,69 @@ JSTE.Storage.PageLocal = new JSTE.Subclass (function () {
     }
     return names;
   } // getNames
-});
+}); // PageLocal
+
+JSTE.Storage.Cookie = JSTE.Subclass (function () {
+  this.keyPrefix = '';
+  this.domain = null;
+  this.path = '/';
+  this.persistent = false;
+  this.expires = null; // or Date
+}, JSTE.Storage, {
+  _parse: function () {
+    return new JSTE.List (document.cookie.split (/;/)).mapToHash (function (nv) {
+      nv = nv.replace (/^\s+/, '').replace (/\s+$/, '').split (/=/, 2);
+      nv[0] = decodeURIComponent (nv[0]);
+      nv[1] = decodeURIComponent (nv[1]);
+      return nv;
+    });
+  }, // _parse
+
+  get: function (name) {
+    return this._parse ().getNamedItem (this.keyPrefix + name);
+  }, // get
+  set: function (name, value) {
+    name = this.keyPrefix + name;
+    var r = encodeURIComponent (name) + '=' + encodeURIComponent (value);
+    if (this.domain) {
+      r += '; domain=' + this.domain;
+    }
+    if (this.path) {
+      r += '; path=' + this.path;
+    }
+    if (this.persistent) {
+      r += '; expires=' + new Date (2030, 1-1, 1).toUTCString ();
+    } else if (this.expires) {
+      r += '; expires=' + this.expires.toUTCString ();
+    }
+    document.cookie = r;
+  }, // set
+  delete: function (name) {
+    var expires = this.expires;
+    var persistent = this.persistent;
+    this.expires = new Date (0);
+    this.persistent = false;
+    this.set (name, '');
+    this.expires = expires;
+    this.persistent = persistent;
+  }, // delete
+
+  getNames: function () {
+    var self = this;
+    return this._parse ().getNames ().grep (function (name) {
+      return name.substring (0, self.keyPrefix.length) == self.keyPrefix;
+    }).map (function (name) {
+      return name.substring (self.keyPrefix.length);
+    });
+  } // getNames
+}); // Cookie
+
+JSTE.Storage.Local = JSTE.Class (function () {
+  var self = new JSTE.Storage.Cookie;
+  self.keyPrefix = 'localStorage-';
+  self.persistent = true;
+  return self;
+}); // Local
 
 
 /* Events: load, close, shown, hidden */
@@ -839,7 +935,7 @@ JSTE.Course = new JSTE.Class (function (doc) {
   this._targetDocument = doc;
 
   this._entryPointsByStateName = new JSTE.Hash;
-  this._entryPointsByStateName.setNamedItem ('done', '');
+  this._entryPointsByStateName.setNamedItem ('done', 'special-none');
 
   this._entryPointsByURL = {};
   this._entryPointsById = {};

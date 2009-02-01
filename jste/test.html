@@ -129,7 +129,9 @@ var MyMessage = new JSTE.Subclass (function () {
   } // _remove
 });
 
-JSTE.Tutorial.createFromURL ('test.xml', document, {messageClass: MyMessage},
+var local = new JSTE.Storage.Local ();
+JSTE.Tutorial.createFromURL ('test.xml', document, {messageClass: MyMessage,
+    states: local},
 function (t) { document.a = t });
 </script>
 
