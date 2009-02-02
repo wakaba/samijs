@@ -689,28 +689,36 @@ JSTE.Storage = new JSTE.Class (function () {
   
   getNames: function () {
     throw "not implemented";
-  } // getNames
+  }, // getNames
+
+  setPrefix: function (newPrefix) {
+    throw "not implemented";
+  } // setPrefix
 }); // Storage
 
 JSTE.Storage.PageLocal = new JSTE.Subclass (function () {
-  
+  this.keyPrefix = '';
 }, JSTE.Storage, {
   get: function (name) {
-    return this['value-' + name];
+    return this['value-' + this.keyPrefix + name];
   }, // get
   set: function (name, value) {
-    this['value-' + name] = value;
+    this['value-' + this.keyPrefix + name] = value;
   }, // set
 
   getNames: function () {
     var names = new JSTE.List;
     for (var n in this) {
-      if (/^value-/.test (n)) {
-        names.push (n.substring (6));
+      if (n.substring (0, 6 + this.keyPrefix.length) == 'value-' + this.keyPrefix) {
+        names.push (n.substring (6 + this.keyPrefix.length));
       }
     }
     return names;
-  } // getNames
+  }, // getNames
+  
+  setPrefix: function (newPrefix) {
+    this.keyPrefix = newPrefix;
+  } // setPrefix
 }); // PageLocal
 
 JSTE.Storage.Cookie = JSTE.Subclass (function () {
@@ -765,13 +773,20 @@ JSTE.Storage.Cookie = JSTE.Subclass (function () {
     }).map (function (name) {
       return name.substring (self.keyPrefix.length);
     });
-  } // getNames
+  }, // getNames
+
+  setPrefix: function (newPrefix) {
+    this.keyPrefix = newPrefix;
+  } // setPrefix
 }); // Cookie
 
 JSTE.Storage.Local = JSTE.Class (function () {
   var self = new JSTE.Storage.Cookie;
   self.keyPrefix = 'localStorage-';
   self.persistent = true;
+  self.setPrefix = function (newPrefix) {
+    this.keyPrefix = 'localStorage-' + newPrefix;
+  }; // setPrefix
   return self;
 }); // Local
 
@@ -988,7 +1003,8 @@ JSTE.Course = new JSTE.Class (function (doc) {
     this._entryPointsByStateName.setNamedItem (stateName, stepName || '');
   }, // setEntryPointByStateName
   setEntryPointByURL: function (url, stepName) {
-    this._entryPointsByURL[url] = stepName || '';
+// TODO: HTML5 URL->URI convertion
+    this._entryPointsByURL[encodeURI (url)] = stepName || '';
   }, // setEntryPointByURL
   setEntryPointById: function (id, stepName) {
     this._entryPointsById[id] = stepName || '';
@@ -1011,6 +1027,9 @@ JSTE.Course = new JSTE.Class (function (doc) {
       stepName = self._entryPointsByURL[url];
       if (stepName) return 'id-' + stepName;
     }
+// TODO: multiple elements with same ID
+// TODO: interpage "back" button
+// TODO: prefetch
     
     var docEl = td.documentElement;
     if (docEl) {
@@ -1080,6 +1099,8 @@ JSTE.Course = new JSTE.Class (function (doc) {
       };
       if (cmd.name == 'gotoStep') {
         cmd.args = ['id-' + bEl.getAttribute ('step')];
+      } else if (cmd.name == 'url') {
+        cmd.args = [bEl.getAttribute ('href')];
       }
       if (!JSTE.Element.isEmpty (bEl)) {
         cmd.labelTemplate = JSTE.Element.createTemplate (self._targetDocument, bEl);
@@ -1126,6 +1147,7 @@ JSTE.Class.addClassMethods (JSTE.Course, {
     if (!docEl) return course;
     if (!JSTE.Element.match (docEl, JSTE.WATNS, 'course')) return course;
     course._processStepsContent (docEl, null);
+    course.name = docEl.hasAttribute ('name') ? docEl.getAttribute ('name') + '-' : '';
     return course;
   }, // createFromDocument
   createFromURL: function (url, targetDoc, onload, onerror) {
@@ -1281,6 +1303,7 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
     if (args.states) this._states = args.states;
   }
   if (!this._states) this._states = new JSTE.Storage.PageLocal;
+  this._states.setPrefix (course.name);
   
   this._currentMessages = new JSTE.List;
   this._currentObservers = new JSTE.List;
@@ -1434,6 +1457,10 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
       this._renderCurrentStep ();
     }
   }, // gotoStep
+
+  url: function (href) {
+    location.href = href;
+  }, // url
 
   close: function () {
     this.clearMessages ();
