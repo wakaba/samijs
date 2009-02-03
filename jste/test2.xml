@@ -22,7 +22,7 @@
   <c:entryPoint url="http://suika.fam.cx/~wakaba/wiki/sw/n/媒体型" step="mt"/>
   <c:step id="mt">
     <c:message>これであなたは MIME 博士(嘘)</c:message>
-    <c:command type="back"/>
+    <c:command type="back" clear-state="done"/>
     <c:command type="close">おしまい</c:command>
     <c:command type="url" href="MIME" clear-state="done">はじめに戻る</c:command>
     <c:save-state name="done"/>

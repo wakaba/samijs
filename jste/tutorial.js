@@ -903,7 +903,7 @@ JSTE.Message = new JSTE.Class (function (doc, template, commandTarget, availComm
       }
 
       var button = new JSTE.Message.Button
-          (label, self._commandTarget, cmd.name, cmd.args);
+          (label, self._commandTarget, cmd.name, cmd.args, cmd.actions);
       buttonContainer.appendChild (button.element);
     });
     return buttonContainer;
@@ -958,7 +958,7 @@ JSTE.Message = new JSTE.Class (function (doc, template, commandTarget, availComm
 /* TODO: button label text should refer message catalog */
 
 JSTE.Message.Button =
-new JSTE.Class (function (label, commandTarget, commandName, commandArgs) {
+new JSTE.Class (function (label, commandTarget, commandName, commandArgs, commandActions) {
   this._label = label != null ? label : "";
 
   if (commandTarget && commandTarget instanceof Function) {
@@ -967,7 +967,7 @@ new JSTE.Class (function (label, commandTarget, commandName, commandArgs) {
   } else if (commandTarget) {
     this._command = function () {
       return commandTarget.executeCommand.apply
-          (commandTarget, [commandName, commandArgs]);
+          (commandTarget, [commandName, commandArgs, commandActions]);
     };
     this._classNames = new JSTE.List (['jste-command-' + commandName]);
   } else {
@@ -1152,9 +1152,11 @@ JSTE.Course = new JSTE.Class (function (doc) {
       if (cmd.name == 'gotoStep') {
         cmd.args = {stepUid: 'id-' + bEl.getAttribute ('step')};
       } else if (cmd.name == 'url') {
-        cmd.args = {url: bEl.getAttribute ('href'),
-                    clearStateNames: JSTE.List.spaceSeparated (bEl.getAttribute ('clear-state'))};
+        cmd.args = {url: bEl.getAttribute ('href')};
       }
+      cmd.actions = {
+        clearStateNames: JSTE.List.spaceSeparated (bEl.getAttribute ('clear-state'))
+      };
       if (!JSTE.Element.isEmpty (bEl)) {
         cmd.labelTemplate = JSTE.Element.createTemplate (self._targetDocument, bEl);
       }
@@ -1465,8 +1467,16 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
     this._currentStepsObjects.clear ();
   }, // clearStepsHandlers
   
-  executeCommand: function (commandName, commandArgs) {
+  executeCommand: function (commandName, commandArgs, commandActions) {
     if (this[commandName]) {
+      // Common actions
+      if (commandActions && commandActions.clearStateNames) {
+        var self = this;
+        commandActions.clearStateNames.forEach (function (stateName) {
+          self._states.delete (stateName);
+        });
+      }
+
       return this[commandName].apply (this, [commandArgs || {}]);
     } else {
       var e = new JSTE.Event ('error');
@@ -1495,8 +1505,11 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
       var prevPage = this._prevPages.pop ();
       if (prevPage.url != location.href) {
         this._saveBackState (true);
-        location.href = prevPage.url;
-// TODO: If prevPage.url == document.referrer, use history.back ()
+        if (document.referrer == prevPage.url) {
+          history.back ();
+        } else {
+          location.href = prevPage.url;
+        }
 // TODO: maybe we should not return if locaton.href and prevPage.,url only differs their fragment ids?
         return;
       }
@@ -1541,12 +1554,6 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
   }, // gotoStep
 
   url: function (args) {
-    if (args.clearStateNames) {
-      var self = this;
-      args.clearStateNames.forEach (function (stateName) {
-        self._states.delete (stateName);
-      });
-    }
     location.href = args.url;
   }, // url
 
