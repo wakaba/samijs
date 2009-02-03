@@ -40,7 +40,6 @@
 
     <c:entry-point step="back-to-tour"/>
     <c:step nohistory="" id="back-to-tour">
-      <c:message>xx</c:message>
       <c:command type="back">MIME ツアーに戻る</c:command>
     </c:step>
   </c:steps>

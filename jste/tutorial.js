@@ -951,7 +951,7 @@ JSTE.Message = new JSTE.Class (function (doc, template, commandTarget, availComm
       this._availCommands.push ({name: 'next'});
     }
  
-    this._availCommands = this._availCommands.grep(function (item) {
+    this._availCommands = this._availCommands.grep (function (item) {
       return self._commandTarget.canExecuteCommand (item.name, item.args);
     });
     
@@ -1384,6 +1384,7 @@ JSTE.Step = new JSTE.Class (function (id) {
   this.availCommands = new JSTE.List;
   this.saveStates = new JSTE.List;
   this.select = "";
+  // this._messageTemplate
 }, {
   setMessageTemplate: function (msg) {
     this._messageTemplate = msg;
@@ -1397,7 +1398,7 @@ JSTE.Step = new JSTE.Class (function (id) {
       var clone = JSTE.Element.createTemplate (doc, this._messageTemplate);
       msg = new msg (doc, clone, commandTarget, this.availCommands.clone ());
     } else {
-      msg = new msg (doc, null, commandTarget);
+      msg = new msg (doc, null, commandTarget, this.availCommands.clone ());
     }
     msg.select = this.select;
     return msg;
