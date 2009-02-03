@@ -1,4 +1,3 @@
-
 if (typeof (JSTE) === "undefined") var JSTE = {};
 
 JSTE.WATNS = 'http://suika.fam.cx/ns/wat';
@@ -752,6 +751,19 @@ JSTE.Class.addClassMethods (JSTE.Prefetch, {
   } // url
 }); // JSTE.Prefetch class methods
 
+
+JSTE.URL = {};
+
+JSTE.Class.addClassMethods (JSTE.URL, {
+  eq: function (u1, u2) {
+    // TODO: maybe we should once decode URLs and then reencode them
+    u1 = (u1 || '').replace (/([^\x21-\x7E]+)/, function (s) { return encodeURI (s) });
+    u2 = (u2 || '').replace (/([^\x21-\x7E]+)/, function (s) { return encodeURI (s) });
+    return u1 == u2;
+  } // eq
+}); // URL class methods
+
+
 JSTE.XHR = new JSTE.Class (function (url, onsuccess, onerror) {
   try {
     this._xhr = new XMLHttpRequest ();
@@ -832,14 +844,14 @@ JSTE.Storage = new JSTE.Class (function () {
     return this.get (name) !== undefined;
   }, // has
 
-  delete: function (name) {
-    throw "delete not implemented";
-  }, // delete
+  del: function (name) {
+    throw "del not implemented";
+  }, // del
 
   flushGet: function (name) {
     var v = this.get ('flush-' + name);
     if (v !== undefined) {
-      this.delete ('flush-' + name);
+      this.del ('flush-' + name);
     }
     return v;
   }, // flushGet
@@ -916,7 +928,7 @@ JSTE.Storage.Cookie = JSTE.Subclass (function () {
     }
     document.cookie = r;
   }, // set
-  delete: function (name) {
+  del: function (name) {
     var expires = this.expires;
     var persistent = this.persistent;
     this.expires = new Date (0);
@@ -924,7 +936,7 @@ JSTE.Storage.Cookie = JSTE.Subclass (function () {
     this.set (name, '');
     this.expires = expires;
     this.persistent = persistent;
-  }, // delete
+  }, // del
 
   getNames: function () {
     var self = this;
@@ -1240,7 +1252,7 @@ JSTE.Course = new JSTE.Class (function (doc) {
         } else if (cond.type == 'class') {
           matched = docClassNames.has (cond.value);
         } else if (cond.type == 'url') {
-          matched = cond.value == docURL;
+          matched = JSTE.URL.eq (cond.value, docURL);
         } else {
           //
         }
@@ -1351,7 +1363,12 @@ JSTE.Class.addClassMethods (JSTE.Course, {
     if (!docEl) return course;
     if (!JSTE.Element.match (docEl, JSTE.WATNS, 'course')) return course;
     course._processStepsContent (docEl, null);
-    course.name = docEl.hasAttribute ('name') ? docEl.getAttribute ('name') + '-' : '';
+    var name = docEl.getAttribute ('name');
+    if (name != null) {
+      course.name = name + '-';
+    } else {
+      course.name = '';
+    }
     return course;
   }, // createFromDocument
   createFromURL: function (url, targetDoc, onload, onerror) {
@@ -1636,7 +1653,7 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
               self._prevStateUids = new JSTE.List;
               self._prevPages = new JSTE.List;
             }
-            self._states.delete (stateName);
+            self._states.del (stateName);
           });
         }
       }
@@ -1667,10 +1684,10 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
     while (this._prevStepUids.list.length == 0 &&
            this._prevPages.list.length > 0) {
       var prevPage = this._prevPages.pop ();
-      if (prevPage.url != location.href) {
+      if (!JSTE.URL.eq (prevPage.url, location.href)) { // TODO: fragment?
         this._saveBackState (true);
         this._states.flushSet ('is-back', true);
-        if (document.referrer == prevPage.url) {
+        if (JSTE.URL.eq (document.referrer, prevPage.url)) { // TODO: fragment?
           history.back ();
         } else {
           location.href = prevPage.url;
@@ -1741,7 +1758,7 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
       i.url = b.url;
       self._prevPages.push (i);
     });
-    if ((this._prevPages.getLast () || {}).url == location.href) {
+    if (JSTE.URL.eq ((this._prevPages.getLast () || {}).url, location.href)) { // TODO: fragment?
       this._prevStepUids = this._prevPages.pop ();
     }
   }, // loadBackState
