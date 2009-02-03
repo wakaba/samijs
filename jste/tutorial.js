@@ -1169,6 +1169,8 @@ JSTE.Course = new JSTE.Class (function (doc) {
     step.nextEvents.append
         (JSTE.List.spaceSeparated (e.getAttribute ('next-event')));
 
+    step.noHistory = JSTE.Element.hasAttribute (e, 'nohistory');
+
     var cs = JSTE.Element.getChildrenClassifiedByType (e);
 
     var msgEl = cs.get (JSTE.WATNS, 'message').list[0];
@@ -1199,6 +1201,7 @@ JSTE.Course = new JSTE.Class (function (doc) {
         cmd.args = {url: bEl.getAttribute ('href')};
       }
       cmd.actions = {
+        saveStateNames: JSTE.List.spaceSeparated (bEl.getAttribute ('save-state')),
         clearStateNames: JSTE.List.spaceSeparated (bEl.getAttribute ('clear-state'))
       };
       if (!JSTE.Element.isEmpty (bEl)) {
@@ -1514,11 +1517,18 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
   executeCommand: function (commandName, commandArgs, commandActions) {
     if (this[commandName]) {
       // Common actions
-      if (commandActions && commandActions.clearStateNames) {
+      if (commandActions) {
         var self = this;
-        commandActions.clearStateNames.forEach (function (stateName) {
-          self._states.delete (stateName);
-        });
+        if (commandActions.saveStateNames) {
+          commandActions.saveStateNames.forEach (function (stateName) {
+            self._states.set (stateName, '');
+          });
+        }
+        if (commandActions.clearStateNames) {
+          commandActions.clearStateNames.forEach (function (stateName) {
+            self._states.delete (stateName);
+          });
+        }
       }
 
       return this[commandName].apply (this, [commandArgs || {}]);
@@ -1576,7 +1586,9 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
     var nextStepUid = this._currentStep.getNextStepUid (this._targetDocument);
     var nextStep = this._getStepOrError (nextStepUid);
     if (nextStep) {
-      this._prevStepUids.push (this._currentStep.uid);
+      if (!this._currentStep.noHistory) {
+        this._prevStepUids.push (this._currentStep.uid);
+      }
       this.clearMessages ();
       this._saveBackState ();
       this._currentStep = nextStep;
@@ -1589,7 +1601,9 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
   gotoStep: function (args) {
     var nextStep = this._getStepOrError (args.stepUid);
     if (nextStep) {
-      this._prevStepUids.push (this._currentStep.uid);
+      if (!this._currentStep.noHistory) {
+        this._prevStepUids.push (this._currentStep.uid);
+      }
       this._saveBackState ();
       this.clearMessages ();
       this._currentStep = nextStep;
@@ -1627,9 +1641,12 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
     });
     if (!ignoreCurrentPage) {
       var uids = this._prevStepUids.clone ();
-      uids.push (this._currentStep.uid);
-      // Add even if uids.list.length == 0.
-      bs.push ({url: location.href, stepUids: uids.list});
+      if (!this._currentStep.noHistory) {
+        uids.push (this._currentStep.uid);
+      }
+      if (uids.list.length) {
+        bs.push ({url: location.href, stepUids: uids.list});
+      }
     }
     this._states.setJSON ('back-state', bs);
   }, // _saveBackState
