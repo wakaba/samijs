@@ -409,6 +409,36 @@ JSTE.Class.addClassMethods (JSTE.Node, {
   } // querySelectorAll
 });
 
+JSTE.Document = {};
+
+JSTE.Class.addClassMethods (JSTE.Document, {
+  getTheHTMLElement: function () {
+    var el = document.documentElement;
+    if (el.nodeName.toUpperCase () == 'HTML') {
+      return el;
+    } else {
+      return null;
+    }
+  }, // getTheHTMLElement
+  getTheHeadElement: function () {
+    var el = JSTE.Document.getTheHTMLElement ();
+    if (!el) return null;
+    var elc = el.childNodes;
+    for (i = 0; i < elc.length; i++) {
+      var cel = elc[i];
+      if (cel.nodeName.toUpperCase () == 'HEAD') {
+        return cel;
+      }
+    }
+    return null;
+  }, // getTheHeadElement
+
+  appendToHead: function (el) {
+    var head = JSTE.Document.getTheHeadElement () || document.body || document.documentElement || document;
+    head.appendChild (el);
+  } // appendToHead
+}); // JSTE.Document class methods
+
 if (!JSTE.Element) JSTE.Element = {};
 
 JSTE.Class.addClassMethods (JSTE.Element, {
@@ -622,6 +652,17 @@ JSTE.ElementHash = new JSTE.Class (function () {
     }
   } // getOrCreate
 }); // ElementHash
+
+JSTE.Prefetch = {};
+
+JSTE.Class.addClassMethods (JSTE.Prefetch, {
+  URL: function (url) {
+    var link = document.createElement ('link');
+    link.rel = 'prefetch';
+    link.href = url;
+    JSTE.Document.appendToHead (link);
+  } // url
+}); // JSTE.Prefetch class methods
 
 JSTE.XHR = new JSTE.Class (function (url, onsuccess, onerror) {
   try {
@@ -905,6 +946,10 @@ JSTE.Message = new JSTE.Class (function (doc, template, commandTarget, availComm
       var button = new JSTE.Message.Button
           (label, self._commandTarget, cmd.name, cmd.args, cmd.actions);
       buttonContainer.appendChild (button.element);
+
+      if (cmd.name == 'url') {
+        JSTE.Prefetch.URL (cmd.args.url);
+      }
     });
     return buttonContainer;
   }, // createCommandButtons
@@ -1080,8 +1125,6 @@ JSTE.Course = new JSTE.Class (function (doc) {
       if (stepName) return 'id-' + stepName;
     }
 // TODO: multiple elements with same ID
-// TODO: interpage "back" button
-// TODO: prefetch
     
     var docEl = td.documentElement;
     if (docEl) {
@@ -1152,6 +1195,7 @@ JSTE.Course = new JSTE.Class (function (doc) {
       if (cmd.name == 'gotoStep') {
         cmd.args = {stepUid: 'id-' + bEl.getAttribute ('step')};
       } else if (cmd.name == 'url') {
+// TODO: relative URL
         cmd.args = {url: bEl.getAttribute ('href')};
       }
       cmd.actions = {
