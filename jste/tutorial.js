@@ -683,9 +683,40 @@ JSTE.Storage = new JSTE.Class (function () {
   get: function (name) {
     throw "not implemented";
   }, // get
+  getJSON: function (name) {
+    var value = this.get (name);
+    if (value != null) {
+      return JSTE.JSON.parse (value); // XXX: try-catch?
+    } else {
+      return value;
+    }
+  }, // getJSON
+
   set: function (name, value) {
     throw "not implemented";
   }, // set
+  setJSON: function (name, obj) {
+    this.set (name, JSTE.JSON.stringify (obj));
+  }, // setJSON
+
+  has: function (name) {
+    return this.get (name) !== undefined;
+  }, // has
+
+  delete: function (name) {
+    throw "delete not implemented";
+  }, // delete
+
+  flushGet: function (name) {
+    var v = this.get ('flush-' + name);
+    if (v !== undefined) {
+      this.delete ('flush-' + name);
+    }
+    return v;
+  }, // flushGet
+  flushSet: function (name, value) {
+    this.set ('flush-' + name, value);
+  }, // flushSet
   
   getNames: function () {
     throw "not implemented";
@@ -789,6 +820,27 @@ JSTE.Storage.Local = JSTE.Class (function () {
   }; // setPrefix
   return self;
 }); // Local
+
+JSTE.JSON = {};
+
+JSTE.Class.addClassMethods (JSTE.JSON, {
+  parse: function (value) {
+    if (self.JSON && JSON.parse) {
+      return JSON.parse (value); // json2.js or ES3.1
+    } else {
+      return eval ('(' + value + ')');
+    }
+  }, // parse
+
+  stringify: function (obj) {
+    if (self.JSON && JSON.stringify) {
+      return JSON.stringify (obj); // json2.js or ES3.1
+    } else {
+      throw "JSTE.JSON.stringify not implemented";
+    }
+  } // serialize
+}); // JSON class methods
+
 
 
 /* Events: load, close, shown, hidden */
@@ -1098,9 +1150,10 @@ JSTE.Course = new JSTE.Class (function (doc) {
         name: bEl.getAttribute ('type') || 'gotoStep'
       };
       if (cmd.name == 'gotoStep') {
-        cmd.args = ['id-' + bEl.getAttribute ('step')];
+        cmd.args = {stepUid: 'id-' + bEl.getAttribute ('step')};
       } else if (cmd.name == 'url') {
-        cmd.args = [bEl.getAttribute ('href')];
+        cmd.args = {url: bEl.getAttribute ('href'),
+                    clearStateNames: JSTE.List.spaceSeparated (bEl.getAttribute ('clear-state'))};
       }
       if (!JSTE.Element.isEmpty (bEl)) {
         cmd.labelTemplate = JSTE.Element.createTemplate (self._targetDocument, bEl);
@@ -1170,7 +1223,7 @@ JSTE.Jump = new JSTE.Class (function (selectors, eventNames, stepUid) {
     var observers = new JSTE.List;
 
     var onev = function () {
-      commandTarget.gotoStep (self.stepUid);
+      commandTarget.gotoStep ({stepUid: self.stepUid});
     };
 
     JSTE.Node.querySelectorAll (doc, this.selectors).forEach
@@ -1288,8 +1341,11 @@ JSTE.SaveState = new JSTE.Class (function (name, value) {
   this.name = name || '';
   this.value = value || '';
 }, {
-  save: function (states) {
-    states.set (this.name, this.value);
+  save: function (tutorial) {
+    var name = this.name;
+    var value = this.value;
+    if (name == 'back-state') return;
+    tutorial._states.set (name, value);
   } // save
 }); // SaveState
 
@@ -1307,15 +1363,25 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
   
   this._currentMessages = new JSTE.List;
   this._currentObservers = new JSTE.List;
-  this._prevStepUids = new JSTE.List;
   this._currentStepsObjects = new JSTE.List;
-  
-  var stepUid = this._course.findEntryPoint (document, this._states);
+
+  this._prevStepUids = new JSTE.List;
+  this._loadBackState ();
+
+  var stepUid;
+  if (this._prevStepUids.list.length) {
+    stepUid = this._prevStepUids.pop ();
+  } else {
+    stepUid = this._course.findEntryPoint (document, this._states);
+  }
+
   this._currentStep = this._getStepOrError (stepUid);
   if (this._currentStep) {
     var e = new JSTE.Event ('load');
     this.dispatchEvent (e);
-    
+
+    this._saveBackState ();
+
     var self = this;
     new JSTE.Observer ('cssomready', this, function () {
       self._renderCurrentStep ();
@@ -1345,7 +1411,7 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
     var self = this;
     var step = this._currentStep;
 
-    step.saveStates.forEach (function (ss) { ss.save (self._states) });
+    step.saveStates.forEach (function (ss) { ss.save (self) });
     
     /* Message */
     var msg = step.createMessage
@@ -1401,7 +1467,7 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
   
   executeCommand: function (commandName, commandArgs) {
     if (this[commandName]) {
-      return this[commandName].apply (this, commandArgs || []);
+      return this[commandName].apply (this, [commandArgs || {}]);
     } else {
       var e = new JSTE.Event ('error');
       e.errorMessage = 'Command not found';
@@ -1424,16 +1490,30 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
   }, // canExecuteCommand
   
   back: function () {
+    while (this._prevStepUids.list.length == 0 &&
+           this._prevPages.list.length > 0) {
+      var prevPage = this._prevPages.pop ();
+      if (prevPage.url != location.href) {
+        this._saveBackState (true);
+        location.href = prevPage.url;
+// TODO: If prevPage.url == document.referrer, use history.back ()
+// TODO: maybe we should not return if locaton.href and prevPage.,url only differs their fragment ids?
+        return;
+      }
+      this._prevStepUids = prevPage;
+    }
+
     var prevStepUid = this._prevStepUids.pop ();
     var prevStep = this._getStepOrError (prevStepUid);
     if (prevStep) {
       this.clearMessages ();
+      this._saveBackState ();
       this._currentStep = prevStep;
       this._renderCurrentStep ();
     }
   }, // back
   canBack: function () {
-    return this._prevStepUids.list.length > 0;
+    return this._prevStepUids.list.length > 0 || this._prevPages.list.length > 0;
   }, // canBack
   next: function () {
     var nextStepUid = this._currentStep.getNextStepUid (this._targetDocument);
@@ -1441,6 +1521,7 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
     if (nextStep) {
       this._prevStepUids.push (this._currentStep.uid);
       this.clearMessages ();
+      this._saveBackState ();
       this._currentStep = nextStep;
       this._renderCurrentStep ();
     }
@@ -1448,18 +1529,25 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
   canNext: function () {
     return this._currentStep.getNextStepUid (this._targetDocument) != null;
   }, // canNext
-  gotoStep: function (uid) {
-    var nextStep = this._getStepOrError (uid);
+  gotoStep: function (args) {
+    var nextStep = this._getStepOrError (args.stepUid);
     if (nextStep) {
       this._prevStepUids.push (this._currentStep.uid);
+      this._saveBackState ();
       this.clearMessages ();
       this._currentStep = nextStep;
       this._renderCurrentStep ();
     }
   }, // gotoStep
 
-  url: function (href) {
-    location.href = href;
+  url: function (args) {
+    if (args.clearStateNames) {
+      var self = this;
+      args.clearStateNames.forEach (function (stateName) {
+        self._states.delete (stateName);
+      });
+    }
+    location.href = args.url;
   }, // url
 
   close: function () {
@@ -1467,6 +1555,33 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
     var e = new JSTE.Event ('closed');
     this.dispatchEvent (e);
   }, // close
+
+  _loadBackState: function () {
+    var self = this;
+    this._prevPages = new JSTE.List;
+    var bs = this._states.getJSON ('back-state');
+    new JSTE.List (bs).forEach (function (b) {
+      var i = new JSTE.List (b.stepUids);
+      i.url = b.url;
+      self._prevPages.push (i);
+    });
+    if ((this._prevPages.getLast () || {}).url == location.href) {
+      this._prevStepUids = this._prevPages.pop ();
+    }
+  }, // loadBackState
+  _saveBackState: function (ignoreCurrentPage) {
+    var bs = [];
+    this._prevPages.forEach (function (pp) {
+      bs.push ({url: pp.url, stepUids: pp.list});
+    });
+    if (!ignoreCurrentPage) {
+      var uids = this._prevStepUids.clone ();
+      uids.push (this._currentStep.uid);
+      // Add even if uids.list.length == 0.
+      bs.push ({url: location.href, stepUids: uids.list});
+    }
+    this._states.setJSON ('back-state', bs);
+  }, // _saveBackState
 
   // <http://twitter.com/waka/status/1129513097> 
   _dispatchCSSOMReadyEvent: function () {
