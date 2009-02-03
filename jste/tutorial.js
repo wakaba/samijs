@@ -359,6 +359,25 @@ JSTE.List.SwitchByLocalName = new JSTE.Class (function (ns, cases, ow) {
   }
 });
 
+JSTE.Set = {};
+
+JSTE.Set.Unordered = new JSTE.Class (function () {
+  // this.caseInsensitive
+}, {
+  addFromList: function (list) {
+    var self = this;
+    list.forEach (function (name) {
+      if (self.caseInsensitive) name = name.toLowerCase ();
+      self['value-' + name] = true;
+    });
+  }, // addFromList
+
+  has: function (name) {
+    if (this.caseInsensitive) name = name.toLowerCase ();
+    return this['value-' + name] !== undefined;
+  } // has
+}); // Unordered
+
 
 if (!JSTE.Node) JSTE.Node = {};
 
@@ -412,16 +431,18 @@ JSTE.Class.addClassMethods (JSTE.Node, {
 JSTE.Document = {};
 
 JSTE.Class.addClassMethods (JSTE.Document, {
-  getTheHTMLElement: function () {
-    var el = document.documentElement;
+  getTheHTMLElement: function (doc) {
+    var el = doc.documentElement;
+// BUG: XML support
     if (el.nodeName.toUpperCase () == 'HTML') {
       return el;
     } else {
       return null;
     }
   }, // getTheHTMLElement
-  getTheHeadElement: function () {
-    var el = JSTE.Document.getTheHTMLElement ();
+  getTheHeadElement: function (doc) {
+// BUG: XML support
+    var el = JSTE.Document.getTheHTMLElement (doc);
     if (!el) return null;
     var elc = el.childNodes;
     for (i = 0; i < elc.length; i++) {
@@ -433,10 +454,23 @@ JSTE.Class.addClassMethods (JSTE.Document, {
     return null;
   }, // getTheHeadElement
 
-  appendToHead: function (el) {
-    var head = JSTE.Document.getTheHeadElement () || document.body || document.documentElement || document;
-    head.appendChild (el);
-  } // appendToHead
+  getClassNames: function (doc) {
+// BUG: XML support
+    var r = new JSTE.Set.Unordered ();
+    r.caseInsensitive = doc.compatMode != 'CSS1Compat';
+    
+    var docEl = doc.documentElement;
+    if (docEl) {
+      r.addFromList (JSTE.List.spaceSeparated (docEl.className));
+    }
+
+    var bodyEl = doc.body;
+    if (bodyEl) {
+      r.addFromList (JSTE.List.spaceSeparated (bodyEl.className));
+    }
+    
+    return r;
+  } // getClassNames
 }); // JSTE.Document class methods
 
 if (!JSTE.Element) JSTE.Element = {};
@@ -513,6 +547,12 @@ JSTE.Class.addClassMethods (JSTE.Element, {
     return el.appendChild (el.ownerDocument.createTextNode (s));
   }, // appendText
   
+  appendToHead: function (el) {
+    var doc = el.ownerDocument;
+    var head = JSTE.Document.getTheHeadElement (doc) || doc.body || doc.documentElement || doc;
+    head.appendChild (el);
+  }, // appendToHead
+
   createTemplate: function (doc, node) {
     var df = doc.createDocumentFragment ();
     new JSTE.List (node.childNodes).forEach (function (n) {
@@ -660,7 +700,7 @@ JSTE.Class.addClassMethods (JSTE.Prefetch, {
     var link = document.createElement ('link');
     link.rel = 'prefetch';
     link.href = url;
-    JSTE.Document.appendToHead (link);
+    JSTE.Element.appendToHead (link);
   } // url
 }); // JSTE.Prefetch class methods
 
@@ -1046,18 +1086,16 @@ new JSTE.Class (function (label, commandTarget, commandName, commandArgs, comman
 JSTE.Course = new JSTE.Class (function (doc) {
   this._targetDocument = doc;
 
-  this._entryPointsByStateName = new JSTE.Hash;
-  this._entryPointsByStateName.setNamedItem ('done', 'special-none');
-
-  this._entryPointsByURL = {};
-  this._entryPointsById = {};
-  this._entryPointsByClassName = {};
+  this._entryPoints = new JSTE.List;
+  this._entryPoints.push
+      ({conditions: new JSTE.List ([{type: 'state', value: 'done'}]),
+        stepUid: 'special-none'});
   
   this._stepsState = new JSTE.List ([new JSTE.Hash]);
   this._steps = new JSTE.Hash;
   
   var nullState = new JSTE.Step;
-  nullState.uid = "";
+  nullState.uid = "special-none";
   this._steps.setNamedItem (nullState.uid, nullState);
   this._initialStepUid = nullState.uid;
 }, {
@@ -1068,7 +1106,7 @@ JSTE.Course = new JSTE.Class (function (doc) {
         steps: function (n) { self._processStepsElement (n, parentSteps) },
         step: function (n) { self._processStepElement (n, parentSteps) },
         jump: function (n) { self._processJumpElement (n, parentSteps) },
-        entryPoint: function (n) { self._processEntryPointElement (n, parentSteps) }
+        'entry-point': function (n) { self._processEntryPointElement (n, parentSteps) }
       })
     );
   }, // _processStepsContent
@@ -1077,86 +1115,102 @@ JSTE.Course = new JSTE.Class (function (doc) {
     steps.parentSteps = parentSteps;
     this._stepsState.pushCloneOfLast ();
     this._stepsState.getLast ().prevStep = null;
+
+    this._addConditionsFromElement (e, steps.conditions);
     this._processStepsContent (e, steps);
+
     this._stepsState.pop ();
   }, // _processStepsElement
 
   _processEntryPointElement: function (e, parentSteps) {
-    if (JSTE.Element.hasAttribute (e, 'state')) {
-      this.setEntryPointByStateName
-          (e.getAttribute ('state'), e.getAttribute ('step'));
-    } else if (JSTE.Element.hasAttribute (e, 'url')) {
-      this.setEntryPointByURL
-          (e.getAttribute ('url'), e.getAttribute ('step'));
-    } else if (JSTE.Element.hasAttribute (e, 'root-id')) {
-      this.setEntryPointById
-          (e.getAttribute ('root-id'), e.getAttribute ('step'));
-    } else if (JSTE.Element.hasAttribute (e, 'root-class')) {
-      this.setEntryPointByClassName
-          (e.getAttribute ('root-class'), e.getAttribute ('step'));
-    }
+    var conds = parentSteps ? parentSteps.conditions.clone () : new JSTE.List;
+    this._addConditionsFromElement (e, conds);
+
+    var stepUid = e.getAttribute ('step');
+    if (stepUid != null) stepUid = 'id-' + stepUid;
+    this._entryPoints.push ({conditions: conds, stepUid: stepUid});
   }, // _processEntryPointElement
-  setEntryPointByStateName: function (stateName, stepName) {
-    this._entryPointsByStateName.setNamedItem (stateName, stepName || '');
-  }, // setEntryPointByStateName
-  setEntryPointByURL: function (url, stepName) {
-// TODO: HTML5 URL->URI convertion
-    this._entryPointsByURL[encodeURI (url)] = stepName || '';
-  }, // setEntryPointByURL
-  setEntryPointById: function (id, stepName) {
-    this._entryPointsById[id] = stepName || '';
-  }, // setEntryPointById
-  setEntryPointByClassName: function (className, stepName) {
-    this._entryPointsByClassName[className] = stepName || '';
-  }, // setEntryPointByClassName
+
+  _addConditionsFromElement: function (e, conds) {
+    var urls = e.getAttribute ('document-url');
+    if (urls != null) {
+      JSTE.List.spaceSeparated (urls).forEach (function (url) {
+        conds.push ({type: 'url', value: encodeURI (url)});
+// TODO: resolve relative URL, URL->URI
+      });
+    }
+
+    var urls = e.getAttribute ('not-document-url');
+    if (urls != null) {
+      JSTE.List.spaceSeparated (urls).forEach (function (url) {
+        conds.push ({type: 'url', value: encodeURI (url), not: true});
+// TODO: resolve relative URL
+      });
+    }
+
+    var classNames = e.getAttribute ('document-class');
+    if (classNames != null) {
+      JSTE.List.spaceSeparated (classNames).forEach (function (className) {
+        conds.push ({type: 'class', value: className});
+      });
+    }
+
+    var classNames = e.getAttribute ('not-document-class');
+    if (classNames != null) {
+      JSTE.List.spaceSeparated (classNames).forEach (function (className) {
+        conds.push ({type: 'class', value: className, not: true});
+      });
+    }
+
+    var stateNames = e.getAttribute ('state');
+    if (stateNames != null) {
+      JSTE.List.spaceSeparated (stateNames).forEach (function (stateName) {
+        conds.push ({type: 'state', value: stateName});
+      });
+    }
+
+    var stateNames = e.getAttribute ('not-state');
+    if (stateNames != null) {
+      JSTE.List.spaceSeparated (stateNames).forEach (function (stateName) {
+        conds.push ({type: 'state', value: stateName, not: true});
+      });
+    }
+  }, // _addConditionsFromElement
+
   findEntryPoint: function (doc, states) {
     var self = this;
-    var td = this._targetDocument;
-    var stepName;
 
-    if (states) {
-      stepName = self._entryPointsByStateName.getByNames (states.getNames ());
-      if (stepName) return stepName;
-    }
-    
-    var url = doc.URL;
-    if (url) {
-      stepName = self._entryPointsByURL[url];
-      if (stepName) return 'id-' + stepName;
-    }
+    var td = this._targetDocument;
+    var docURL = td.URL; // TODO: drop fragments?
+    var docClassNames = JSTE.Document.getClassNames (td);
+
+    var stepUid = this._entryPoints.forEach (function (ep) {
+      if (ep.conditions.forEach (function (cond) {
+        var matched;
+        if (cond.type == 'state') {
+          matched = states.has (cond.value);
+        } else if (cond.type == 'class') {
+          matched = docClassNames.has (cond.value);
+        } else if (cond.type == 'url') {
+          matched = cond.value == docURL;
+        } else {
+          //
+        }
+        if (cond.not) matched = !matched;
+        if (!matched) return new JSTE.List.Return (true);
+      })) return; // true = not matched
+
+      // matched
+      return new JSTE.List.Return (ep.stepUid);
+    });
+
 // TODO: multiple elements with same ID
-    
-    var docEl = td.documentElement;
-    if (docEl) {
-      var docElId = JSTE.Element.getIds (docEl).forEach (function (i) {
-        stepName = self._entryPointsById[i];
-        if (stepName) return new JSTE.List.Return (stepName);
-      });
-      if (stepName) return 'id-' + stepName;
-      
-      stepName = JSTE.Element.getClassNames (docEl).forEach (function (c) {
-        stepName = self._entryPointsByClassName[c];
-        if (stepName) return new JSTE.List.Return (stepName);
-      });
-      if (stepName) return 'id-' + stepName;
+
+    if (stepUid != null) {
+      return stepUid;
+    } else {
+      return this._initialStepUid;
     }
-    
-    var bodyEl = td.body;
-    if (bodyEl) {
-      var bodyElId = JSTE.Element.getIds (bodyEl).forEach (function (i) {
-        stepName = self._entryPointsById[i];
-        if (stepName) return new JSTE.List.Return (stepName);
-      });
-      if (stepName) return 'id-' + stepName;
-      
-      stepName = JSTE.Element.getClassNames (bodyEl).forEach (function (c) {
-        stepName = self._entryPointsByClassName[c];
-        if (stepName) return new JSTE.List.Return (stepName);
-      });
-      if (stepName) return 'id-' + stepName;
-    }
-    
-    return this._initialStepUid;
   }, // findEntryPoint
   
   _processStepElement: function (e, parentSteps) {
@@ -1223,9 +1277,9 @@ JSTE.Course = new JSTE.Class (function (doc) {
     }
     
     this._steps.setNamedItem (step.uid, step);
-    if (!this._initialStepUid) {
+    /*if (!this._initialStepUid) {
       this._initialStepUid = step.uid;
-    }
+    }*/
   }, // _processStepElement
   
   _processJumpElement: function (e, parentSteps) {
@@ -1291,6 +1345,7 @@ JSTE.Jump = new JSTE.Class (function (selectors, eventNames, stepUid) {
 JSTE.Steps = new JSTE.Class (function () {
   this._jumps = new JSTE.List;
   this._jumpHandlers = new JSTE.List;
+  this.conditions = new JSTE.List;
 }, {
   setCurrentStepByUid: function (uid) {
     this._jumpHandlers.forEach (function (jh) {
@@ -1418,7 +1473,7 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
   this._loadBackState ();
 
   var stepUid;
-  if (this._prevStepUids.list.length) {
+  if (this._states.flushGet ('is-back') && this._prevStepUids.list.length) {
     stepUid = this._prevStepUids.pop ();
   } else {
     stepUid = this._course.findEntryPoint (document, this._states);
@@ -1442,11 +1497,13 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
   }
 }, {
   _getStepOrError: function (stepUid) {
+    if (stepUid == 'special-none') {
+      return null;
+    }
+
     var step = this._course.getStep (stepUid);
     if (step) {
       return step;
-    } else if (stepUid == 'special-none') {
-      return null;
     } else {
       var e = new JSTE.Event ('error');
       e.errorMessage = 'Step not found';
@@ -1526,6 +1583,10 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
         }
         if (commandActions.clearStateNames) {
           commandActions.clearStateNames.forEach (function (stateName) {
+            if (stateName == 'back-state') {
+              self._prevStateUids = new JSTE.List;
+              self._prevPages = new JSTE.List;
+            }
             self._states.delete (stateName);
           });
         }
@@ -1559,6 +1620,7 @@ JSTE.Tutorial = new JSTE.Class (function (course, doc, args) {
       var prevPage = this._prevPages.pop ();
       if (prevPage.url != location.href) {
         this._saveBackState (true);
+        this._states.flushSet ('is-back', true);
         if (document.referrer == prevPage.url) {
           history.back ();
         } else {

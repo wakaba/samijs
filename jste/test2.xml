@@ -2,10 +2,10 @@
     xmlns="http://www.w3.org/1999/xhtml">
 
   <c:steps not-state="in-tour">
-    <c:entryPoint url="http://suika.fam.cx/~wakaba/wiki/sw/n/MIME" step="start"/>
+    <c:entry-point document-url="http://suika.fam.cx/~wakaba/wiki/sw/n/MIME" step="start"/>
     <c:step id="start">
       <c:message>MIME つまみ食いツアーでーす。</c:message>
-      <c:command type="next" save-state="in-tour">はじめる</c:command>
+      <c:command type="next" clear-state="back-state" save-state="in-tour">はじめる</c:command>
       <c:command type="close">あとでやる</c:command>
       <c:command type="close" save-state="done">やらない</c:command>
       <c:next-step step="mime"/>
@@ -13,7 +13,7 @@
   </c:steps>
 
   <c:steps state="in-tour">
-    <c:entryPoint url="http://suika.fam.cx/~wakaba/wiki/sw/n/MIME" step="mime"/>
+    <c:entry-point document-url="http://suika.fam.cx/~wakaba/wiki/sw/n/MIME" step="mime"/>
 
     <c:step id="mime">
       <c:message>MIME てこんなんです。</c:message>
@@ -21,25 +21,26 @@
       <c:command type="url" href="実体">次へ</c:command>
     </c:step>
 
-    <c:entryPoint url="http://suika.fam.cx/~wakaba/wiki/sw/n/実体" step="entity"/>
+    <c:entry-point document-url="http://suika.fam.cx/~wakaba/wiki/sw/n/実体" step="entity"/>
     <c:step id="entity">
       <c:message>MIME 実体ってこういうことなんです。わかったかな?</c:message>
       <c:command type="back"/>
       <c:command type="url" href="媒体型">次へ</c:command>
-      <c:save-state name="back-state"/>
     </c:step>
 
-    <c:entryPoint url="http://suika.fam.cx/~wakaba/wiki/sw/n/媒体型" step="mt"/>
+    <c:entry-point document-url="http://suika.fam.cx/~wakaba/wiki/sw/n/媒体型" step="mt"/>
     <c:step id="mt">
       <c:message>これであなたは MIME 博士(嘘)</c:message>
       <c:command type="back" clear-state="done"/>
-      <c:command type="close">おしまい</c:command>
-      <c:command type="url" href="MIME" clear-state="done">はじめに戻る</c:command>
+      <c:command type="close" clear-state="in-tour">おしまい</c:command>
+      <c:command type="url" href="MIME" clear-state="in-tour done">はじめに戻る</c:command>
       <c:save-state name="done"/>
       <c:next-step/>
     </c:step>
 
-    <c:step nohistory="">
+    <c:entry-point step="back-to-tour"/>
+    <c:step nohistory="" id="back-to-tour">
+      <c:message>xx</c:message>
       <c:command type="back">MIME ツアーに戻る</c:command>
     </c:step>
   </c:steps>
