@@ -702,18 +702,26 @@ JSTE.Class.addClassMethods (JSTE.Script, {
     var number = urls.list.length;
     var counter = 0;
     var check = function () {
-      script.onload = null;
-      script.onreadystatechange = null;
       if (counter == number) {
         onload ();
       }
     };
     urls.forEach (function (url) {
+      if (/\.css(?:\?|$)/.test (url)) {
+        JSTE.Style.loadStyle (url, function () {
+          counter++;
+          check ();
+        });
+        return;
+      }
+
       var script = document.createElement ('script');
       script.src = url;
       script.onload = function () {
         counter++;
         check ();
+        script.onload = null;
+        script.onreadystatechange = null;
       };
       script.onreadystatechange = function () {
         if (script.readyState != 'complete' && script.readyState != 'loaded') {
@@ -721,6 +729,8 @@ JSTE.Class.addClassMethods (JSTE.Script, {
         }
         counter++;
         check ();
+        script.onload = null;
+        script.onreadystatechange = null;
       };
       document.body.appendChild (script);
     });
@@ -730,10 +740,25 @@ JSTE.Class.addClassMethods (JSTE.Script, {
 JSTE.Style = {};
 
 JSTE.Class.addClassMethods (JSTE.Style, {
-  loadStyle: function (url) {
+  loadStyle: function (url, onload) {
     var link = document.createElement ('link');
     link.rel = 'stylesheet';
     link.href = url;
+    if (onload) {
+      link.onload = function () {
+        onload ();
+        link.onload = null;
+        link.onreadystatechange = null;
+      };
+      link.onreadystatechange= function () {
+        if (link.readyState != 'complete' && link.readyState != 'loaded') {
+          return;
+        }
+        onload ();
+        link.onload = null;
+        link.onreadystatechange = null;
+      };
+    }
     JSTE.Element.appendToHead (link);
   } // loadStyle
 }); // Style class methods
