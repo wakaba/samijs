@@ -114,6 +114,7 @@ new JSTE.Observer ('load', window, function () {
 });
 
 
+
 JSTE.Hash = new JSTE.Class (function (hash) {
   this.hash = hash || {};
 }, {
@@ -692,6 +693,53 @@ JSTE.ElementHash = new JSTE.Class (function () {
     }
   } // getOrCreate
 }); // ElementHash
+
+
+
+JSTE.Script = {};
+
+JSTE.Class.addClassMethods (JSTE.Script, {
+  loadScripts: function (urls, onload) {
+    var number = urls.list.length;
+    var counter = 0;
+    var check = function () {
+      script.onload = null;
+      script.onreadystatechange = null;
+      if (counter == number) {
+        onload ();
+      }
+    };
+    urls.forEach (function (url) {
+      var script = document.createElement ('script');
+      script.src = url;
+      script.onload = function () {
+        counter++;
+        check ();
+      };
+      script.onreadystatechange = function () {
+        if (script.readyState != 'complete' && script.readyState != 'loaded') {
+          return;
+        }
+        counter++;
+        check ();
+      };
+      document.body.appendChild (script);
+    });
+  } // loadScripts
+}); // Script class methods
+
+JSTE.Style = {};
+
+JSTE.Class.addClassMethods (JSTE.Style, {
+  loadStyle: function (url) {
+    var link = document.createElement ('link');
+    link.rel = 'stylesheet';
+    link.href = url;
+    JSTE.Element.appendToHead (link);
+  } // loadStyle
+}); // Style class methods
+
+
 
 JSTE.Prefetch = {};
 

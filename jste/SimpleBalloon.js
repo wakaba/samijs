@@ -410,6 +410,31 @@ var SimpleBalloonVML = new JSTE.Subclass (function () {
 
 }); // SimpleBalloonVML
 
+SimpleBalloon.Message = new JSTE.Subclass (function () {
+  return this._super.apply (this, arguments);
+}, JSTE.Message, {
+  _render: function (msgContainer) {
+    var doc = this._targetDocument;
+
+    var container = doc.createElement ('article');
+    container.className = 'mm-container';
+
+    container.appendChild (msgContainer);
+
+    var buttonContainer = this.createCommandButtons ();
+    container.appendChild (buttonContainer);
+
+    var refElement = JSTE.Node.querySelector (document, this.select);
+    this._simpleBalloon = new SimpleBalloon (container, refElement);
+
+    return this._simpleBalloon.element;
+  }, // _render
+
+  _remove: function () {
+    this._simpleBalloon.remove ();
+  } // _remove
+}); // Message
+
 /* ***** BEGIN LICENSE BLOCK *****
  * Copyright 2008-2009 Wakaba <w@suika.fam.cx>.  All rights reserved.
  *
