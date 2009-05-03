@@ -441,6 +441,37 @@ SAMI.Class.addClassMethods (SAMI.String, {
   } // uUnescape
 });
 
+SAMI.StringContainer = new SAMI.Class (function () {
+  // Abstract
+}, {
+  appendText: function (s) {
+    alert ('appendText: not implemented');
+  }, // appendText
+
+  say: function (s) {
+    this.appendText (s + "\n");
+  }, // say
+  sayPrefixed: function (prefix, s) {
+    if (s.length) {
+      s = prefix + s.replace (/\x0A/g, "\x0A" + prefix);
+    }
+    this.say (s);
+  } // sayPrefixed
+}); // StringContainer
+
+SAMI.StringContainer.Element = new SAMI.Subclass (function (el) {
+  this.element = el;
+}, SAMI.StringContainer, {
+  appendText: function (s) {
+    var lc = this.element.lastChild;
+    if (!lc || lc.nodeType != 3 /* TEXT_NODE */) {
+      lc = this.element.appendChild (this.element.ownerDocument.createTextNode (''));
+    }
+
+    lc.data += s;
+  } // appendText
+});
+
 /* --- DOM --- */
 
 if (!SAMI.Node) SAMI.Node = {};
@@ -587,6 +618,22 @@ SAMI.Class.addClassMethods (SAMI.Element, {
     });
     return r;
   }, // getChildrenClassifiedByType
+
+  getTextContent: function (el) {
+    var tc = el.textContent;
+    if (tc === undefined) {
+      tc = el.innerText;
+    }
+    return tc;
+  }, // getTextContent
+  setTextContent: function (el, s) {
+    var tc = el.innerText;
+    if (tc === undefined) {
+      el.textContent = s;
+    } else {
+      el.innerText = s;
+    }
+  }, // setTextContent
 
   isEmpty: function (el) {
     // HTML5 definition of "empty"

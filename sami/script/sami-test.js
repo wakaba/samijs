@@ -65,20 +65,19 @@ SAMI.Class.addClassMethods (SAMI.Test, {
     return tests;
   }, // parseTestData
 
-  executeTestsByURL: function (url, fieldProps, code, onsuccess, onfail) {
+  executeTestsByURL: function (url, fieldProps, code, ondone, onerror) {
     new SAMI.XHR (url, function () {
-      var results = new SAMI.Test.Results;
       SAMI.Test.parseTestData (fieldProps, this.getText ()).forEach (function (test) {
-        var result = code (test);
-        results.add (result);
+        code (test);
       });
-      results.report (onsuccess, onfail);
+
+      if (ondone) ondone ();
     }, function () {
       var e = new SAMI.Event ('error');
       e.type = 'cannot retrieve test file';
       e.text = this.getSimpleErrorInfo ();
       e.label = 'm';
-      this.dispatchEvent (e);
+      if (onerror) onerror (e);
     }).get ();
   }
 }); // SAMI.Test class methods
@@ -98,44 +97,67 @@ SAMI.Test.Item = new SAMI.Class (function () {
   } // setField
 });
 
-SAMI.Test.Results = new SAMI.Class (function () {
-  //this.results = new SAMI.List;
-  this.successCount = 0;
-  this.failCount = 0;
-}, {
-  add: function (result) {
-    if (result === true) {
-      result = new Boolean (true);
-      result.success = true;
-    } else if (result === false) {
-      result = new Boolean (true);
-      result.success = false;
-    } else if (!result) {
-    //  result = new SAMI.Test.Result (false, 'Test code did not return the result');
-    }
+SAMI.Test.Manager = new SAMI.Class (function (resultElement, out) {
+  this.resultElement = resultElement;
+  SAMI.Element.addClassName (resultElement, 'FAIL');
+  SAMI.Element.setTextContent (resultElement, 'FAIL (script error)');
 
-    //this.results.push (result);
-    if (result && result.success) {
-      this.successCount++;
+  this.out = out;
+  this.lastTestNumber = 0;
+  this.failedTestNumber = 0;
+}, {
+  ok: function (expr, desc, diag) {
+    var n = ++this.lastTestNumber;
+    if (expr) {
+      var s = 'ok ' + n;
+      if (desc && desc.length) {
+        s += ' - ' + desc.replace (/[\x0D\x0A]+/g, ' ');
+      }
+      this.out.say (s);
     } else {
-      this.failCount++;
+      var s = 'not ok ' + n;
+      if (desc && desc.length) {
+        s += ' - ' + desc.replace (/[\x0D\x0A]+/g, ' ');
+      }
+      this.out.say (s);
+      if (diag && diag.length) {
+        this.out.sayPrefixed ('# ', diag);
+      }
+      this.failedTestNumber++;
     }
-  }, // add
-  report: function (onsuccess, onfail) {
-    if (this.failCount == 0) {
+  }, // ok
+  ng: function (expr, message, diag) {
+    this.ok (!expr, message, diag);
+  }, // ng
+
+  done: function (onsuccess, onfail) {
+    this.out.say ('1..' + this.lastTestNumber);
+    if (this.failedTestNumber == 0) {
       if (onsuccess) onsuccess.apply (this);
+
+      SAMI.Element.deleteClassName (this.resultElement, 'FAIL');
+      SAMI.Element.addClassName (this.resultElement, 'PASS');
+      SAMI.Element.setTextContent (this.resultElement, 'PASS');
     } else {
+      var s = this.failedTestNumber + ' tests failed';
+      this.out.sayPrefixed ('# ', s);
       if (onfail) onfail.apply (this);
+
+      SAMI.Element.addClassName (this.resultElement, 'FAIL');
+      SAMI.Element.setTextContent (this.resultElement, 'FAIL (' + s + ')');
     }
-  } // report
-}); // Results
+  }, // done
+  abort: function (desc) {
+    var s = 'Ball out!';
+    if (desc && desc.length) {
+      s += ' - ' + desc.replace (/[\x0D\x0A]+/g, ' ');
+    }
+    this.out.say (s);
 
-SAMI.Result = new SAMI.Class (function (isSuccess, message) {
-  this.success = isSuccess;
-  this.message = message || 'Null';
-}, {
-
-}); // Result
+    SAMI.Element.addClassName (this.resultElement, 'FAIL');
+    SAMI.Element.setTextContent (this.resultElement, 'FAIL (' + s + ')');
+  } // abort
+}); // Manager
 
 /* --- Onload --- */
 

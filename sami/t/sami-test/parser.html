@@ -5,11 +5,16 @@
 
 <p id=result class=FAIL>FAIL (noscript)</p>
 
+<pre id=result-tap></pre>
+
 <script src="../../script/sami-core.js"></script>
 <script src="../../script/sami-test.js"></script>
 <script>
   var r = document.getElementById ('result');
-  r.firstChild.data = 'FAIL (script)';
+  var tap = document.getElementById ('result-tap');
+
+  var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
   SAMI.Test.executeTestsByURL ('test-format.dat', {
     data: {isPrefixed: true},
     errors: {isPrefixed: true, isList: true},
@@ -20,11 +25,11 @@
         return '* ' + n + '\n"' + v + '"';
       }).sort ().list.join ("\n");
     }).list.join ("\n$\n");
-    return actual == test.getField ('document');
+
+    tm.ok (actual == test.getField ('document'), test.getField ('data'));
   }, function () {
-    r.firstChild.data = 'PASS (' + this.successCount + ') tests';
-    r.className = 'PASS';
-  }, function () {
-    r.firstChild.data = 'FAIL (' + this.successCount + ' tests succeeded, ' + this.failCount + ' tests failed)';
+    tm.done ();
+  }, function (e) {
+    tm.abort (e.type + ' - ' + e.text);
   });
 </script>
