@@ -1,0 +1,30 @@
+#data
+| #field1
+| #field2
+#document
+* field1
+""
+* field2
+""
+
+#data
+| #field1
+| abc
+| #field2
+| def
+#document
+* field1
+"abc"
+* field2
+"def"
+
+#data
+| #field1
+| 
+| #field2
+#document
+* field1
+""
+$
+* field2
+""

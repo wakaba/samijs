@@ -127,6 +127,14 @@ SAMI.Hash = new SAMI.Class (function (hash) {
       if (r && r.stop) break;
     }
   }, // forEach
+  mapToList: function (code) {
+    var l = new SAMI.List;
+    for (var n in this.hash) {
+      var r = code (n, this.hash[n]);
+      l.push (r);
+    }
+    return l;
+  }, // mapToList
   clone: function (code) {
     var newHash = {};
     this.forEach (function (n, v) {
@@ -135,12 +143,24 @@ SAMI.Hash = new SAMI.Class (function (hash) {
     return new this.constructor (newHash);
   }, // clone
   
+  // Obsolete
   getNamedItem: function (n) {
     return this.hash[n];
   }, // getNamedItem
+  // Obsolete
   setNamedItem: function (n, v) {
     return this.hash[n] = v;
   }, // setNamedItem
+
+  get: function (n) {
+    return this.hash[n];
+  }, // get
+  has: function (n) {
+    return this.hash[n] !== undefined;
+  }, // has
+  set: function (n, v) {
+    this.hash[n] = v;
+  }, // set
 
   getNames: function () {
     var r = new SAMI.List;
@@ -250,6 +270,11 @@ SAMI.List = new SAMI.Class (function (arrayLike) {
       return true;
     });
   }, // uniq
+
+  sort: function (code) {
+    var l = code ? this.list.sort (code) : this.list.sort ();
+    return new this.constructor (l);
+  }, // sort
   
   getFirstMatch: function (code) {
     return this.forEach (function (item) {
@@ -258,6 +283,14 @@ SAMI.List = new SAMI.Class (function (arrayLike) {
       }
     });
   }, // getFirstMatch
+  has: function (value, eq) {
+    if (!eq) eq = function (i1, i2) { return i1 === i2 };
+    return this.forEach (function (item) {
+      if (eq (item, value)) {
+        return new SAMI.List.Return (true);
+      }
+    });
+  }, // has
   
   switchByElementType: function () {
     var cases = new SAMI.List (arguments);
@@ -384,6 +417,29 @@ SAMI.Set.Unordered = new SAMI.Class (function () {
     return this['value-' + name] !== undefined;
   } // has
 }); // Unordered
+
+/* --- String --- */
+
+if (!SAMI.String) SAMI.String = {};
+
+SAMI.Class.addClassMethods (SAMI.String, {
+  uUnescape: function (s) {
+    s.replace (/\\(?:u([0-9A-Fa-f]{4})|U([0-9A-Fa-f]{8}))/, function (_, c, d) {
+      c = parseInt ('0x' + (c || d));
+      if (c > 0x10FFFF) {
+        return "\uFFFD";
+      } else if (c > 0xFFFF) {
+        var h = 55296 // 0b1101100000000000
+            | (c & 1047552); // 0b11111111110000000000
+        var l = 56320 // 0b1101110000000000
+            | (c & 1023); // 0b1111111111
+        return String.fromCharCode (h, l);
+      } else {
+        return String.fromCharCode (c);
+      }
+    });
+  } // uUnescape
+});
 
 /* --- DOM --- */
 
@@ -847,9 +903,18 @@ SAMI.XHR = new SAMI.Class (function (url, onsuccess, onerror) {
     return (this._xhr.status < 400);
   }, // succeeded
 
+  getText: function () {
+    return this._xhr.responseText;
+  }, // getText
   getDocument: function () {
     return this._xhr.responseXML;
-  } // getDocument
+  }, // getDocument
+
+  getSimpleErrorInfo: function () {
+    var r = this._xhr.status + ' ' + this._xhr.statusText;
+    return r;
+  } // getSimpleErrorInfo
+
 }); // XHR
 
 /* --- Storage --- */
@@ -1027,6 +1092,7 @@ if (SAMI.onLoadFunctions) {
   new SAMI.List (SAMI.onLoadFunctions).forEach (function (code) {
     code ();
   });
+  delete SAMI.onLoadFunctions;
 }
 
 if (SAMI.isDynamicallyLoaded) {
