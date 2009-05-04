@@ -59,7 +59,18 @@ SAMI.EventTarget = new SAMI.Subclass (function () {
       }
     });
     return preventDefault || e.isDefaultPrevented ();
-  } // dispatchEvent
+  }, // dispatchEvent
+  reportError: function (args) {
+    var e = new SAMI.Event.Error;
+    for (p in args) {
+      var n = p;
+      if (p == 'type') {
+        n = 'errorType';
+      }
+      e[n] = args[p];
+    }
+    this.dispatchEvent (e);
+  } // reportError
 }); // EventTarget
 
 SAMI.Event = new SAMI.Class (function (eventType, canBubble, cancelable) {
@@ -73,7 +84,13 @@ SAMI.Event = new SAMI.Class (function (eventType, canBubble, cancelable) {
   isDefaultPrevented: function () {
     return this.defaultPrevented;
   } // isDefaultPrevented
-});
+}); // Event
+
+SAMI.Event.Error = new SAMI.Subclass (function () {
+  this._super.apply (this, ['error']);
+}, SAMI.Event, {
+  
+}); // Error
 
 SAMI.Observer = new SAMI.Class (function (eventType, target, onevent) {
   this.eventType = eventType;
@@ -186,7 +203,11 @@ SAMI.Hash = new SAMI.Class (function (hash) {
 /* --- List --- */
 
 SAMI.List = new SAMI.Class (function (arrayLike) {
-  this.list = arrayLike || [];
+  if (arrayLike instanceof SAMI.List) {
+    this.list = arrayLike.list;
+  } else {
+    this.list = arrayLike || [];
+  }
 }, {
   getLast: function () {
     if (this.list.length) {

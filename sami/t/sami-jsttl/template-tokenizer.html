@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<title>JSTTL.TemplateTokenizer.prototype.tokenize</title>
+<h1>JSTTL.TemplateTokenizer.prototype.tokenize</h1>
+
+<p id=result class=FAIL>FAIL (noscript)</p>
+
+<pre id=result-tap></pre>
+
+<script src="../../script/sami-core.js"></script>
+<script src="../../script/sami-jsttl.js"></script>
+<script src="../../script/sami-test.js"></script>
+<script>
+  var r = document.getElementById ('result');
+  var tap = document.getElementById ('result-tap');
+
+  var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
+  var errors;
+
+  var t = new JSTTL.TemplateTokenizer;
+  t.addEventListener ('error', function (e) {
+    errors.push ([e.line, e.column, e.errorType].join (';'));
+  });
+
+  SAMI.Test.executeTestsByURL ('tokenization.dat', {
+    data: {isPrefixed: true},
+    errors: {isPrefixed: true, isList: true},
+    tokens: {isPrefixed: true}
+  }, function (test) {
+    errors = new SAMI.List;
+
+    var actual = t.tokenize (test.getField ('data')).map (function (token) {
+      var lc = token.line + ';' + token.column + ';';
+      var type = token.type;
+      var value = token.valueRef.substring (token.valueStart, token.valueEnd);
+      if (type == 'text') {
+        return lc + '"' + value + '"';
+      } else if (type == 'tag') {
+        return lc + '%' + value;
+      } else {
+        return lc + '#' + type + ' ' + value;
+      }
+    }).list.join ("\n");
+
+    tm.is (actual, test.getField ('tokens'), 'Tokens - ' + test.getField ('data'));
+    tm.is (errors.sort ().list.join ("\n"), new SAMI.List (test.getField ('errors')).sort ().list.join ("\n"), 'Errors - ' + test.getField ('data'));
+  }, function () {
+    tm.done ();
+  }, function (e) {
+    tm.abort (e.type + ' - ' + e.text);
+  });
+</script>

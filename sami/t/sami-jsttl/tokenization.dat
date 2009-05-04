@@ -1,0 +1,26 @@
+#data
+abc
+#tokens
+1;1;"abc"
+
+#data
+abc[%%]def
+#tokens
+1;1;"abc"
+1;4;%
+1;8;"def"
+
+#data
+abc[%xyz%]def
+#tokens
+1;1;"abc"
+1;4;%xyz
+1;11;"def"
+
+#data
+abc[%xyz
+#errors
+1;9;unclosed tag at eof
+#tokens
+1;1;"abc"
+1;4;%xyz

@@ -130,6 +130,13 @@ SAMI.Test.Manager = new SAMI.Class (function (resultElement, out) {
     this.ok (!expr, message, diag);
   }, // ng
 
+  is: function (actual, expected, message) {
+    this.ok (actual == expected, message, 'Actual value: "' + actual + '", Expected value: "' + expected + '"');
+  }, // is
+  isnt: function (actual, expected, message) {
+    this.ok (actual != expected, message, 'Actual value: "' + actual + '", Expected value: not "' + expected + '"');
+  }, // isnt
+
   done: function (onsuccess, onfail) {
     this.out.say ('1..' + this.lastTestNumber);
     if (this.failedTestNumber == 0) {
