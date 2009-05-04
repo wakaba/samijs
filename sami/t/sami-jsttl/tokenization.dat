@@ -170,3 +170,21 @@ abc [%--%]  def
 | 
 #tokens
 2;1;%
+
+#data
+[%  -%][%- %]
+#tokens escaped
+1;1;% \u0020
+1;8;%\u0020
+
+#data
+[%--%]
+#tokens
+1;1;%
+
+#data
+[%%}
+#errors
+1;5;unclosed tag at eof
+#tokens
+1;1;%%}
