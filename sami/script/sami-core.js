@@ -445,7 +445,7 @@ if (!SAMI.String) SAMI.String = {};
 
 SAMI.Class.addClassMethods (SAMI.String, {
   uUnescape: function (s) {
-    s.replace (/\\(?:u([0-9A-Fa-f]{4})|U([0-9A-Fa-f]{8}))/, function (_, c, d) {
+    return s.replace (/\\(?:u([0-9A-Fa-f]{4})|U([0-9A-Fa-f]{8}))/g, function (_, c, d) {
       c = parseInt ('0x' + (c || d));
       if (c > 0x10FFFF) {
         return "\uFFFD";

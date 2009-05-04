@@ -24,3 +24,149 @@ abc[%xyz
 #tokens
 1;1;"abc"
 1;4;%xyz
+
+#data
+abc
+def
+[%ghi%]
+jkl
+#tokens
+1;1;"abc
+def
+"
+3;1;%ghi
+3;8;"
+jkl"
+
+#data
+abc[%
+def
+%]ghi
+#tokens
+| 1;1;"abc"
+| 1;4;%
+| def
+| 
+| 3;3;"ghi"
+
+#data
+[%abc%]
+#tokens
+1;1;%abc
+
+#data
+abc
+[%--%]
+efg
+#tokens
+1;1;"abc"
+2;1;%
+3;1;"efg"
+
+#data
+abc
+[% -%]
+efg
+#tokens escaped
+1;1;"abc
+"
+2;1;%\u0020
+3;1;"efg"
+
+#data
+abc
+[%- %]
+efg
+#tokens escaped
+1;1;"abc"
+2;1;%\u0020
+2;7;"
+efg"
+
+#data
+abc
+[% -%]
+ efg
+#tokens escaped
+1;1;"abc
+"
+2;1;%\u0020
+3;1;" efg"
+
+#data escaped
+abc\u0020
+[%- %]
+efg
+#tokens escaped
+1;1;"abc "
+2;1;%\u0020
+2;7;"
+efg"
+
+#data
+| abc
+| [% -%]
+| 
+|  efg
+#tokens escaped
+1;1;"abc
+"
+2;1;%\u0020
+3;1;"
+ efg"
+
+#data escaped
+| abc\u0020
+| 
+| [%- %]
+| efg
+#tokens escaped
+1;1;"abc 
+"
+3;1;% 
+3;7;"
+efg"
+
+#data escaped
+abc
+[% -%] \u0020
+ efg
+#tokens escaped
+1;1;"abc
+"
+2;1;%\u0020
+3;1;" efg"
+
+#data escaped
+abc\u0020
+  [%- %]
+efg
+#tokens escaped
+1;1;"abc "
+2;3;%\u0020
+2;9;"
+efg"
+
+#data escaped
+abc
+ [%-%]\u0020\u0020
+def
+#tokens
+1;1;"abc"
+2;2;%
+2;7;"  
+def"
+
+#data
+abc [%--%]  def
+#tokens
+1;1;"abc "
+1;5;%
+1;11;"  def"
+
+#data
+| 
+| [%--%]
+| 
+#tokens
+2;1;%

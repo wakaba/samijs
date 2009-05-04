@@ -29,16 +29,34 @@ JSTTL.TemplateTokenizer = SAMI.Class (function () {
         if (s.charAt (i) == "[") {
           i++;
           if (s.charAt (i) == "%") {
-            if (prevPos != i - 1) {
+            var cDiff = 0;
+            var valueEnd = i - 1;
+            if (s.charAt (i + 1) == "-") {
+              i++;
+              cDiff = 1;
+              var p = valueEnd;
+              while (prevPos < p) {
+                if (s.charAt (p - 1) == "\x0A") {
+                  valueEnd = p - 1;
+                  break;
+                } else if (/\s/.test (s.charAt (p - 1))) {
+                  p--;
+                } else {
+                  break;
+                }
+              }
+            }
+            if (prevPos < valueEnd) {
               tokens.push ({type: 'text',
-                            valueRef: s, valueStart: prevPos, valueEnd: i - 1,
+                            valueRef: s, valueStart: prevPos, valueEnd: valueEnd,
                             line: tokenL, column: tokenC});
             }
             prevPos = ++i;
             tokenL = l;
             tokenC = c++;
+            c += cDiff;
             state = 'tag';
-          } // else { i++ }
+          }
         } else {
           i++;
         }
@@ -46,16 +64,33 @@ JSTTL.TemplateTokenizer = SAMI.Class (function () {
         if (s.charAt (i) == "%") {
           i++;
           if (s.charAt (i) == "]") {
-            //if (prevPos != i - 1) {
-              tokens.push ({type: 'tag',
-                            valueRef: s, valueStart: prevPos, valueEnd: i - 1,
-                            line: tokenL, column: tokenC});
-            //}
-            prevPos = ++i;
+            var valueEnd = i - 1;
+            var newPrevPos = ++i;
+            if (prevPos <= i - 3 && s.charAt (i - 3) == "-") {
+              valueEnd--;
+              var p = newPrevPos;
+              while (p < s.length) {
+                if (s.charAt (p) == "\x0A") {
+                  p++;
+                  l++;
+                  c = -1;
+                  newPrevPos = p;
+                  break;
+                } else if (/\s/.test (s.charAt (p))) {
+                  p++;
+                } else {
+                  break;
+                }
+              }
+            }
+            tokens.push ({type: 'tag',
+                          valueRef: s, valueStart: prevPos, valueEnd: valueEnd,
+                          line: tokenL, column: tokenC});
+            prevPos = newPrevPos;
             tokenL = l;
             tokenC = ++c + 1;
             state = 'content';
-          } // else { i++ }
+          }
         } else {
           i++;
         }

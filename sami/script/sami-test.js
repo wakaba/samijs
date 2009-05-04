@@ -111,13 +111,13 @@ SAMI.Test.Manager = new SAMI.Class (function (resultElement, out) {
     if (expr) {
       var s = 'ok ' + n;
       if (desc && desc.length) {
-        s += ' - ' + desc.replace (/[\x0D\x0A]+/g, ' ');
+        s += ' - ' + desc.replace (/\x0D\x0A?|\x0A/g, "\\n");
       }
       this.out.say (s);
     } else {
       var s = 'not ok ' + n;
       if (desc && desc.length) {
-        s += ' - ' + desc.replace (/[\x0D\x0A]+/g, ' ');
+        s += ' - ' + desc.replace (/\x0D\x0A?|\x0A/g, "\\n");
       }
       this.out.say (s);
       if (diag && diag.length) {
@@ -157,7 +157,7 @@ SAMI.Test.Manager = new SAMI.Class (function (resultElement, out) {
   abort: function (desc) {
     var s = 'Ball out!';
     if (desc && desc.length) {
-      s += ' - ' + desc.replace (/[\x0D\x0A]+/g, ' ');
+      s += ' - ' + desc.replace (/\x0D\x0A?|\x0A/g, "\\n");
     }
     this.out.say (s);
 
