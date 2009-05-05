@@ -17,6 +17,7 @@ JSTTL.Tokenizer = SAMI.Class (function () {
     var c = 0;
     var tokenL = 1;
     var tokenC = 1;
+    var isComment = false;
     while (i < s.length) {
       if (s.charAt (i) == "\x0A") {
         l++;
@@ -45,6 +46,11 @@ JSTTL.Tokenizer = SAMI.Class (function () {
                   break;
                 }
               }
+              isComment = false;
+            } else if (s.charAt (i + 1) == "#") {
+              isComment = true;
+            } else {
+              isComment = false;
             }
             if (prevPos < valueEnd) {
               tokens.push ({type: 'text',
@@ -83,9 +89,11 @@ JSTTL.Tokenizer = SAMI.Class (function () {
                 }
               }
             }
-            tokens.push ({type: 'tag',
-                          valueRef: s, valueStart: prevPos, valueEnd: valueEnd,
-                          line: tokenL, column: tokenC});
+            if (!isComment) {
+              tokens.push ({type: 'tag',
+                            valueRef: s, valueStart: prevPos, valueEnd: valueEnd,
+                            line: tokenL, column: tokenC});
+            }
             prevPos = newPrevPos;
             tokenL = l;
             tokenC = ++c + 1;
@@ -111,7 +119,15 @@ JSTTL.Tokenizer = SAMI.Class (function () {
     }
 
     return tokens;
-  } // tokenizeTemplate
+  }, // tokenizeTemplate
+
+  tokenizeDirectives: function (s) {
+    /*
+      directives := [directive ";" directive]
+      directive = 
+    */
+
+  } // tokenizeDirectives
 }); // Tokenizer
 
 /* --- Onload --- */

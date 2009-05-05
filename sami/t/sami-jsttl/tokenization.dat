@@ -188,3 +188,23 @@ abc [%--%]  def
 1;5;unclosed tag at eof
 #tokens
 1;1;%%}
+
+#data
+abc[%# a %]def
+#tokens
+1;1;"abc"
+1;12;"def"
+
+#data
+abc[% # a %]def
+#tokens escaped
+1;1;"abc"
+1;4;% # a\u0020
+1;13;"def"
+
+#data
+abc
+[%-# a -%]
+#tokens escaped
+1;1;"abc"
+2;1;%# a\u0020
