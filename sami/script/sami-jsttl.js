@@ -2,10 +2,10 @@
 
 if (!self.JSTTL) self.JSTTL = {};
 
-JSTTL.TemplateTokenizer = SAMI.Class (function () {
+JSTTL.Tokenizer = SAMI.Class (function () {
 
 }, {
-  tokenize: function (s) {
+  tokenizeTemplate: function (s) {
     var tokens = new SAMI.List;
 
     s = s.replace (/\x0D\x0A/g, "\x0A").replace (/\x0D/g, "\x0A");
@@ -111,8 +111,8 @@ JSTTL.TemplateTokenizer = SAMI.Class (function () {
     }
 
     return tokens;
-  } // tokenize
-}); // TemplateTokenizer
+  } // tokenizeTemplate
+}); // Tokenizer
 
 /* --- Onload --- */
 

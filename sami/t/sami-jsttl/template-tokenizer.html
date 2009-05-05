@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
-<title>JSTTL.TemplateTokenizer.prototype.tokenize</title>
-<h1>JSTTL.TemplateTokenizer.prototype.tokenize</h1>
+<title>JSTTL.Tokenizer.prototype.tokenizeTemplate</title>
+<h1>JSTTL.Tokenizer.prototype.tokenizeTemplate</h1>
 
 <p id=result class=FAIL>FAIL (noscript)</p>
 
@@ -17,7 +17,7 @@
 
   var errors;
 
-  var t = new JSTTL.TemplateTokenizer;
+  var t = new JSTTL.Tokenizer;
   t.addEventListener ('error', function (e) {
     errors.push ([e.line, e.column, e.errorType].join (';'));
   });
@@ -29,7 +29,7 @@
   }, function (test) {
     errors = new SAMI.List;
 
-    var actual = t.tokenize (test.getField ('data')).map (function (token) {
+    var actual = t.tokenizeTemplate (test.getField ('data')).map (function (token) {
       var lc = token.line + ';' + token.column + ';';
       var type = token.type;
       var value = token.valueRef.substring (token.valueStart, token.valueEnd);
