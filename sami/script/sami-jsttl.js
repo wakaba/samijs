@@ -6,6 +6,19 @@ JSTTL.Tokenizer = SAMI.Class (function () {
 
 }, {
   tokenizeTemplate: function (s) {
+    /*
+      We only support a subset of Template Tooklit's Template language.
+
+      template := *(text / tag) broken-tag?
+      text := 1*char - (*char "[%" *char)
+      tag := "[%" ["-" / "#"] [(char - ("-" / "#")) [*char (char - "-")] - (*char "%]" *char)] ["-"] "%]"
+      broken-tag := "[%" ["-" / "#"] [(char - ("-" / "#")) *char - (*char "%]" *char)]
+
+      [%~~%], [%++%], [%==%] are not supported.  CHOMP and TRIM flags
+      are not supported.  INTERPOLATE flag is not supported.  GRAMMER
+      is not supported.
+    */
+
     var tokens = new SAMI.List;
 
     s = s.replace (/\x0D\x0A/g, "\x0A").replace (/\x0D/g, "\x0A");
@@ -123,8 +136,45 @@ JSTTL.Tokenizer = SAMI.Class (function () {
 
   tokenizeDirectives: function (s) {
     /*
+      We only support a subset of Template Toolkit's directive language.
+
+      comment := '#' *(char - newline) (newline / end-of-directives)
+      wsp := *(\s / comment)
       directives := [directive ";" directive]
-      directive = 
+      directive := get / set / foreach / if / elsif / else / include / block / wrapper / end / 1*filter / use
+      get := ['GET'] expression *filter [condition]
+      set := ['SET' / 'DEFAULT' / 'META'] *(variable "=" expression / ",") variable "=" (expression *filter [condition] *"," / 'BLOCK')
+      foreach := 'FOREACH' variable ("=" / 'IN') expression
+      if := ('IF' / 'UNLESS') expression
+      elsif := 'ELSIF' expression
+      else := 'ELSE'
+      include := ('INCLUDE' / 'PROCESS' / 'INSERT') path arguments *filter [condition]
+      wrapper := 'WRAPPER' scalar-term arguments
+      block := ('BLOCK' / 'MACRO') (atom / number / path)
+      end := 'END'
+      filter := ('FILTER' / "|") scalar-term
+      use := 'USE' scalar-term
+      condition := if / foreach
+      arguments := *("," / variable "=" expression)
+      expression := monomial / binomial / trinomial / term / "(" expression ")"
+      monomial := ("!" / "not") expression
+      binomial := expression ("or" / "and" / "&&" / "||" / "==" / "!=" / "+" / "-" / "*" / "/" / "_" / ".") expression
+      trinomial := expression "?" expression ":" expression
+      path := scalar-term
+      term := scalar-term / list-literal / hash-literal
+      scalar-term := variable / dollar-variable / double-quoted / single-quoted / path / number / function
+      function := atom "(" arguments ")"
+      variable := atom
+      dollar-variable := "$" atom
+      enclosed-dollar-variable := "${" (variable / dollar-variable) *("." (variable / dollar-variable)) "}"
+      double-quoted := <"> *(char - ("\" / <"> / "$") / "\" char / dollar-variable / enclosed-dollar-variable) <">
+      path := (*achar - number) 1*("/" *achar) - "/"
+      number := ["-"] 1*DIGIT ["." 1*DIGIT]
+      list-literal := "[" *(term / ",") "]"
+      hash-literal := "{" arguments "}"
+
+      TAGS is not supported.  "." and ".." in path are not supported.
+      PERL, RAWPERL, JAVASCRIPT are not supported.
     */
 
   } // tokenizeDirectives
