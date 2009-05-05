@@ -141,40 +141,60 @@ JSTTL.Tokenizer = SAMI.Class (function () {
       comment := '#' *(char - newline) (newline / end-of-directives)
       wsp := *(\s / comment)
       directives := [directive ";" directive]
-      directive := get / set / foreach / if / elsif / else / include / block / wrapper / end / 1*filter / use
-      get := ['GET'] expression *filter [condition]
-      set := ['SET' / 'DEFAULT' / 'META'] *(variable "=" expression / ",") variable "=" (expression *filter [condition] *"," / 'BLOCK')
-      foreach := 'FOREACH' variable ("=" / 'IN') expression
+      directive := get / set / foreach / if / elsif / else / while / switch / case / include / block / macro / wrapper / end / 1*filter / use / goto
+      get := ['GET' / 'CALL'] expression *filter [condition]
+      set := ['SET' / 'DEFAULT'] *(variable "=" expression / ",") variable "=" (expression *filter [condition] *"," / 'BLOCK')
+      foreach := 'FOREACH' [variable ("=" / 'IN')] expression
       if := ('IF' / 'UNLESS') expression
       elsif := 'ELSIF' expression
       else := 'ELSE'
       include := ('INCLUDE' / 'PROCESS' / 'INSERT') path arguments *filter [condition]
+      while := 'WHILE' right-expression
+      switch := 'SWITCH' expression
+      case := 'CASE' [expression / 'DEFAULT']
+      goto := ('BREAK' / 'NEXT' / 'LAST') [condition]
       wrapper := 'WRAPPER' scalar-term arguments
-      block := ('BLOCK' / 'MACRO') (atom / number / path)
+      block := 'BLOCK' (atom / number / path)
+      macro := 'MACRO' (atom / number / path) ['BLOCK']
       end := 'END'
       filter := ('FILTER' / "|") scalar-term
       use := 'USE' scalar-term
       condition := if / foreach
-      arguments := *("," / variable "=" expression)
-      expression := monomial / binomial / trinomial / term / "(" expression ")"
+      arguments := *("," / lvalue "=" right-expression)
+      expression := monomial / binomial / trinomial / term / "(" right-expression ")"
+      right-expression := expression / lvalue "=" expression
       monomial := ("!" / "not") expression
-      binomial := expression ("or" / "and" / "&&" / "||" / "==" / "!=" / "+" / "-" / "*" / "/" / "_" / ".") expression
+      binomial := expression ("or" / "and" / "&&" / "||" / "==" / "!=" / "<" / ">" / "<=" / ">=" / "+" / "-" / "*" / "/" / "_" / "mod" / "div" / "%") expression
       trinomial := expression "?" expression ":" expression
       path := scalar-term
       term := scalar-term / list-literal / hash-literal
-      scalar-term := variable / dollar-variable / double-quoted / single-quoted / path / number / function
+      scalar-term := lvalue / double-quoted / single-quoted / path / number / ref
+      ref := "\" lvalue
+      lvalue := (variable / dollar-variable / function) *("." (variable / dollar-variable / function))
       function := atom "(" arguments ")"
       variable := atom
       dollar-variable := "$" atom
-      enclosed-dollar-variable := "${" (variable / dollar-variable) *("." (variable / dollar-variable)) "}"
+      enclosed-dollar-variable := "${" lvalue "}"
       double-quoted := <"> *(char - ("\" / <"> / "$") / "\" char / dollar-variable / enclosed-dollar-variable) <">
       path := (*achar - number) 1*("/" *achar) - "/"
-      number := ["-"] 1*DIGIT ["." 1*DIGIT]
+      number := ["-"] 1*DIGIT ["." 1*DIGIT] ;; token
       list-literal := "[" *(term / ",") "]"
-      hash-literal := "{" arguments "}"
+      hash-literal := "{" hash-items "}"
+      hash-items := *("," / variable "=" right-expression)
+      atom = astartchar *achar ;; token
+      achar = astartchar / DIGIT
+      astartchar = <"A".."Z"> / "_"
 
       TAGS is not supported.  "." and ".." in path are not supported.
       PERL, RAWPERL, JAVASCRIPT are not supported.
+      INSERT/INCLUDE/PROCESS/WRAPPER a + b is not supported.
+      xxx WRAPPER yyy is not supported.
+      USE Foo.Bar is not supported.  USE foo = bar is not supported.
+      MACRO name xxx where xxx is not BLOCK is not supported.
+      TRY, THROW, CATCH, FINAL are not supported.
+      RETURN and STOP are not supported.  CLEAR is not supported.
+      META and DEBUG are not supported.
+      VIEW is not supported.
     */
 
   } // tokenizeDirectives
