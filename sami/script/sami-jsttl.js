@@ -134,7 +134,7 @@ JSTTL.Tokenizer = SAMI.Class (function () {
     return tokens;
   }, // tokenizeTemplate
 
-  tokenizeDirectives: function (s) {
+  tokenizeDirectives: function (s, ln, cn) {
     /*
       We only support a subset of Template Toolkit's directive language.
 
@@ -197,55 +197,107 @@ JSTTL.Tokenizer = SAMI.Class (function () {
       VIEW is not supported.
     */
 
+    ln = ln || 1;
+    cn = cn || 1;
+
     var tokens = new SAMI.List;
 
     while (s.length) {
       var match = false;
 
-      s = s.replace (/^\s+/, function () { match = true; '' });
-      s = s.replace (/^#[^\x0A]*(?:\x0A|$)/, function () { match = true; '' });
+      s = s.replace (/^\s+/, function (c) {
+        match = true;
+        if (/\x0A/.test (c)) {
+          c = c.replace (/[^\x0A]*\x0A/g, function () {
+            ln++;
+            cn = 1;
+            return '';
+          });
+          cn += c.length;
+        } else {
+          cn += c.length;
+        }
+        return '';
+      });
+      s = s.replace (/^#[^\x0A]*(?:\x0A|$)/, function (c) {
+        match = true;
+        if (c.substring (c.length - 1, c.length) == "\x0A") {
+          ln++;
+          cn = 1;
+        } else {
+          cn += c.length;
+        }
+        return '';
+      });
 
       s = s.replace (/^(?:[<>=!]=|$\{|&&|\|\|)/, function (c) {
         match = true;
-        tokens.push ({type: c});
+        tokens.push ({type: c, line: ln, column: cn});
+        cn += c.length;
+        return '';
       });
 
       s = s.replace (/^-?[0-9]+(?:\.[0-9]+)?/, function (c) {
         match = true;
-        tokens.push ({type: 'number', value: parseInt (c)});
+        tokens.push ({type: 'number', value: parseInt (c), line: ln, column: cn});
+        cn += c.length;
+        return '';
       });
 
       s = s.replace (/^[A-Za-z_][A-Za-z_0-9]*/, function (c) {
         match = true;
         var keyword = JSTTL.Tokenizer.KEYWORDS[c];
-        if (keyword == 'FILTER') {
-          tokens.push ({type: '|'});
-        } else if (keyword === true) {
-          tokens.push ({type: c});
+        if (keyword === true) {
+          tokens.push ({type: c, line: ln, column: cn});
         } else if (keyword) {
-          tokens.push ({type: keyword});
+          tokens.push ({type: keyword, line: ln, column: cn});
         } else {
-          tokens.push ({type: 'identifier', value: c});
+          tokens.push ({type: 'identifier', value: c, line: ln, column: cn});
         }
+        cn += c.length;
+        return '';
+      });
+
+      s = s.replace (/^"((?:[^"\\]|\\[\s\S])*)("?)/, function (_, c, q) {
+        match = true;
+        c = c.replace (/\\([\s\S])/g, '$1');
+// XXX: $variable
+        tokens.push ({type: 'string', value: c, line: ln, column: cn});
+        this.reportError ({type: 'unclosed string literal'});
+        cn += _.length; // XXX: \x0A in string literal
+        return '';
+      });
+
+      s = s.replace (/^'((?:[^'\\]|\\[\s\S])*)('?)/, function (_, c, q) {
+        match = true;
+        c = c.replace (/\\([\s\S])/g, '$1');
+        tokens.push ({type: 'string', value: c, line: ln, column: cn});
+        this.reportError ({type: 'unclosed string literal'});
+        cn += _.length; // XXX: \x0A in string literal
+        return '';
       });
 
       s = s.replace (/^[+\\\[\]\/%!(),{}?:.;*]/, function (c) {
         match = true;
-        tokens.push ({type: c});
+        tokens.push ({type: c, line: ln, column: cn});
+        cn += c.length;
+        return '';
       });
-
-// XXX: "", ''
 
       if (!match) {
         s = s.replace (/^[<>=!$&|_-]/, function (c) {
           match = true;
-          tokens.push ({type: c});
+          tokens.push ({type: c, line: ln, column: cn});
+          cn += c.length;
+          return '';
         });
       }
 
       if (!match) {
-        s = s.replace (/^.\s*/, function (c) {
-          tokens.push ({type: c});
+        s = s.replace (/^[\s\S]\s*/, function (c) {
+          tokens.push ({type: c, line: ln, column: cn});
+          cn += c.length;
+          return '';
         });
       }
     }
@@ -286,7 +338,7 @@ JSTTL.Tokenizer.KEYWORDS = {
   FINAL: true,
   NEXT: true,
   LAST: true,
-  BREAK: true,
+  BREAK: 'last',
   RETURN: true,
   STOP: true,
   CLEAR: true,
