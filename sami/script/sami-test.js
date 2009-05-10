@@ -166,6 +166,36 @@ SAMI.Test.Manager = new SAMI.Class (function (resultElement, out) {
   } // abort
 }); // Manager
 
+/* --- Utility --- */
+
+SAMI.Test.Utility = {};
+SAMI.Class.addClassMethods (SAMI.Test.Utility, {
+  getStatusElement: function () {
+    var el = document.getElementById ('test-status');
+    if (!el) {
+      el = document.createElement ('pre');
+      el.id = 'test-status';
+      if (document.body) {
+        document.body.insertBefore (el, document.body.firstChild);
+      } else {
+        document.documentElement.appendChild (el);
+      }
+    }
+    return el;
+  },
+
+  out: function (s) {
+    var el = SAMI.Test.Utility.getStatusElement ();
+    el.insertBefore (el.ownerDocument.createTextNode (s + "\n"), el.firstChild);
+  },
+
+  install: function () {
+    for (var p in {out: true}) {
+      window[p] = this[p];
+    }
+  }
+});
+
 /* --- Onload --- */
 
 if (SAMI.Test.onLoadFunctions) {
