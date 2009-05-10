@@ -197,6 +197,8 @@ JSTTL.Tokenizer = SAMI.Class (function () {
       VIEW is not supported.
     */
 
+    var self = this;
+
     ln = ln || 1;
     cn = cn || 1;
 
@@ -230,21 +232,7 @@ JSTTL.Tokenizer = SAMI.Class (function () {
         return '';
       });
 
-      s = s.replace (/^(?:[<>=!]=|$\{|&&|\|\|)/, function (c) {
-        match = true;
-        tokens.push ({type: c, line: ln, column: cn});
-        cn += c.length;
-        return '';
-      });
-
-      s = s.replace (/^-?[0-9]+(?:\.[0-9]+)?/, function (c) {
-        match = true;
-        tokens.push ({type: 'number', value: parseInt (c), line: ln, column: cn});
-        cn += c.length;
-        return '';
-      });
-
-      s = s.replace (/^[A-Za-z_][A-Za-z_0-9]*/, function (c) {
+      s = s.replace (/^(?:[A-Za-z][A-Za-z_0-9]*|_[A-Za-z_0-9]+)/, function (c) {
         match = true;
         var keyword = JSTTL.Tokenizer.KEYWORDS[c];
         if (keyword === true) {
@@ -258,12 +246,27 @@ JSTTL.Tokenizer = SAMI.Class (function () {
         return '';
       });
 
+      s = s.replace (/^(?:[<>=!]=|\$\{|&&|\|\|)/, function (c) {
+        match = true;
+        tokens.push ({type: c, line: ln, column: cn});
+        cn += c.length;
+        return '';
+      });
+
+      s = s.replace (/^-?[0-9]+(?:\.[0-9]+)?/, function (c) {
+        match = true;
+        tokens.push ({type: 'number', value: c,
+                      line: ln, column: cn});
+        cn += c.length;
+        return '';
+      });
+
       s = s.replace (/^"((?:[^"\\]|\\[\s\S])*)("?)/, function (_, c, q) {
         match = true;
         c = c.replace (/\\([\s\S])/g, '$1');
 // XXX: $variable
         tokens.push ({type: 'string', value: c, line: ln, column: cn});
-        this.reportError ({type: 'unclosed string literal'});
+        if (!q) self.reportError ({type: 'unclosed string literal'});
         cn += _.length; // XXX: \x0A in string literal
         return '';
       });
@@ -272,12 +275,12 @@ JSTTL.Tokenizer = SAMI.Class (function () {
         match = true;
         c = c.replace (/\\([\s\S])/g, '$1');
         tokens.push ({type: 'string', value: c, line: ln, column: cn});
-        this.reportError ({type: 'unclosed string literal'});
+        if (!q) self.reportError ({type: 'unclosed string literal'});
         cn += _.length; // XXX: \x0A in string literal
         return '';
       });
 
-      s = s.replace (/^[+\\\[\]\/%!(),{}?:.;*]/, function (c) {
+      s = s.replace (/^[+\\\[\]\/%(),{}?:.;*]/, function (c) {
         match = true;
         tokens.push ({type: c, line: ln, column: cn});
         cn += c.length;
@@ -294,7 +297,7 @@ JSTTL.Tokenizer = SAMI.Class (function () {
       }
 
       if (!match) {
-        s = s.replace (/^[\s\S]\s*/, function (c) {
+        s = s.replace (/^[\s\S]\S*/, function (c) {
           tokens.push ({type: c, line: ln, column: cn});
           cn += c.length;
           return '';
