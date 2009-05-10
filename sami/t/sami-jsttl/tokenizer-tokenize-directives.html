@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<title>JSTTL.Tokenizer.prototype.tokenizeDirectives</title>
+<h1>JSTTL.Tokenizer.prototype.tokenizeDirectives</h1>
+
+<p id=result class=FAIL>FAIL (noscript)</p>
+
+<pre id=result-tap></pre>
+
+<script src="../../script/sami-core.js"></script>
+<script src="../../script/sami-jsttl.js"></script>
+<script src="../../script/sami-test.js"></script>
+<script>
+  var r = document.getElementById ('result');
+  var tap = document.getElementById ('result-tap');
+
+  SAMI.Test.Utility.install ();
+
+  var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
+  var errors;
+
+  var t = new JSTTL.Tokenizer;
+  t.addEventListener ('error', function (e) {
+    errors.push ([e.line, e.column, e.errorType].join (';'));
+  });
+
+  SAMI.Test.executeTestsByURL ('tokenization-directives.dat', {
+    data: {isPrefixed: true},
+    errors: {isPrefixed: true, isList: true},
+    tokens: {isPrefixed: true}
+  }, function (test) {
+    errors = new SAMI.List;
+
+    var actual = t.tokenizeDirectives (test.getField ('data')).map (function (token) {
+      return [token.line, token.column, token.type, token.value || ''].join (';');
+    }).list.join ("\n");
+
+    tm.is (actual, test.getField ('tokens'), 'Tokens - ' + test.getField ('data'));
+    tm.is (errors.sort ().list.join ("\n"), new SAMI.List (test.getField ('errors')).sort ().list.join ("\n"), 'Errors - ' + test.getField ('data'));
+  }, function () {
+    tm.done ();
+  }, function (e) {
+    tm.abort (e.type + ' - ' + e.text);
+  });
+</script>
