@@ -124,7 +124,8 @@ JSTTL.Tokenizer = SAMI.Class (function () {
                       valueRef: s, valueStart: prevPos, valueEnd: i,
                       line: tokenL, column: tokenC});
       } else { // state == 'tag'
-        this.reportError ({type: 'unclosed tag at eof', line: l, column: c + 1});
+        this.reportError ({type: 'unclosed tag at eof', level: 'm',
+                           line: l, column: c + 1});
         tokens.push ({type: 'tag',
                       valueRef: s, valueStart: prevPos, valueEnd: i,
                       line: tokenL, column: tokenC});
@@ -266,8 +267,13 @@ JSTTL.Tokenizer = SAMI.Class (function () {
         c = c.replace (/\\([\s\S])/g, '$1');
 // XXX: $variable
         tokens.push ({type: 'string', value: c, line: ln, column: cn});
-        if (!q) self.reportError ({type: 'unclosed string literal'});
         cn += _.length; // XXX: \x0A in string literal
+        if (!q) {
+          self.reportError ({
+            type: 'unclosed string literal', level: 'm',
+            line: ln, column: cn
+          });
+        }
         return '';
       });
 
@@ -275,8 +281,13 @@ JSTTL.Tokenizer = SAMI.Class (function () {
         match = true;
         c = c.replace (/\\([\s\S])/g, '$1');
         tokens.push ({type: 'string', value: c, line: ln, column: cn});
-        if (!q) self.reportError ({type: 'unclosed string literal'});
         cn += _.length; // XXX: \x0A in string literal
+        if (!q) {
+          self.reportError ({
+            type: 'unclosed string literal', level: 'm',
+            line: ln, column: cn
+          });
+        }
         return '';
       });
 
