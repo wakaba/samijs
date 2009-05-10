@@ -208,3 +208,9 @@ abc
 #tokens escaped
 1;1;"abc"
 2;1;%# a\u0020
+
+#data
+[% a "b %] c " d %] e"
+#tokens escaped
+1;1;% a "b\u0020
+1;11;" c " d %] e""

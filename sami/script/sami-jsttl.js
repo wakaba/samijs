@@ -197,8 +197,141 @@ JSTTL.Tokenizer = SAMI.Class (function () {
       VIEW is not supported.
     */
 
+    var tokens = new SAMI.List;
+
+    while (s.length) {
+      var match = false;
+
+      s = s.replace (/^\s+/, function () { match = true; '' });
+      s = s.replace (/^#[^\x0A]*(?:\x0A|$)/, function () { match = true; '' });
+
+      s = s.replace (/^(?:[<>=!]=|$\{|&&|\|\|)/, function (c) {
+        match = true;
+        tokens.push ({type: c});
+      });
+
+      s = s.replace (/^-?[0-9]+(?:\.[0-9]+)?/, function (c) {
+        match = true;
+        tokens.push ({type: 'number', value: parseInt (c)});
+      });
+
+      s = s.replace (/^[A-Za-z_][A-Za-z_0-9]*/, function (c) {
+        match = true;
+        var keyword = JSTTL.Tokenizer.KEYWORDS[c];
+        if (keyword == 'FILTER') {
+          tokens.push ({type: '|'});
+        } else if (keyword === true) {
+          tokens.push ({type: c});
+        } else if (keyword) {
+          tokens.push ({type: keyword});
+        } else {
+          tokens.push ({type: 'identifier', value: c});
+        }
+      });
+
+      s = s.replace (/^[+\\\[\]\/%!(),{}?:.;*]/, function (c) {
+        match = true;
+        tokens.push ({type: c});
+      });
+
+// XXX: "", ''
+
+      if (!match) {
+        s = s.replace (/^[<>=!$&|_-]/, function (c) {
+          match = true;
+          tokens.push ({type: c});
+        });
+      }
+
+      if (!match) {
+        s = s.replace (/^.\s*/, function (c) {
+          tokens.push ({type: c});
+        });
+      }
+    }
+
+    return tokens;
   } // tokenizeDirectives
 }); // Tokenizer
+
+JSTTL.Tokenizer.KEYWORDS = {
+  GET: true,
+  CALL: true,
+  SET: true,
+  DEFAULT: true,
+  INSERT: true,
+  INCLUDE: true,
+  PROCESS: true,
+  WRAPPER: true,
+  IF: true,
+  UNLESS: true,
+  ELSE: true,
+  ELSIF: true,
+  FOR: true,
+  FOREACH: true,
+  WHILE: true,
+  SWITCH: true,
+  CASE: true,
+  USE: true,
+  PLUGIN: true,
+  FILTER: '|',
+  MACRO: true,
+  PERL: true,
+  RAWPERL: true,
+  BLOCK: true,
+  META: true,
+  TRY: true,
+  THROW: true,
+  CATCH: true,
+  FINAL: true,
+  NEXT: true,
+  LAST: true,
+  BREAK: true,
+  RETURN: true,
+  STOP: true,
+  CLEAR: true,
+  TO: true,
+  STEP: true,
+  END: true,
+  VIEW: true,
+  JAVASCRIPT: true,
+  'MOD': '%',
+  'Mod': '%',
+  'mOd': '%',
+  'moD': '%',
+  'MoD': '%',
+  'MOd': '%',
+  'mOD': '%',
+  'mod': '%',
+  'div': 'div',
+  'Div': 'div',
+  'dIv': 'div',
+  'diV': 'div',
+  'DiV': 'div',
+  'DIv': 'div',
+  'dIV': 'div',
+  'div': 'div',
+  'AND': 'and',
+  'And': 'and',
+  'aNd': 'and',
+  'anD': 'and',
+  'ANd': 'and',
+  'aND': 'and',
+  'AnD': 'and',
+  'and': 'and',
+  'OR': 'or',
+  'Or': 'or',
+  'oR': 'or',
+  'or': 'or',
+  'NOT': 'not',
+  'Not': 'not',
+  'nOt': 'not',
+  'noT': 'not',
+  'NoT': 'not',
+  'NOt': 'not',
+  'noT': 'not',
+  'not': 'not'
+}; // KEYWORDS
 
 /* --- Onload --- */
 
