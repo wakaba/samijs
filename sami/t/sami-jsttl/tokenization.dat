@@ -20,7 +20,7 @@ abc[%xyz%]def
 #data
 abc[%xyz
 #errors
-1;9;unclosed tag at eof
+1;9;m;unclosed tag at eof
 #tokens
 1;1;"abc"
 1;4;%xyz
@@ -185,7 +185,7 @@ abc [%--%]  def
 #data
 [%%}
 #errors
-1;5;unclosed tag at eof
+1;5;m;unclosed tag at eof
 #tokens
 1;1;%%}
 

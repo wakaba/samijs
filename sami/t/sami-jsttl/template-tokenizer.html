@@ -19,7 +19,7 @@
 
   var t = new JSTTL.Tokenizer;
   t.addEventListener ('error', function (e) {
-    errors.push ([e.line, e.column, e.errorType].join (';'));
+    errors.push ([e.line, e.column, e.level, e.errorType].join (';'));
   });
 
   SAMI.Test.executeTestsByURL ('tokenization.dat', {
