@@ -21,7 +21,7 @@
 
   var t = new JSTTL.Parser;
   t.addEventListener ('error', function (e) {
-    errors.push ([e.line, e.column, e.level, e.errorType].join (';'));
+    errors.push ([e.line, e.column, e.level, e.errorType, e.text || '', e.value || ''].join (';'));
   });
 
   SAMI.Test.executeTestsByURL ('parser.dat', {

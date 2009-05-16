@@ -8,11 +8,81 @@ a[%%]b
 [%a%]
 #actions
 [AppendValueOf]
-  [GetVariable a]
+  [GetOrSetVariable a]
 
 #data
 [%a%]b
 #actions
 [AppendValueOf]
-  [GetVariable a]
+  [GetOrSetVariable a]
 [AppendString b]
+
+#data
+[%GET a%]
+#actions
+[AppendValueOf]
+  [GetVariable a]
+
+#data
+[%GET a%][%GET b%]
+#actions
+[AppendValueOf]
+  [GetVariable a]
+[AppendValueOf]
+  [GetVariable b]
+
+#data
+x[%GET a%]c
+#actions
+[AppendString x]
+[AppendValueOf]
+  [GetVariable a]
+[AppendString c]
+
+#data
+[%GET a=b%]c
+#errors
+1;8;m;unexpected token;=;
+#actions
+[AppendString c]
+
+#data
+x[%GET a=b%]c
+#errors
+1;9;m;unexpected token;=;
+#actions
+[AppendString x]
+[AppendString c]
+
+#data
+x[%GET a=b;d%]c
+#errors
+1;9;m;unexpected token;=;
+#actions
+[AppendString x]
+[AppendString c]
+
+#data
+x[%-GET a=b;d%]c
+#errors
+1;10;m;unexpected token;=;
+#actions
+[AppendString x]
+[AppendString c]
+
+#data
+a[%GET%]b
+#errors
+1;7;m;unexpected token;eof;
+#actions
+[AppendString a]
+[AppendString b]
+
+#data
+a[%b
+#errors
+1;5;m;unclosed tag at eof;;
+#actions
+[AppendString a]
+[AppendValueOf]
+  [GetOrSetVariable b]

@@ -30,6 +30,7 @@ JSTTL.Tokenizer = SAMI.Class (function () {
     var c = 0;
     var tokenL = 1;
     var tokenC = 1;
+    var tokenCInner = 1;
     var isComment = false;
     while (i < s.length) {
       if (s.charAt (i) == "\x0A") {
@@ -73,6 +74,7 @@ JSTTL.Tokenizer = SAMI.Class (function () {
             prevPos = ++i;
             tokenL = l;
             tokenC = c++;
+            tokenCInner = tokenC + 2 /* [% */ + cDiff /* - */;
             c += cDiff;
             state = 'tag';
           }
@@ -105,11 +107,12 @@ JSTTL.Tokenizer = SAMI.Class (function () {
             if (!isComment) {
               tokens.push ({type: 'tag',
                             valueRef: s, valueStart: prevPos, valueEnd: valueEnd,
-                            line: tokenL, column: tokenC});
+                            line: tokenL, column: tokenC, columnInner: tokenCInner});
             }
             prevPos = newPrevPos;
             tokenL = l;
             tokenC = ++c + 1;
+            tokenCInner = tokenC;
             state = 'content';
           }
         } else {
@@ -118,17 +121,22 @@ JSTTL.Tokenizer = SAMI.Class (function () {
       }
     } // while
 
-    if (prevPos != i) {
+    if (prevPos != i || state == 'tag') {
       if (state != 'tag') {
         tokens.push ({type: 'text',
                       valueRef: s, valueStart: prevPos, valueEnd: i,
                       line: tokenL, column: tokenC});
       } else { // state == 'tag'
-        this.reportError ({type: 'unclosed tag at eof', level: 'm',
-                           line: l, column: c + 1});
-        tokens.push ({type: 'tag',
+        if (tokens.list.length) {
+          prevPos = tokens.getLast ().valueEnd;
+        } else {
+          prevPos = 0;
+        }
+
+        tokens.push ({type: 'text',
                       valueRef: s, valueStart: prevPos, valueEnd: i,
                       line: tokenL, column: tokenC});
+        /* tokenL and tokenC are incorrect when there are spaces before "[%-" */
       }
     }
 
@@ -488,56 +496,99 @@ JSTTL.Parser = new SAMI.Subclass (function () {
 
     var actionTypes = { // actionTypes[stackTopType][newTokenType]
       '*bottommost': {
-        
+        'eof': '*nop'
+      },
+
+      'GET': {
+        'identifier': 'GetVariable/push'
+      },
+
+      'getOrSet': {
+        'identifier': 'GetOrSetVariable/push',
       },
 
       'GetVariable': {
-        'eof': 'pop/AppendValueOf'
+        'eof': 'pop/AppendValueOf/pop'
+      },
+
+      'GetOrSetVariable': {
+        'eof': 'pop/AppendValueOf/pop'
       },
 
       'default': {
-        'text': 'AppendString',
-        'identifier': 'GetVariable/push',
-        'eof': '*nop'
+        'GET': 'push',
+        'string': 'AppendString',
+        'identifier': 'push-getOrSet/redo'
+      },
+
+      'error': {
+        'eof': 'recoverFromError',
+        'default': '*nop'
       }
     };
 
-    var tokens = [];
+    var tokens = new SAMI.List;
     this.tokenizeTemplate (s).forEach (function (t) {
       if (t.type == 'text') {
         tokens.push ({type: 'string',
                       value: t.valueRef.substring (t.valueStart, t.valueEnd)});
       } else if (t.type == 'tag') {
-        self.tokenizeDirectives (t.valueRef.substring (t.valueStart, t.valueEnd)).forEach (function (t) {
-          tokens.push (t);
-        });
+        tokens.append (self.tokenizeDirectives
+            (t.valueRef.substring (t.valueStart, t.valueEnd),
+             t.line, t.columnInner));
       } else {
         this.die ('Unknown token type: ' + t.type);
       }
     });
 
-    while (tokens.length || stack.list.length > 1) {
+    while (tokens.list.length || stack.list.length > 1) {
       var t = tokens.shift () || {type: 'eof'};
 
       var actionType = (actionTypes[stack.getLast ().type] || actionTypes['default'])[t.type]
+          || (actionTypes[stack.getLast ().type] || {})['default']
           || actionTypes['default'][t.type]
-          || 'AppendString'; // XXX: ??
+          || '*unexpectedToken';
 out('stacktop: ' + stack.getLast ().type + ', token: ' + t.type + ' -> ' + actionType);
 
-      if (actionType == 'GetVariable/push') {
+      if (actionType == 'GetOrSetVariable/push') {
+        var a = new JSTTL.Action.GetVariable (t.value);
+        a.type = 'GetOrSetVariable';
+        stack.push (a);
+      } else if (actionType == 'GetVariable/push') {
         var a = new JSTTL.Action.GetVariable (t.value);
         stack.push (a);
+      } else if (actionType == 'pop/AppendValueOf/pop') {
+        var a = new JSTTL.Action.AppendValueOf (stack.pop ());
+        r.push (a);
+        stack.pop (); // 'GET' / 'getOrSet'
       } else if (actionType == 'pop/AppendValueOf') {
         var a = new JSTTL.Action.AppendValueOf (stack.pop ());
         r.push (a);
       } else if (actionType == 'AppendString') {
         var a = new JSTTL.Action.AppendString (t.value);
         r.push (a);
+      } else if (actionType == 'push') {
+        stack.push (t);
+      } else if (actionType == 'push-getOrSet/redo') {
+        stack.push ({type: 'getOrSet'});
+        tokens.unshift (t);
+      } else if (actionType == 'recoverFromError') {
+        while (stack.list.length > 1) {
+          stack.pop ();
+        }
       } else if (actionType == '*nop') {
         //
       } else if (actionType == '*end') {
 out(stack.list);
         break;
+      } else if (actionType == '*unexpectedToken') {
+        this.reportError ({
+          type: 'unexpected token', level: 'm',
+          text: t.type, value: t.value,
+          line: t.line, column: t.column
+        });
+        stack.push ({type: 'error'});
+        if (t.type == 'eof') tokens.unshift (t);
       } else {
         this.die ('Unknown action type: actionTypes[' + stack.getLast ().type + '][' + t.type + '] = ' + actionType);
       }
