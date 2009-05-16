@@ -135,7 +135,7 @@ JSTTL.Tokenizer = SAMI.Class (function () {
     return tokens;
   }, // tokenizeTemplate
 
-  tokenizeDirectives: function (s, ln, cn) {
+  tokenizeDirectives: function (s, ln, cn, opts) {
     /*
       We only support a subset of Template Toolkit's directive language.
 
@@ -202,6 +202,7 @@ JSTTL.Tokenizer = SAMI.Class (function () {
 
     ln = ln || 1;
     cn = cn || 1;
+    opts = opts || {};
 
     var tokens = new SAMI.List;
 
@@ -264,11 +265,48 @@ JSTTL.Tokenizer = SAMI.Class (function () {
 
       s = s.replace (/^"((?:[^"\\]|\\[\s\S])*)("?)/, function (_, c, q) {
         match = true;
-        c = c.replace (/\\([\s\S])/g, '$1');
-// XXX: $variable
-        tokens.push ({type: 'string', value: c, line: ln, column: cn});
-        cn += _.length; // XXX: \x0A in string literal
-        if (!q) {
+        cn++; // "
+        
+        tokens.push ({type: '(', line: ln, column: cn});
+        tokens.push ({type: 'string', value: '', line: ln, column: cn});
+        while (c.length) {
+          c = c.replace (/^[^\\\$]+/, function (_) {
+            tokens.push ({type: '_', line: ln, column: cn});
+            tokens.push ({type: 'string', value: _, line: ln, column: cn});
+            cn += _.length; // XXX: \x0A
+            return '';
+          });
+
+          c = c.replace (/^\\(.)/, function (_, v) {
+            tokens.push ({type: '_', line: ln, column: cn});
+            cn++;
+            tokens.push ({type: 'string', value: v, line: ln, column: cn});
+            cn++; // XXX: \x0A
+            return '';
+          });
+
+          c = c.replace (/^\$(?:([A-Za-z][A-Za-z_0-9]*|_[A-Za-z_0-9]+)|(\{))/, function (_, i, b) {
+            if (b) {
+              tokens.push ({type: '${', line: ln, column: cn});
+              cn += 2;
+              var ts = self.tokenizeDirectives (c, ln, cn, {returnAtBrace: true});
+              var eof = ts.pop ();
+              ln = eof.line;
+              cn = eof.column;
+              tokens.append (ts);
+            } else {
+              tokens.push ({type: '$', line: ln, column: cn});
+              cn++;
+              tokens.push ({type: 'identifier', value: i, line: ln, column: cn});
+              cn += i.length;
+            }
+            return '';
+          });
+        } // while c
+        tokens.push ({type: ')', line: ln, column: cn});
+        if (q) {
+          cn++; // "
+        } else {
           self.reportError ({
             type: 'unclosed string literal', level: 'm',
             line: ln, column: cn
@@ -297,6 +335,9 @@ JSTTL.Tokenizer = SAMI.Class (function () {
         cn += c.length;
         return '';
       });
+      if (opts.returnAtBrace && tokens.getLast ().type == '}') {
+        break; // while s
+      }
 
       if (!match) {
         s = s.replace (/^[<>=!$&|_-]/, function (c) {
@@ -314,7 +355,9 @@ JSTTL.Tokenizer = SAMI.Class (function () {
           return '';
         });
       }
-    }
+    } // while s
+
+    tokens.push ({type: 'eof', line: ln, column: cn});
 
     return tokens;
   } // tokenizeDirectives

@@ -2,6 +2,7 @@
 a
 #tokens
 1;1;identifier;a
+1;2;eof;
 
 #data
 a
@@ -11,11 +12,13 @@ b
 1;1;identifier;a
 2;1;identifier;b
 3;3;identifier;c
+3;4;eof;
 
 #data escaped
      a    \u0020
 #tokens
 1;6;identifier;a
+1;12;eof;
 
 #data
 a     # comment
@@ -23,6 +26,7 @@ b
 #tokens
 1;1;identifier;a
 2;1;identifier;b
+2;2;eof;
 
 #data
 a+b
@@ -30,6 +34,7 @@ a+b
 1;1;identifier;a
 1;2;+;
 1;3;identifier;b
+1;4;eof;
 
 #data
 a  +  b++
@@ -39,6 +44,7 @@ a  +  b++
 1;7;identifier;b
 1;8;+;
 1;9;+;
+1;10;eof;
 
 #data escaped
 xyz = BLOCK\u0020
@@ -46,6 +52,7 @@ xyz = BLOCK\u0020
 1;1;identifier;xyz
 1;5;=;
 1;7;BLOCK;
+1;13;eof;
 
 #data
 MACRO x(y); BLOCK; 'abc'; END
@@ -61,11 +68,13 @@ MACRO x(y); BLOCK; 'abc'; END
 1;20;string;abc
 1;25;;;
 1;27;END;
+1;30;eof;
 
 #data
 | #abc
 | #def
 #tokens
+2;5;eof;
 
 #data
 a!=b
@@ -73,6 +82,7 @@ a!=b
 1;1;identifier;a
 1;2;!=;
 1;4;identifier;b
+1;5;eof;
 
 #data
 a !== b
@@ -81,6 +91,7 @@ a !== b
 1;3;!=;
 1;5;=;
 1;7;identifier;b
+1;8;eof;
 
 #data
 !!a
@@ -88,6 +99,7 @@ a !== b
 1;1;!;
 1;2;!;
 1;3;identifier;a
+1;4;eof;
 
 #data
 a<>b
@@ -96,6 +108,7 @@ a<>b
 1;2;<;
 1;3;>;
 1;4;identifier;b
+1;5;eof;
 
 #data
 a${b}c
@@ -105,6 +118,7 @@ a${b}c
 1;4;identifier;b
 1;5;};
 1;6;identifier;c
+1;7;eof;
 
 #data
 a && b || c
@@ -114,6 +128,7 @@ a && b || c
 1;6;identifier;b
 1;8;||;
 1;11;identifier;c
+1;12;eof;
 
 #data
 a &= c
@@ -122,12 +137,14 @@ a &= c
 1;3;&;
 1;4;=;
 1;6;identifier;c
+1;7;eof;
 
 #data
 0.4cm
 #tokens
 1;1;number;0.4
 1;4;identifier;cm
+1;6;eof;
 
 #data
 04*-02
@@ -135,6 +152,7 @@ a &= c
 1;1;number;04
 1;3;*;
 1;4;number;-02
+1;7;eof;
 
 #data
 6.0 - 0.2
@@ -142,12 +160,14 @@ a &= c
 1;1;number;6.0
 1;5;-;
 1;7;number;0.2
+1;10;eof;
 
 #data
 .123
 #tokens
 1;1;.;
 1;2;number;123
+1;5;eof;
 
 #data
 1.0.8
@@ -155,6 +175,7 @@ a &= c
 1;1;number;1.0
 1;4;.;
 1;5;number;8
+1;6;eof;
 
 #data
 123,567.9
@@ -162,6 +183,7 @@ a &= c
 1;1;number;123
 1;4;,;
 1;5;number;567.9
+1;10;eof;
 
 #data
 a[b]
@@ -170,6 +192,7 @@ a[b]
 1;2;[;
 1;3;identifier;b
 1;4;];
+1;5;eof;
 
 #data
 \a\\b
@@ -179,6 +202,7 @@ a[b]
 1;3;\;
 1;4;\;
 1;5;identifier;b
+1;6;eof;
 
 #data
 a/b //c
@@ -189,6 +213,7 @@ a/b //c
 1;5;/;
 1;6;/;
 1;7;identifier;c
+1;8;eof;
 
 #data
 a % b{c}
@@ -199,6 +224,7 @@ a % b{c}
 1;6;{;
 1;7;identifier;c
 1;8;};
+1;9;eof;
 
 #data
 a.x?b:c;
@@ -211,6 +237,7 @@ a.x?b:c;
 1;6;:;
 1;7;identifier;c
 1;8;;;
+1;9;eof;
 
 #data
 $a_&b
@@ -219,6 +246,7 @@ $a_&b
 1;2;identifier;a_
 1;4;&;
 1;5;identifier;b
+1;6;eof;
 
 #data
 $a _ &b
@@ -228,90 +256,171 @@ $a _ &b
 1;4;_;
 1;6;&;
 1;7;identifier;b
+1;8;eof;
 
 #data
 `abc`def
 #tokens
 1;1;`abc`def;
+1;9;eof;
 
 #data escaped
 ab\u4e00c
 #tokens escaped
 1;1;identifier;ab
 1;3;\u4e00c;
+1;5;eof;
 
 #data
 "abc"
 #tokens
-1;1;string;abc
+1;2;(;
+1;2;string;
+1;2;_;
+1;2;string;abc
+1;5;);
+1;6;eof;
 
 #data
 "abc""def"
 #tokens
-1;1;string;abc
-1;6;string;def
+1;2;(;
+1;2;string;
+1;2;_;
+1;2;string;abc
+1;5;);
+1;7;(;
+1;7;string;
+1;7;_;
+1;7;string;def
+1;10;);
+1;11;eof;
 
 #data
 "ab"cd"ef"
 #tokens
-1;1;string;ab
+1;2;(;
+1;2;string;
+1;2;_;
+1;2;string;ab
+1;4;);
 1;5;identifier;cd
-1;7;string;ef
+1;8;(;
+1;8;string;
+1;8;_;
+1;8;string;ef
+1;10;);
+1;11;eof;
 
 #data
 "ab
 #errors
 1;4;m;unclosed string literal
 #tokens
-1;1;string;ab
+1;2;(;
+1;2;string;
+1;2;_;
+1;2;string;ab
+1;4;);
+1;4;eof;
 
 #data
 "abc\"d"
 #tokens
-1;1;string;abc"d
+1;2;(;
+1;2;string;
+1;2;_;
+1;2;string;abc
+1;5;_;
+1;6;string;"
+1;7;_;
+1;7;string;d
+1;8;);
+1;9;eof;
 
 #data
 "a\\b\\c"
 #tokens
-1;1;string;a\b\c
+1;2;(;
+1;2;string;
+1;2;_;
+1;2;string;a
+1;3;_;
+1;4;string;\
+1;5;_;
+1;5;string;b
+1;6;_;
+1;7;string;\
+1;8;_;
+1;8;string;c
+1;9;);
+1;10;eof;
 
 #data
 "a\"b
 #errors
 1;6;m;unclosed string literal
 #tokens
-1;1;string;a"b
+1;2;(;
+1;2;string;
+1;2;_;
+1;2;string;a
+1;3;_;
+1;4;string;"
+1;5;_;
+1;5;string;b
+1;6;);
+1;6;eof;
 
 #data
 ""
 #tokens
-1;1;string;
+1;2;(;
+1;2;string;
+1;2;);
+1;3;eof;
 
 #data
 "ab""
 #errors
 1;6;m;unclosed string literal
 #tokens
-1;1;string;ab
-1;5;string;
+1;2;(;
+1;2;string;
+1;2;_;
+1;2;string;ab
+1;4;);
+1;6;(;
+1;6;string;
+1;6;);
+1;6;eof;
 
 #data
 "ab\"
 #errors
 1;6;m;unclosed string literal
 #tokens
-1;1;string;ab"
+1;2;(;
+1;2;string;
+1;2;_;
+1;2;string;ab
+1;4;_;
+1;5;string;"
+1;6;);
+1;6;eof;
 
 #data
 'abc'
 #tokens
 1;1;string;abc
+1;6;eof;
 
 #data
 'abc''def'
 #tokens
 1;1;string;abc
 1;6;string;def
+1;11;eof;
 
 #data
 'ab'cd'ef'
@@ -319,6 +428,7 @@ ab\u4e00c
 1;1;string;ab
 1;5;identifier;cd
 1;7;string;ef
+1;11;eof;
 
 #data
 'ab
@@ -326,16 +436,19 @@ ab\u4e00c
 1;4;m;unclosed string literal
 #tokens
 1;1;string;ab
+1;4;eof;
 
 #data
 'abc\'d'
 #tokens
 1;1;string;abc'd
+1;9;eof;
 
 #data
 'a\\b\\c'
 #tokens
 1;1;string;a\b\c
+1;10;eof;
 
 #data
 'a\'b
@@ -343,11 +456,13 @@ ab\u4e00c
 1;6;m;unclosed string literal
 #tokens
 1;1;string;a'b
+1;6;eof;
 
 #data
 ''
 #tokens
 1;1;string;
+1;3;eof;
 
 #data
 'ab''
@@ -356,6 +471,7 @@ ab\u4e00c
 #tokens
 1;1;string;ab
 1;5;string;
+1;6;eof;
 
 #data
 'ab\'
@@ -363,8 +479,10 @@ ab\u4e00c
 1;6;m;unclosed string literal
 #tokens
 1;1;string;ab'
+1;6;eof;
 
 #data
 'ab"cd"ef'
 #tokens
 1;1;string;ab"cd"ef
+1;11;eof;
