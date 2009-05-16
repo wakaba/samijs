@@ -285,8 +285,9 @@ JSTTL.Tokenizer = SAMI.Class (function () {
             return '';
           });
 
-          c = c.replace (/^\$(?:([A-Za-z][A-Za-z_0-9]*|_[A-Za-z_0-9]+)|(\{))/, function (_, i, b) {
+          c = c.replace (/^\$(?:([A-Za-z_0-9]+)|(\{))?/, function (_, i, b) {
             if (b) {
+              tokens.push ({type: '_', line: ln, column: cn});
               tokens.push ({type: '${', line: ln, column: cn});
               cn += 2;
               var ts = self.tokenizeDirectives (c, ln, cn, {returnAtBrace: true});
@@ -294,11 +295,28 @@ JSTTL.Tokenizer = SAMI.Class (function () {
               ln = eof.line;
               cn = eof.column;
               tokens.append (ts);
+            } else if (i != null && i != "") {
+              if (i == '0') {
+                tokens.push ({type: '_', line: ln, column: cn});
+                tokens.push ({type: 'string', value: '$0', line: ln, column: cn});
+                cn += 2; // $0
+              } else if (/^[0-9]/.test (i)) {
+                cn++; // $
+                self.reportError ({
+                  type: 'not an identifier', level: 'm',
+                  line: ln, column: cn
+                });
+                cn += i.length;
+              } else { // $_45 is allowed.
+                tokens.push ({type: '_', line: ln, column: cn});
+                tokens.push ({type: '$', line: ln, column: cn});
+                cn++;
+                tokens.push ({type: 'identifier', value: i, line: ln, column: cn});
+                cn += i.length;
+              }
+            } else if (i == '0') {
             } else {
-              tokens.push ({type: '$', line: ln, column: cn});
-              cn++;
-              tokens.push ({type: 'identifier', value: i, line: ln, column: cn});
-              cn += i.length;
+              cn++; // $
             }
             return '';
           });
