@@ -285,16 +285,19 @@ JSTTL.Tokenizer = SAMI.Class (function () {
             return '';
           });
 
+          var newC = null;
           c = c.replace (/^\$(?:([A-Za-z_0-9]+)|(\{))?/, function (_, i, b) {
             if (b) {
               tokens.push ({type: '_', line: ln, column: cn});
               tokens.push ({type: '${', line: ln, column: cn});
               cn += 2;
-              var ts = self.tokenizeDirectives (c, ln, cn, {returnAtBrace: true});
+              var ts = self.tokenizeDirectives
+                  (c.substring (2), ln, cn, {returnAtBrace: true});
               var eof = ts.pop ();
               ln = eof.line;
               cn = eof.column;
               tokens.append (ts);
+              newC = ts.c;
             } else if (i != null && i != "") {
               if (i == '0') {
                 tokens.push ({type: '_', line: ln, column: cn});
@@ -320,6 +323,7 @@ JSTTL.Tokenizer = SAMI.Class (function () {
             }
             return '';
           });
+          if (newC != null) c = newC;
         } // while c
         tokens.push ({type: ')', line: ln, column: cn});
         if (q) {
@@ -374,6 +378,15 @@ JSTTL.Tokenizer = SAMI.Class (function () {
         });
       }
     } // while s
+
+    if (opts.returnAtBrace && tokens.getLast ().type != '}') {
+      this.reportError ({
+        type: 'unclosed variable block', level: 'm',
+        line: ln, column: cn
+      });
+      tokens.push ({type: '}', line: ln, column: cn});
+    }
+    tokens.c = s;
 
     tokens.push ({type: 'eof', line: ln, column: cn});
 
