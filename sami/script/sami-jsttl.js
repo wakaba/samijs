@@ -483,18 +483,41 @@ JSTTL.Parser = new SAMI.Subclass (function () {
 
     var self = this;
 
+    var stack = new SAMI.List;
+    stack.push ({type: 'bottommost'});
+
+    var actionTypes = { // actionTypes[stackTopType][newTokenType]
+      'bottommost': {
+        
+      },
+
+      'default': {
+        'text': 'AppendString',
+        'eof': 'nop'
+      }
+    };
+
+    var processToken = function (t) {
+      var actionType = (actionTypes[stack.getLast ().type] || actionTypes['default'])[t.type]
+          || actionTypes['default'][t.type]
+          || 'AppendString'; // XXX: ??
+
+      if (actionType == 'AppendString') {
+        var a = new JSTTL.Action.AppendString (t.value);
+        r.push (a);
+      } else if (actionType == 'nop') {
+        //
+      } else {
+        this.die ('Unknown action type: actionTypes[' + stack.getLast ().type + '][' + t.type + '] = ' + actionType);
+      }
+    };
+
     this.tokenizeTemplate (s).forEach (function (t) {
       if (t.type == 'text') {
-        var a = new JSTTL.Action.AppendString (t.valueRef.substring (t.valueStart, t.valueEnd));
-        r.push (a);
-out(t.type + ' ' + t.valueRef.substring (t.valueStart, t.valueEnd));
+        processToken ({value: t.valueRef.substring (t.valueStart, t.valueEnd)});
       } else if (t.type == 'tag') {
         self.tokenizeDirectives (t.valueRef.substring (t.valueStart, t.valueEnd)).forEach (function (t) {
-          if (t.type == 'eof') {
-            //
-          } else {
-out(t.type + ' ' + t.value);
-          }
+          processToken (t);
         });
       } else {
         this.die ('Unknown token type: ' + t.type);
