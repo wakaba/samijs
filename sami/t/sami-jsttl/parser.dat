@@ -1,0 +1,5 @@
+#data
+a[%%]b
+#actions
+[AppendString a]
+[AppendString b]

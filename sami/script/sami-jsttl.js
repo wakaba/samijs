@@ -317,7 +317,6 @@ JSTTL.Tokenizer = SAMI.Class (function () {
                 tokens.push ({type: 'identifier', value: i, line: ln, column: cn});
                 cn += i.length;
               }
-            } else if (i == '0') {
             } else {
               cn++; // $
             }
@@ -472,6 +471,68 @@ JSTTL.Tokenizer.KEYWORDS = {
   'noT': 'not',
   'not': 'not'
 }; // KEYWORDS
+
+/* --- Parser --- */
+
+JSTTL.Parser = new SAMI.Subclass (function () {
+
+}, JSTTL.Tokenizer, {
+
+  parseString: function (s) {
+    var r = new JSTTL.Action.ActionList;
+
+    var self = this;
+
+    this.tokenizeTemplate (s).forEach (function (t) {
+      if (t.type == 'text') {
+        var a = new JSTTL.Action.AppendString (t.valueRef.substring (t.valueStart, t.valueEnd));
+        r.push (a);
+out(t.type + ' ' + t.valueRef.substring (t.valueStart, t.valueEnd));
+      } else if (t.type == 'tag') {
+        self.tokenizeDirectives (t.valueRef.substring (t.valueStart, t.valueEnd)).forEach (function (t) {
+          if (t.type == 'eof') {
+            //
+          } else {
+out(t.type + ' ' + t.value);
+          }
+        });
+      } else {
+        this.die ('Unknown token type: ' + t.type);
+      }
+    });
+
+    return r;
+  } // parseString
+
+}); // Parser
+
+/* --- Actions --- */
+
+JSTTL.Action = new SAMI.Class (function () {
+
+}, {
+  className: 'Action',
+  toString: function () {
+    return '[' + this.className + (this.value != undefined ? ' ' + this.value : '') + ']';
+  } // toString
+}); // Action
+
+// JSTTL.Action.ActionList is not a subclass of JSTTL.Action.
+JSTTL.Action.ActionList = new SAMI.Subclass (function () {
+
+}, SAMI.List, {
+  className: 'ActionList',
+
+  toString: function () {
+    return this.list.join ("\n");
+  } // toString
+}); // ActionList
+
+JSTTL.Action.AppendString = new SAMI.Subclass (function (s) {
+  this.value = s;
+}, JSTTL.Action, {
+  className: 'AppendString'
+}); // AppendString
 
 /* --- Onload --- */
 
