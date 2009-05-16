@@ -70,7 +70,10 @@ SAMI.EventTarget = new SAMI.Subclass (function () {
       e[n] = args[p];
     }
     this.dispatchEvent (e);
-  } // reportError
+  }, // reportError
+  die: function (m) {
+    throw m;
+  } // die
 }); // EventTarget
 
 SAMI.Event = new SAMI.Class (function (eventType, canBubble, cancelable) {
@@ -225,6 +228,15 @@ SAMI.List = new SAMI.Class (function (arrayLike) {
     }
     return null;
   }, // forEach
+  forEachReverse: function (code) {
+    var length = this.list.length;
+    for (var i = length - 1; i >= 0; i--) {
+      var r = code (this.list[i]);
+      if (r && r.stop) return r.returnValue;
+    }
+    return null;
+  }, // forEachReverse
+
   map: function (code) {
     var newList = new this.constructor;
     var length = this.list.length;
@@ -328,11 +340,24 @@ SAMI.List = new SAMI.Class (function (arrayLike) {
   push: function (item) {
     this.list.push (item);
   }, // push
+  // destructive
+  unshift: function (v) {
+    return this.list.unshift (v);
+  }, // unshift
 
   // destructive
   pushCloneOfLast: function () {
     this.list.push (this.getLast ().clone ());
   }, // pushCloneOfLast
+
+  // destructive
+  prepend: function (list) {
+    var self = this;
+    list.forEachReverse (function (n) {
+      self.list.unshift (n);
+    });
+    return this;
+  }, // prepend
 
   // destructive
   append: function (list) {
@@ -343,6 +368,10 @@ SAMI.List = new SAMI.Class (function (arrayLike) {
     return this;
   }, // append
   
+  // destructive
+  shift: function () {
+    return this.list.shift ();
+  }, // shift
   // destructive
   pop: function () {
     return this.list.pop ();
