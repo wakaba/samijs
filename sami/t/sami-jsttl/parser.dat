@@ -3,3 +3,16 @@ a[%%]b
 #actions
 [AppendString a]
 [AppendString b]
+
+#data
+[%a%]
+#actions
+[AppendValueOf]
+  [GetVariable a]
+
+#data
+[%a%]b
+#actions
+[AppendValueOf]
+  [GetVariable a]
+[AppendString b]

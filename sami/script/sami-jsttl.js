@@ -484,45 +484,64 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     var self = this;
 
     var stack = new SAMI.List;
-    stack.push ({type: 'bottommost'});
+    stack.push ({type: '*bottommost'});
 
     var actionTypes = { // actionTypes[stackTopType][newTokenType]
-      'bottommost': {
+      '*bottommost': {
         
+      },
+
+      'GetVariable': {
+        'eof': 'pop/AppendValueOf'
       },
 
       'default': {
         'text': 'AppendString',
-        'eof': 'nop'
+        'identifier': 'GetVariable/push',
+        'eof': '*nop'
       }
     };
 
-    var processToken = function (t) {
-      var actionType = (actionTypes[stack.getLast ().type] || actionTypes['default'])[t.type]
-          || actionTypes['default'][t.type]
-          || 'AppendString'; // XXX: ??
-
-      if (actionType == 'AppendString') {
-        var a = new JSTTL.Action.AppendString (t.value);
-        r.push (a);
-      } else if (actionType == 'nop') {
-        //
-      } else {
-        this.die ('Unknown action type: actionTypes[' + stack.getLast ().type + '][' + t.type + '] = ' + actionType);
-      }
-    };
-
+    var tokens = [];
     this.tokenizeTemplate (s).forEach (function (t) {
       if (t.type == 'text') {
-        processToken ({value: t.valueRef.substring (t.valueStart, t.valueEnd)});
+        tokens.push ({type: 'string',
+                      value: t.valueRef.substring (t.valueStart, t.valueEnd)});
       } else if (t.type == 'tag') {
         self.tokenizeDirectives (t.valueRef.substring (t.valueStart, t.valueEnd)).forEach (function (t) {
-          processToken (t);
+          tokens.push (t);
         });
       } else {
         this.die ('Unknown token type: ' + t.type);
       }
     });
+
+    while (tokens.length || stack.list.length > 1) {
+      var t = tokens.shift () || {type: 'eof'};
+
+      var actionType = (actionTypes[stack.getLast ().type] || actionTypes['default'])[t.type]
+          || actionTypes['default'][t.type]
+          || 'AppendString'; // XXX: ??
+out('stacktop: ' + stack.getLast ().type + ', token: ' + t.type + ' -> ' + actionType);
+
+      if (actionType == 'GetVariable/push') {
+        var a = new JSTTL.Action.GetVariable (t.value);
+        stack.push (a);
+      } else if (actionType == 'pop/AppendValueOf') {
+        var a = new JSTTL.Action.AppendValueOf (stack.pop ());
+        r.push (a);
+      } else if (actionType == 'AppendString') {
+        var a = new JSTTL.Action.AppendString (t.value);
+        r.push (a);
+      } else if (actionType == '*nop') {
+        //
+      } else if (actionType == '*end') {
+out(stack.list);
+        break;
+      } else {
+        this.die ('Unknown action type: actionTypes[' + stack.getLast ().type + '][' + t.type + '] = ' + actionType);
+      }
+    }
 
     return r;
   } // parseString
@@ -534,17 +553,21 @@ JSTTL.Parser = new SAMI.Subclass (function () {
 JSTTL.Action = new SAMI.Class (function () {
 
 }, {
-  className: 'Action',
+  type: 'Action',
   toString: function () {
-    return '[' + this.className + (this.value != undefined ? ' ' + this.value : '') + ']';
+    var v = '[' + this.type + (this.value != undefined ? ' ' + this.value : '') + ']';
+    if (this.action != null) {
+      v += "\n  " + this.action.toString ();
+    }
+    return v;
   } // toString
 }); // Action
 
 // JSTTL.Action.ActionList is not a subclass of JSTTL.Action.
 JSTTL.Action.ActionList = new SAMI.Subclass (function () {
-
+  this._super.apply (this, arguments);
 }, SAMI.List, {
-  className: 'ActionList',
+  type: 'ActionList',
 
   toString: function () {
     return this.list.join ("\n");
@@ -554,8 +577,20 @@ JSTTL.Action.ActionList = new SAMI.Subclass (function () {
 JSTTL.Action.AppendString = new SAMI.Subclass (function (s) {
   this.value = s;
 }, JSTTL.Action, {
-  className: 'AppendString'
+  type: 'AppendString'
 }); // AppendString
+
+JSTTL.Action.AppendValueOf = new SAMI.Subclass (function (s) {
+  this.action = s;
+}, JSTTL.Action, {
+  type: 'AppendValueOf'
+}); // AppendValueOf
+
+JSTTL.Action.GetVariable = new SAMI.Subclass (function (s) {
+  this.value = s;
+}, JSTTL.Action, {
+  type: 'GetVariable'
+}); // GetVariable
 
 /* --- Onload --- */
 
