@@ -80,9 +80,6 @@ a[%GET%]b
 
 #data
 a[%b
-#errors
-1;5;m;unclosed tag at eof;;
 #actions
 [AppendString a]
-[AppendValueOf]
-  [GetOrSetVariable b]
+[AppendString [%b]
