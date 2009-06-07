@@ -8,7 +8,7 @@ output {
   white-space: pre;
 }
 textarea {
-  height: 10em;
+  height: 20em;
 }
 p, output {
   text-indent: 0;
@@ -26,6 +26,12 @@ p, output {
 <p><label><strong>Parsing table (as JavaScript object)</strong>:<br>
 <textarea id=parsing-table-js></textarea></label>
 
+<p><label><strong>Parsed string</strong>:<br>
+<textarea id=parsed-string></textarea></label>
+
+<p><label><strong>Parse tree</strong>:<br>
+<textarea id=parse-tree></textarea></label>
+
 <script src="http://suika.fam.cx/www/js/sami/script/sami-core.js"></script>
 <script src="http://suika.fam.cx/www/js/sami/script/sami-pg.js"></script>
 <script>
@@ -41,7 +47,34 @@ p, output {
     if (pt) {
       SAMI.Element.setTextContent ($('parsing-table-text'), pt.toString ());
       SAMI.Element.setTextContent ($('parsing-table-js'), pt.toSource ());
+      window.parsingTable = pt;
     }
   });
 
+  new SAMI.Observer ('change', $('parsed-string'), function () {
+    var p = new SAMI.Parser.LR1 ();
+    p._parsingTable = window.parsingTable;
+    p._processLR1StackObjects = function (key, objs) {
+      return {type: key, value: /* key + */ "{\n  " + objs.map (function (s) {
+        return s.type + ': ' + s.value;
+      }).list.join (',\n').replace (/\n/g, "\n  ") + '\n}'};
+    };
+    new SAMI.Observer ('error', p, function (ev) {
+      SAMI.Element.setTextContent ($('parse-tree'),
+          'Error: Unexpected token type {' + ev.token.type + ', ' + ev.token.value + '}; ' + ev.value);
+    });
+
+    var t = new SAMI.Parser.SimpleTokenizer ();
+    t._patterns = new SAMI.List ([
+      {pattern: /[\w_]+/, type: 'atom', code: function (t, v) { t.value = v }},
+      {pattern: /[^\s\w_]+/},
+      {pattern: /\s+/, ignore: true}
+    ]);
+    var tokens = t.tokenizeString ($('parsed-string').value);
+    var r = p._parseTokens (tokens);
+
+    if (r) {
+      SAMI.Element.setTextContent ($('parse-tree'), r.value);
+    }
+  });
 </script>
