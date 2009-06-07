@@ -652,6 +652,16 @@ if (JSTTL.onLoadFunctions) {
   delete JSTTL.onLoadFunctions;
 }
 
+/* 
+
+TODO:
+
+  ".." (same as Perl)
+  "=>"
+  a.${b.c}
+
+*/
+
 /* ***** BEGIN LICENSE BLOCK *****
  * Copyright 2008-2009 Wakaba <w@suika.fam.cx>.  All rights reserved.
  *

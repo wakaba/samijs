@@ -17,6 +17,24 @@ SAMI.Class.addClassMethods = function (classObject, methods) {
   });
 }; // addClassMethods
 
+SAMI.Class.addAliasMethods = function (classObject, methods) {
+  for (var n in methods) {
+    if (!classObject[n]) {
+      classObject.prototype[n]
+          = classObject.prototype[methods[n]] ||
+              classObject.prototype._super.prototype[methods[n]];
+    }
+  }
+}; // addAliasMethods
+
+SAMI.Class.mix = function (classObject, mixedClass) {
+  for (var n in mixedClass.prototype) {
+    if (!classObject.prototype[n]) {
+      classObject.prototype[n] = mixedClass.prototype[n];
+    }
+  }
+}; // mix
+
 SAMI.Subclass = function (constructor, superclass, prototype) {
   constructor.prototype = new superclass;
   for (var n in prototype) {
@@ -1182,6 +1200,205 @@ SAMI.Class.addClassMethods (SAMI.JSON, {
     }
   } // serialize
 }); // JSON class methods
+
+/* --- Parser --- */
+
+SAMI.Parser = {};
+
+SAMI.Parser.SimpleTokenizer = new SAMI.Class (function () {
+
+}, {
+  // _patterns
+
+  tokenizeString: function tokenize (s) {
+    var tokens = new SAMI.List;
+    while (s.length) {
+      if (this._patterns.forEach (function (p) {
+        var match = null;
+        s = s.replace (new RegExp ('^(?:' + p.pattern.source + ')'), function (_) { match = _; return '' });
+        if (match != null) {
+          var token = {type: p.type || match};
+          if (p.code) {
+            p.code (token, match);
+          }
+          if (!p.ignore) tokens.push (token);
+          return new SAMI.List.Return (true);
+        }
+      })) {
+        //
+      } else {
+        s = s.replace (/^[\s\S]/, function (_) {
+        tokens.push ({type: _});
+          return '';
+        });
+      }
+    }
+    tokens.push ({type: 'EOF'});
+    return tokens;
+  } // tokenizeString
+}); // SimpleTokenizer
+
+/* -- LR(1) Parser -- */
+
+SAMI.Parser.LR1 = new SAMI.Class (function () {
+
+}, {
+  // _parsingTable
+  // _processLR1StackObjects
+
+  _parseTokens: function (tokens) {
+    var stack = new SAMI.Parser.LR1.Stack;
+    stack.push (this._parsingTable.getInitialRow ());
+
+    while (tokens.list.length) {
+      var token = tokens.shift ();
+//outn ('Token: {' + token.type + ', ' + token.value + '}');
+//outn ('Current stack: '  + stack);
+      var state = stack.getLast ();
+      var goTo = state.getCellByTokenType (token.type);
+      if (goTo) {
+//outn('goTo: ' + goTo );
+        if (goTo.isReduction) {
+          stack.pop (); // state
+          var args = new SAMI.List;
+          var i = goTo.reductionLength * 2 - 1;
+          while (i) {
+            args.unshift (stack.pop ());
+            i--;
+            if (i) {
+              stack.pop (); // state
+              i--;
+            }
+          }
+          if (goTo.reductionType == '$start') {
+            return args.list[0];
+          } else {
+            var pState = stack.getLast ();
+            var stackObject = this._processLR1StackObjects (goTo.reductionType, args);
+            stack.push (stackObject);
+            var pStateGoTo = pState.getCellByTokenType (goTo.reductionType);
+            stack.push (this._parsingTable.getRowByIndex (pStateGoTo.nextRowId));
+            tokens.unshift (token);
+          }
+        } else {
+          stack.push (token);
+          stack.push (this._parsingTable.getRowByIndex (goTo.nextRowId));
+        }
+      } else {
+        this.reportError ({type: 'parse error', level: 'm', token: token, value: stack + ''});
+        break;
+      }
+    }
+
+    return null;
+  } // _parseTokens
+}); // LR1
+
+SAMI.Parser.LR1.Stack = new SAMI.Subclass (function () {
+  this._super.apply (this, arguments);
+}, SAMI.List, {
+  toString: function () {
+    return this.map (function (item) {
+      if (item instanceof SAMI.Parser.LR1.ParsingTableRow) {
+        return '#' + item.index;
+      } else {
+        return item.type;
+      }
+    }).list.join (', ');
+  } // toString
+}); // Stack
+
+SAMI.Parser.LR1.ParsingTable = new SAMI.Subclass (function () {
+  this._super.apply (this, arguments);
+}, SAMI.List, {
+  getInitialRow: function () {
+    return this.list[0];
+  }, // getInitialRow
+  getRowByIndex: function (index) {
+    return this.list[index];
+  }, // getRowByIndex
+
+  toString: function () {
+    return this.list.join ("\n");
+  }, // toString
+
+  toSource: function () {
+    return "new SAMI.Parser.LR1.ParsingTable ([\n  " + this.map (function (row) {
+      return row.toSource ('  ');
+    }).list.join (", \n  ") + "\n])";
+  } // toSource
+}); // ParsingTable
+
+SAMI.Parser.LR1.ParsingTableRow = new SAMI.Subclass (function () {
+  this._super.apply (this, arguments);
+}, SAMI.Hash, {
+  // index
+  setIndex: function (index) {
+    this.index = index;
+    return this;
+  }, // setIndex
+
+  toString: function () {
+    return this.index + ': ' + this.mapToList (function (n, v) {
+      return n + ' -> ' + v;
+    }).list.join ('; ');
+  }, // toString
+
+  toSource: function (indent) {
+    indent = indent || '';
+    return "new SAMI.Parser.LR1.ParsingTableRow ({\n" + indent + "  " + this.mapToList (function (n, v) {
+      return '"' + n.replace (/([\u005C\u0022])/g, '\\$1') + '": ' + v.toSource ();
+    }).list.join (",\n" + indent + "  ") + "\n" + indent + '}).setIndex (' + this.index + ')';
+  } // toSource
+}); // ParsingTableRow
+
+SAMI.Class.addAliasMethods (SAMI.Parser.LR1.ParsingTableRow, {
+  getCellByTokenType: 'get'
+});
+
+SAMI.Parser.LR1.ParsingTableCell = new SAMI.Class (function (isReduction, type, length, id) {
+  this.isReduction = isReduction;
+  this.reductionType = type;
+  this.reductionLength = length;
+  this.nextRowId = id;
+}, {
+  // isReduction
+  // reductionType, reductionLength
+  // nextRowId
+
+  toString: function () {
+    if (this.isReduction) {
+      return this.reductionLength + ' -> ' + this.reductionType;
+    } else {
+      return '#' + this.nextRowId;
+    }
+  }, // toString
+
+  toSource: function () {
+    if (this.isReduction) {
+      return 'new SAMI.Parser.LR1.ParsingTableCell (true, "'
+          + this.reductionType.replace (/([\u005C\u0022])/g, '\\$1') + '", '
+          + this.reductionLength + ')';
+    } else {
+      return 'new SAMI.Parser.LR1.ParsingTableCell (false, undefined, undefined, ' + this.nextRowId + ')';
+    }
+  } // toSource
+}); // ParsingTableCell
+
+/* --- Global --- */
+
+SAMI.Global = {};
+SAMI.Class.addClassMethods (SAMI.Global, {
+  '$': function (id) {
+    return document.getElementById (id);
+  }, // $
+
+  install: function () {
+    for (var p in {'$': true}) {
+      self[p] = this[p];
+    }
+  } // install
+}); // SAMI.Global class methods
 
 /* --- Onload --- */
 

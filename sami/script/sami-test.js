@@ -182,19 +182,23 @@ SAMI.Class.addClassMethods (SAMI.Test.Utility, {
       }
     }
     return el;
-  },
+  }, // getStatusElement
 
   out: function (s) {
     var el = SAMI.Test.Utility.getStatusElement ();
     el.insertBefore (el.ownerDocument.createTextNode (s + "\n"), el.firstChild);
-  },
+  }, // out
+
+  outn: function (s) {
+    SAMI.Test.Utility.out (s + "\n");
+  }, // outn
 
   install: function () {
-    for (var p in {out: true}) {
-      window[p] = this[p];
+    for (var p in {out: true, outn: true}) {
+      self[p] = this[p];
     }
-  }
-});
+  } // install
+}); // SAMI.Test.Utility class methods
 
 /* --- Onload --- */
 

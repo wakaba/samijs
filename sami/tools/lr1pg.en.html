@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html lang=en>
+<title>SAMI LR(1) Parser Generator</title>
+<link rel=stylesheet href="http://suika.fam.cx/www/style/html/xhtml">
+<style>
+output {
+  display: block;
+  white-space: pre;
+}
+textarea {
+  height: 10em;
+}
+p, output {
+  text-indent: 0;
+}
+</style>
+
+<h1>LR(1) Parser Generator</h1>
+
+<p><label><strong>Grammer</strong>:<br>
+<textarea id=grammer></textarea></label>
+
+<p><label><strong>Parsing table (as text)</strong>:<br>
+<textarea id=parsing-table-text></textarea></label>
+
+<p><label><strong>Parsing table (as JavaScript object)</strong>:<br>
+<textarea id=parsing-table-js></textarea></label>
+
+<script src="http://suika.fam.cx/www/js/sami/script/sami-core.js"></script>
+<script src="http://suika.fam.cx/www/js/sami/script/sami-pg.js"></script>
+<script>
+  SAMI.Global.install ();
+
+  new SAMI.Observer ('change', $('grammer'), function () {
+    var grammer = $('grammer').value;
+    var pt = SAMI.PG.LR1.rulesStringToParsingTable (grammer, null, function (ev) {
+      SAMI.Element.setTextContent ($('parsing-table-text'),
+          'Error: Unexpected token type {' + ev.token.type + ', ' + ev.token.value + '}; ' + ev.value);
+    });
+
+    if (pt) {
+      SAMI.Element.setTextContent ($('parsing-table-text'), pt.toString ());
+      SAMI.Element.setTextContent ($('parsing-table-js'), pt.toSource ());
+    }
+  });
+
+</script>

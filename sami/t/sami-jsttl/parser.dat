@@ -83,3 +83,23 @@ a[%b
 #actions
 [AppendString a]
 [AppendString [%b]
+
+#data
+[%SET a=b%]
+#actions
+[Assign]
+  [GetVariable a]
+  [GetVariable b]
+
+#data
+[%a=b%]
+#actions
+[Assign]
+  [GetVariable a]
+  [GetVariable b]
+
+#data
+[%a="b"%]
+[Assign]
+  [GetVariable a]
+  [String b]
