@@ -469,6 +469,16 @@ SAMI.PG.LR1.RulesParser = new SAMI.Subclass (function () {
     return {type: key, value: key + '{ ' + objs.map (function (s) { return s.type + ',' + s.value }).list.join (', ') + ' }'};
   }, // _processLR1StackObjects
 
+/*
+
+  rules := expression ;
+  expression := 'non-terminal-symbol' ':=' righthand ;
+  righthand := righthand symbol ;
+  righthand := symbol ;
+  symbol := 'non-terminal-symbol' ;
+  symbol := 'terminal-symbol' ;
+
+*/
   _parsingTable:
   /* Parsing Table */
 new SAMI.Parser.LR1.ParsingTable ([
