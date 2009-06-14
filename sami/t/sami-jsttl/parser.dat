@@ -8,35 +8,35 @@ a[%%]b
 [%a%]
 #actions
 [AppendValueOf]
-  [GetOrSetVariable a]
+  [GetLValue a]
 
 #data
 [%a%]b
 #actions
 [AppendValueOf]
-  [GetOrSetVariable a]
+  [GetLValue a]
 [AppendString b]
 
 #data
 [%GET a%]
 #actions
 [AppendValueOf]
-  [GetVariable a]
+  [GetLValue a]
 
 #data
 [%GET a%][%GET b%]
 #actions
 [AppendValueOf]
-  [GetVariable a]
+  [GetLValue a]
 [AppendValueOf]
-  [GetVariable b]
+  [GetLValue b]
 
 #data
 x[%GET a%]c
 #actions
 [AppendString x]
 [AppendValueOf]
-  [GetVariable a]
+  [GetLValue a]
 [AppendString c]
 
 #data
@@ -88,18 +88,18 @@ a[%b
 [%SET a=b%]
 #actions
 [Assign]
-  [GetVariable a]
-  [GetVariable b]
+  [GetLValue a]
+  [GetLValue b]
 
 #data
 [%a=b%]
 #actions
 [Assign]
-  [GetVariable a]
-  [GetVariable b]
+  [GetLValue a]
+  [GetLValue b]
 
 #data
 [%a="b"%]
 [Assign]
-  [GetVariable a]
+  [GetLValue a]
   [String b]

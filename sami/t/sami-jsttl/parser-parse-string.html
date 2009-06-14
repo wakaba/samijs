@@ -17,23 +17,22 @@
   directives := directives ";";
   directives := directive;
 
-  directive := directive errors;
   directive := get;
   directive := set;
   
-  get := 'GET' get-expression;
-  get := get-expression;
-  
-  get-expression := expression filters conditions;
-  get-expression := expression filters;
-  get-expression := expression conditions;
-  get-expression := expression;
+  get := 'GET' righthand;
+  get := righthand;
+
+  righthand := expression filters conditions;
+  righthand := expression filters;
+  righthand := expression conditions;
+  righthand := expression;
   
   set := 'SET' set-expression;
   set := set-expression;
   
   set-expressions := set-expression;
-  set-expression := variable-name "=" get-expression;
+  set-expression := variable-name "=" righthand;
   
   expression := expression "+" expression1;
   expression := expression1;

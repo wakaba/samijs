@@ -501,10 +501,116 @@ JSTTL.Parser = new SAMI.Subclass (function () {
 }, SAMI.Parser.LR1, {
 
   _processLR1StackObjects: function (key, objs) {
-    return {type: key, value: /* key + */ "{\n  " + objs.map (function (s) {
-      return s.type + ': ' + s.value;
-    }).list.join (',\n').replace (/\n/g, "\n  ") + '\n}'};
+    var pr = this._processParsingNode[key];
+    if (pr) {
+      return {type: key, value: pr (objs)};
+    } else {
+      return {type: key, value: /* key + */ "{\n  " + objs.map (function (s) {
+        return s.type + ': ' + s.value;
+      }).list.join (',\n').replace (/\n/g, "\n  ") + '\n}'};
+    }
   }, // _processLR1StackObjects
+
+  _processParsingNode: {
+    template: function (objs) {
+      if (objs.list.length == 2) {
+        var al;
+        if (objs.list[0].value instanceof JSTTL.Action.ActionList) {
+          al = objs.list[0].value;
+        } else {
+          al = new JSTTL.Action.ActionList;
+          al.push (objs.list[0].value);
+        }
+
+        if (objs.list[1].type == 'string') {
+          al.push (new JSTTL.Action.AppendString (objs.list[1].value));
+        } else {
+          al.push (objs.list[1].value);
+        }
+        
+        return al;
+      } else {
+        if (objs.list[0].type == 'string') {
+          return new JSTTL.Action.AppendString (objs.list[0].value);
+        } else {
+          return objs.list[0].value;
+        }
+      }
+    }, // template
+
+    directives: function (objs) {
+      if (objs.list.length == 3) { // directive ; directive
+        var al;
+        if (objs.list[0].value instanceof JSTTL.Action.ActionList) {
+          al = objs.list[0].value;
+        } else {
+          al = new JSTTL.Action.ActionList;
+          al.push (objs.list[0].value);
+        }
+
+        al.push (objs.list[1].value);
+        return al;
+      } else {
+        return objs.list[0].value;
+      }
+    }, // directives
+
+    directive: function (objs) {
+      return objs.list[0].value;
+    }, // directive
+
+    get: function (objs) {
+      if (objs.list.length == 2) { // GET foo
+        return new JSTTL.Action.AppendValueOf (objs.list[1].value);
+      } else { // foo
+        return new JSTTL.Action.AppendValueOf (objs.list[0].value);
+      }
+    }, // get
+
+    righthand: function (objs) {
+      // XXX
+
+      return objs.list[0].value;
+    }, // objs
+
+    expression: function (objs) {
+      if (objs.list.length == 2) {
+        // XXX
+      } else {
+        return objs.list[0].value;
+      }
+    }, // expression
+    expression1: function (objs) {
+      if (objs.list.length == 2) {
+        // XXX
+      } else {
+        return objs.list[0].value;
+      }
+    }, // expression1
+    expression2: function (objs) {
+      if (objs.list.length == 2) {
+        // XXX
+      } else {
+        return objs.list[0].value;
+      }
+    }, // expression2
+
+    term: function function (objs) {
+      return objs.list[0].value;
+    }, // term
+    'scalar-term': function (objs) {
+      return objs.list[0].value;
+    }, // scalar-term
+
+    lvalue: function (objs) {
+      // variable-name
+      return new JSTTL.Action.GetLValue (objs.list[0].value);
+    }, // lvalue
+
+    'variable-name': function (objs) {
+      return objs.list[0].value;
+    } // variable-name
+  }, // _processParsingNode
 
   parseString: function (s) {
     var self = this;
@@ -701,11 +807,11 @@ JSTTL.Action.AppendValueOf = new SAMI.Subclass (function (s) {
   type: 'AppendValueOf'
 }); // AppendValueOf
 
-JSTTL.Action.GetVariable = new SAMI.Subclass (function (s) {
+JSTTL.Action.GetLValue = new SAMI.Subclass (function (s) {
   this.value = s;
 }, JSTTL.Action, {
-  type: 'GetVariable'
-}); // GetVariable
+  type: 'GetLValue'
+}); // GetLValue
 
 /* --- Onload --- */
 
