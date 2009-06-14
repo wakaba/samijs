@@ -1285,13 +1285,17 @@ outn('goTo: ' + goTo );
           stack.push (this._parsingTable.getRowByIndex (goTo.nextRowId));
         }
       } else {
-        this.reportError ({type: 'parse error', level: 'm', token: token, value: stack + ''});
+        this._onParseError (stack, token, tokens);
         break;
       }
     }
 
     return null;
-  } // _parseTokens
+  }, // _parseTokens
+
+  _onParseError: function (stack, token, tokens) {
+    this.reportError ({type: 'parse error', level: 'm', token: token, value: stack + ''});
+  } // _onParseError
 }); // LR1
 
 SAMI.Parser.LR1.Stack = new SAMI.Subclass (function () {

@@ -8,12 +8,15 @@
 
 <pre id=grammer>
 
-  template := template directives; XXX := 'empty';
+  template := template tag; // XXX empty case
   template := template 'string';
-  template := directives;
+  template := tag;
   template := 'string';
 
-  directives := directives ";" directive; XXX := 'empty';
+  tag := directives 'eod';
+  tag := 'eod';
+
+  directives := directives ";" directive;
   directives := directives ";";
   directives := directive;
 
@@ -31,7 +34,7 @@
   set := 'SET' set-expression;
   set := set-expression;
   
-  set-expressions := set-expression; // XXX
+  set-expressions := set-expression; //XXX
   set-expression := variable-name "=" righthand;
   
   expression := expression "+" expression1;
@@ -47,6 +50,7 @@
   term := "(" expression ")";
   
   scalar-term := lvalue;
+  scalar-term := 'string';
   scalar-term := "number";
   
   lvalue := lvalue "." variable-name;

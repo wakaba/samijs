@@ -492,12 +492,6 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     out ('Error: Unexpected token type {' + ev.token.type + ', ' + ev.token.value + '}; ' + ev.value);
   });
 
-
-  // XXX
-  new SAMI.Observer ('error', this, function (ev) {
-    out ('Error: Unexpected token type {' + ev.token.type + ', ' + ev.token.value + '}; ' + ev.value);
-  });
-
 }, SAMI.Parser.LR1, {
 
   _processLR1StackObjects: function (key, objs) {
@@ -537,6 +531,14 @@ JSTTL.Parser = new SAMI.Subclass (function () {
         }
       }
     }, // template
+
+    tag: function (objs) {
+      if (objs.list.length == 2) {
+        return objs.list[0].value;
+      } else {
+        return new JSTTL.Action.ActionList;
+      }
+    }, // tag
 
     directives: function (objs) {
       if (objs.list.length == 3) { // directive ; directive
@@ -579,7 +581,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
       var left;
       if (objs.list[0].value instanceof JSTTL.Action) {
         left = objs.list[0].value;
-      } else if (objs.list[0].type == 'identifier') {
+      } else if (objs.list[0].type == 'variable-name') {
         left = new JSTTL.Action.GetLValue (objs.list[0].value);
       } else {
         left = new JSTTL.Action.String (objs.list[0].value);
@@ -620,7 +622,11 @@ JSTTL.Parser = new SAMI.Subclass (function () {
       return objs.list[0].value;
     }, // term
     'scalar-term': function (objs) {
-      return objs.list[0].value;
+      if (objs.list[0].type == 'string') {
+        return new JSTTL.Action.String (objs.list[0].value);
+      } else {
+        return objs.list[0].value;
+      }
     }, // scalar-term
 
     lvalue: function (objs) {
@@ -632,6 +638,16 @@ JSTTL.Parser = new SAMI.Subclass (function () {
       return objs.list[0].value;
     } // variable-name
   }, // _processParsingNode
+
+  _onParseError: function (stack, token, tokens) {
+    this.reportError ({
+      type: 'unexpected token', level: 'm',
+      token: token,
+      line: token.line, column: token.column,
+      text: token.type, value: token.value
+    });
+    
+  }, // _onParseError
 
   parseString: function (s) {
     var self = this;
@@ -647,7 +663,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
         tokens.append (self.tokenizeDirectives
             (t.valueRef.substring (t.valueStart, t.valueEnd),
              t.line, t.columnInner));
-        tokens.pop (); // EOF
+        tokens.getLast ().type = 'eod';
       } else {
         this.die ('Unknown token type: ' + t.type);
       }

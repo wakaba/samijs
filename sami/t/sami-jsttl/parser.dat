@@ -73,7 +73,7 @@ x[%-GET a=b;d%]c
 #data
 a[%GET%]b
 #errors
-1;7;m;unexpected token;eof;
+1;7;m;unexpected token;eod;
 #actions
 [AppendString a]
 [AppendString b]
@@ -99,7 +99,7 @@ a[%b
   [GetLValue b]
 
 #data
-[%a="b"%]
+[%a='b'%]
 #actions
 [Assign]
   [GetLValue a]
