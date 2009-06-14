@@ -1,8 +1,9 @@
 #data
 a[%%]b
 #actions
-[AppendString a]
-[AppendString b]
+| [AppendString a]
+| 
+| [AppendString b]
 
 #data
 [%a%]
