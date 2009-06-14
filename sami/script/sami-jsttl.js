@@ -516,7 +516,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
           al.push (objs.list[0].value);
         }
 
-        if (objs.list[1].type == 'string') {
+        if (objs.list[1].type == 'text') {
           al.push (new JSTTL.Action.AppendString (objs.list[1].value));
         } else {
           al.push (objs.list[1].value);
@@ -524,7 +524,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
         
         return al;
       } else {
-        if (objs.list[0].type == 'string') {
+        if (objs.list[0].type == 'text') {
           return new JSTTL.Action.AppendString (objs.list[0].value);
         } else {
           return objs.list[0].value;
@@ -650,19 +650,17 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     // discard all states and tokens in the current (opening) directive tag.
     while (stack.list.length > 1) {
       var state = stack.pop (); // state
-      var token = stack.pop ();
-      if (token.type == 'template') {
-        stack.push (token);
+      var stoken = stack.pop ();
+      if (stoken.type == 'template') {
+        stack.push (stoken);
         stack.push (state);
         break;
       }
     }
 
     // discard all tokens until 'eod' (or 'EOF' for safety) appears.
-    if (token.type != 'eod') {
-      while (token.type != 'eod') {
-        token = tokens.shift ();
-      }
+    while (token.type != 'eod') {
+      token = tokens.shift ();
     }
 
     return true; // continue processing
@@ -676,7 +674,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     var tokens = new SAMI.List;
     this.tokenizeTemplate (s).forEach (function (t) {
       if (t.type == 'text') {
-        tokens.push ({type: 'string',
+        tokens.push ({type: 'text',
                       value: t.valueRef.substring (t.valueStart, t.valueEnd)});
       } else if (t.type == 'tag') {
         tokens.append (self.tokenizeDirectives
@@ -691,135 +689,8 @@ JSTTL.Parser = new SAMI.Subclass (function () {
 
     outn (tokens.toSource());
 
-    var r = this._parseTokens (tokens) || {}; // XXX
-    out (r.value);
-    return r.value || ''; // XXX
-
-    var r = new JSTTL.Action.ActionList;
-
-    var self = this;
-
-    var stack = new SAMI.List;
-    stack.push ({type: '*bottommost'});
-
-    var actionTypes = { // actionTypes[stackTopType][newTokenType]
-      '*bottommost': {
-        'eof': '*nop'
-      },
-
-      'GET': {
-        'identifier': 'GetVariable/push'
-      },
-
-      'SET': {
-        'identifier': 'SetVariable/push'
-      },
-
-      'getOrSet': {
-        'identifier': 'GetOrSetVariable/push',
-      },
-
-      'GetVariable': {
-        'eof': 'pop/AppendValueOf/pop'
-      },
-
-      'GetOrSetVariable': {
-        'eof': 'pop/AppendValueOf/pop'
-      },
-
-      'SetVariable': {
-        '=': 'push'
-      },
-
-      '=': {
-        
-      },
-
-      'default': {
-        'GET': 'push',
-        'SET': 'push',
-        'string': 'AppendString',
-        'identifier': 'push-getOrSet/redo'
-      },
-
-      'error': {
-        'eof': 'recoverFromError',
-        'default': '*nop'
-      }
-    };
-
-    var tokens = new SAMI.List;
-    this.tokenizeTemplate (s).forEach (function (t) {
-      if (t.type == 'text') {
-        tokens.push ({type: 'string',
-                      value: t.valueRef.substring (t.valueStart, t.valueEnd)});
-      } else if (t.type == 'tag') {
-        tokens.append (self.tokenizeDirectives
-            (t.valueRef.substring (t.valueStart, t.valueEnd),
-             t.line, t.columnInner));
-      } else {
-        this.die ('Unknown token type: ' + t.type);
-      }
-    });
-
-    while (tokens.list.length || stack.list.length > 1) {
-      var t = tokens.shift () || {type: 'eof'};
-
-      var actionType = (actionTypes[stack.getLast ().type] || actionTypes['default'])[t.type]
-          || (actionTypes[stack.getLast ().type] || {})['default']
-          || actionTypes['default'][t.type]
-          || '*unexpectedToken';
-out('stacktop: ' + stack.getLast ().type + ', token: ' + t.type + ' -> ' + actionType);
-
-      if (actionType == 'GetOrSetVariable/push') {
-        var a = new JSTTL.Action.GetVariable (t.value);
-        a.type = 'GetOrSetVariable';
-        stack.push (a);
-      } else if (actionType == 'GetVariable/push') {
-        var a = new JSTTL.Action.GetVariable (t.value);
-        stack.push (a);
-      } else if (actionType == 'SetVariable/push') {
-        var a = new JSTTL.Action.GetVariable (t.value);
-        a.type = 'SetVariable';
-        stack.push (a);
-      } else if (actionType == 'pop/AppendValueOf/pop') {
-        var a = new JSTTL.Action.AppendValueOf (stack.pop ());
-        r.push (a);
-        stack.pop (); // 'GET' / 'getOrSet'
-      } else if (actionType == 'pop/AppendValueOf') {
-        var a = new JSTTL.Action.AppendValueOf (stack.pop ());
-        r.push (a);
-      } else if (actionType == 'AppendString') {
-        var a = new JSTTL.Action.AppendString (t.value);
-        r.push (a);
-      } else if (actionType == 'push') {
-        stack.push (t);
-      } else if (actionType == 'push-getOrSet/redo') {
-        stack.push ({type: 'getOrSet'});
-        tokens.unshift (t);
-      } else if (actionType == 'recoverFromError') {
-        while (stack.list.length > 1) {
-          stack.pop ();
-        }
-      } else if (actionType == '*nop') {
-        //
-      } else if (actionType == '*end') {
-out(stack.list);
-        break;
-      } else if (actionType == '*unexpectedToken') {
-        this.reportError ({
-          type: 'unexpected token', level: 'm',
-          text: t.type, value: t.value,
-          line: t.line, column: t.column
-        });
-        stack.push ({type: 'error'});
-        if (t.type == 'eof') tokens.unshift (t);
-      } else {
-        this.die ('Unknown action type: actionTypes[' + stack.getLast ().type + '][' + t.type + '] = ' + actionType);
-      }
-    }
-
-    return r;
+    var r = this._parseTokens (tokens);
+    return r.value;
   } // parseString
 
 }); // Parser
