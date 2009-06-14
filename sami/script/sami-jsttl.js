@@ -395,7 +395,7 @@ JSTTL.Tokenizer = SAMI.Class (function () {
     }
     tokens.c = s;
 
-    tokens.push ({type: 'eof', line: ln, column: cn});
+    tokens.push ({type: 'EOF', line: ln, column: cn});
 
     return tokens;
   } // tokenizeDirectives
@@ -484,9 +484,55 @@ JSTTL.Tokenizer.KEYWORDS = {
 
 JSTTL.Parser = new SAMI.Subclass (function () {
 
-}, JSTTL.Tokenizer, {
+  // XXX
+  var grammer = $('grammer').textContent;
+
+  // XXX
+  this._parsingTable = SAMI.PG.LR1.rulesStringToParsingTable (grammer, null, function (ev) {
+    out ('Error: Unexpected token type {' + ev.token.type + ', ' + ev.token.value + '}; ' + ev.value);
+  });
+
+
+  // XXX
+  new SAMI.Observer ('error', this, function (ev) {
+    out ('Error: Unexpected token type {' + ev.token.type + ', ' + ev.token.value + '}; ' + ev.value);
+  });
+
+}, SAMI.Parser.LR1, {
+
+  _processLR1StackObjects: function (key, objs) {
+    return {type: key, value: /* key + */ "{\n  " + objs.map (function (s) {
+      return s.type + ': ' + s.value;
+    }).list.join (',\n').replace (/\n/g, "\n  ") + '\n}'};
+  }, // _processLR1StackObjects
 
   parseString: function (s) {
+    var self = this;
+
+    outn (s);
+
+    var tokens = new SAMI.List;
+    this.tokenizeTemplate (s).forEach (function (t) {
+      if (t.type == 'text') {
+        tokens.push ({type: 'string',
+                      value: t.valueRef.substring (t.valueStart, t.valueEnd)});
+      } else if (t.type == 'tag') {
+        tokens.append (self.tokenizeDirectives
+            (t.valueRef.substring (t.valueStart, t.valueEnd),
+             t.line, t.columnInner));
+        tokens.pop (); // EOF
+      } else {
+        this.die ('Unknown token type: ' + t.type);
+      }
+    });
+    tokens.push ({type: 'EOF'});
+
+    outn (tokens.toSource());
+
+    var r = this._parseTokens (tokens) || {}; // XXX
+    out (r.value);
+    return r.value || ''; // XXX
+
     var r = new JSTTL.Action.ActionList;
 
     var self = this;
@@ -503,6 +549,10 @@ JSTTL.Parser = new SAMI.Subclass (function () {
         'identifier': 'GetVariable/push'
       },
 
+      'SET': {
+        'identifier': 'SetVariable/push'
+      },
+
       'getOrSet': {
         'identifier': 'GetOrSetVariable/push',
       },
@@ -515,8 +565,17 @@ JSTTL.Parser = new SAMI.Subclass (function () {
         'eof': 'pop/AppendValueOf/pop'
       },
 
+      'SetVariable': {
+        '=': 'push'
+      },
+
+      '=': {
+        
+      },
+
       'default': {
         'GET': 'push',
+        'SET': 'push',
         'string': 'AppendString',
         'identifier': 'push-getOrSet/redo'
       },
@@ -556,6 +615,10 @@ out('stacktop: ' + stack.getLast ().type + ', token: ' + t.type + ' -> ' + actio
         stack.push (a);
       } else if (actionType == 'GetVariable/push') {
         var a = new JSTTL.Action.GetVariable (t.value);
+        stack.push (a);
+      } else if (actionType == 'SetVariable/push') {
+        var a = new JSTTL.Action.GetVariable (t.value);
+        a.type = 'SetVariable';
         stack.push (a);
       } else if (actionType == 'pop/AppendValueOf/pop') {
         var a = new JSTTL.Action.AppendValueOf (stack.pop ());
@@ -598,6 +661,7 @@ out(stack.list);
   } // parseString
 
 }); // Parser
+SAMI.Class.mix (JSTTL.Parser, JSTTL.Tokenizer);
 
 /* --- Actions --- */
 

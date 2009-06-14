@@ -4,15 +4,70 @@
 
 <p id=result class=FAIL>FAIL (noscript)</p>
 
-<pre id=result-tap></pre>
+<pre id=result-tap style="white-space: pre-wrap"></pre>
+
+<pre id=grammer>
+
+  template := template directives; XXX := 'empty';
+  template := template 'string';
+  template := directives;
+  template := 'string';
+
+  directives := directives ";" directive; XXX := 'empty';
+  directives := directives ";";
+  directives := directive;
+
+  directive := directive errors;
+  directive := get;
+  directive := set;
+  
+  get := 'GET' get-expression;
+  get := get-expression;
+  
+  get-expression := expression filters conditions;
+  get-expression := expression filters;
+  get-expression := expression conditions;
+  get-expression := expression;
+  
+  set := 'SET' set-expression;
+  set := set-expression;
+  
+  set-expressions := set-expression;
+  set-expression := variable-name "=" get-expression;
+  
+  expression := expression "+" expression1;
+  expression := expression1;
+  
+  expression1 := expression1 "*" expression2;
+  expression1 := expression2;
+  
+  expression2 := "not" term;
+  expression2 := term;
+  
+  term := scalar-term;
+  term := "(" expression ")";
+  
+  scalar-term := lvalue;
+  scalar-term := "number";
+  
+  lvalue := lvalue "." variable-name;
+  lvalue := variable-name;
+   
+  variable-name := "identifier";
+  
+
+
+</pre>
 
 <script src="../../script/sami-core.js"></script>
 <script src="../../script/sami-jsttl.js"></script>
+<script src="../../script/sami-pg.js"></script><!-- XXX -->
 <script src="../../script/sami-test.js"></script>
 <script>
   var r = document.getElementById ('result');
   var tap = document.getElementById ('result-tap');
 
+  SAMI.Global.install ();
   SAMI.Test.Utility.install ();
 
   var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
