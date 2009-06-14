@@ -1285,8 +1285,9 @@ outn('goTo: ' + goTo );
           stack.push (this._parsingTable.getRowByIndex (goTo.nextRowId));
         }
       } else {
-        this._onParseError (stack, token, tokens);
-        break;
+        if (!this._onParseError (stack, token, tokens)) {
+          break;
+        }
       }
     }
 

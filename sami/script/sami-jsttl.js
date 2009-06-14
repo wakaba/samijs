@@ -646,7 +646,26 @@ JSTTL.Parser = new SAMI.Subclass (function () {
       line: token.line, column: token.column,
       text: token.type, value: token.value
     });
-    
+
+    // discard all states and tokens in the current (opening) directive tag.
+    while (stack.list.length > 1) {
+      var state = stack.pop (); // state
+      var token = stack.pop ();
+      if (token.type == 'template') {
+        stack.push (token);
+        stack.push (state);
+        break;
+      }
+    }
+
+    // discard all tokens until 'eod' (or 'EOF' for safety) appears.
+    if (token.type != 'eod') {
+      while (token.type != 'eod') {
+        token = tokens.shift ();
+      }
+    }
+
+    return true; // continue processing
   }, // _onParseError
 
   parseString: function (s) {
