@@ -433,8 +433,9 @@ SAMI.PG.LR1.RulesParser = new SAMI.Subclass (function () {
         t.value = v.replace (/^./, '').replace (/.$/, '').replace (/\\(.)/g, function (_, v) { return v });
       }
     },
+    {pattern: /:=/},
     {pattern: /\s+/, ignore: true},
-    {pattern: /:=/}
+    {pattern: /\/\/[^\u000D\u000A\u000C]*/, ignore: true}
   ]), // _patterns
 
   _processLR1StackObjects: function (key, objs) {

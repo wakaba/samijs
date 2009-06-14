@@ -567,6 +567,27 @@ JSTTL.Parser = new SAMI.Subclass (function () {
       }
     }, // get
 
+    set: function (objs) {
+      if (objs.list.length == 2) { // SET foo
+        return objs.list[1].value;
+      } else { // foo
+        return objs.list[0].value;
+      }
+    }, // set
+
+    'set-expression': function (objs) {
+      var left;
+      if (objs.list[0].value instanceof JSTTL.Action) {
+        left = objs.list[0].value;
+      } else if (objs.list[0].type == 'identifier') {
+        left = new JSTTL.Action.GetLValue (objs.list[0].value);
+      } else {
+        left = new JSTTL.Action.String (objs.list[0].value);
+      }
+
+      return new JSTTL.Action.Assign (left, objs.list[2].value);
+    }, // set-expression
+
     righthand: function (objs) {
       // XXX
 
@@ -780,6 +801,9 @@ JSTTL.Action = new SAMI.Class (function () {
     if (this.action != null) {
       v += "\n  " + this.action.toString ();
     }
+    if (this.action2 != null) {
+      v += "\n  " + this.action2.toString ();
+    }
     return v;
   } // toString
 }); // Action
@@ -807,11 +831,24 @@ JSTTL.Action.AppendValueOf = new SAMI.Subclass (function (s) {
   type: 'AppendValueOf'
 }); // AppendValueOf
 
+JSTTL.Action.Assign = new SAMI.Subclass (function (s, t) {
+  this.action = s;
+  this.action2 = t;
+}, JSTTL.Action, {
+  type: 'Assign'
+}); // Assign
+
 JSTTL.Action.GetLValue = new SAMI.Subclass (function (s) {
   this.value = s;
 }, JSTTL.Action, {
   type: 'GetLValue'
 }); // GetLValue
+
+JSTTL.Action.String = new SAMI.Subclass (function (s) {
+  this.value = s;
+}, JSTTL.Action, {
+  type: 'String'
+}); // String
 
 /* --- Onload --- */
 
