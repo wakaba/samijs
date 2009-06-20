@@ -510,6 +510,14 @@ JSTTL.Parser = new SAMI.Subclass (function () {
   }, // _processLR1StackObjects
 
   _processParsingNode: {
+    content: function (objs) {
+      if (objs.list.length == 2) {
+        return objs.list[1].value;
+      } else {
+        return new JSTTL.Action.ActionList;
+      }
+    }, // content
+
     template: function (objs) {
       if (objs.list.length == 2) {
         var al;
@@ -680,7 +688,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     while (stack.list.length > 1) {
       var state = stack.pop (); // state
       var stoken = stack.pop ();
-      if (stoken.type == 'template' || stoken.type == 'text') {
+      if (stoken.type == 'template' || stoken.type == 'text' || stoken.type == 'content-start') {
         stack.push (stoken);
         stack.push (state);
         break;
@@ -692,6 +700,11 @@ JSTTL.Parser = new SAMI.Subclass (function () {
       token = tokens.shift ();
     }
 
+    // dummy
+    if (tokens.length < 4) {
+      tokens.unshift ({type: 'text', value: ''});
+    }
+
     return true; // continue processing
   }, // _onParseError
 
@@ -701,6 +714,8 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     outn (s);
 
     var tokens = new SAMI.List;
+    tokens.push ({type: 'content-start'});
+
     this.tokenizeTemplate (s).forEach (function (t) {
       if (t.type == 'text') {
         tokens.push ({type: 'text',

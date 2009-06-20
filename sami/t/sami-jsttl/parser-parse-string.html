@@ -8,7 +8,11 @@
 
 <pre id=grammer>
 
-  template := template tag; // XXX empty case
+  // to handle empty case
+  content := 'content-start' template;
+  content := 'content-start';
+
+  template := template tag;
   template := template 'text';
   template := tag;
   template := 'text';

@@ -212,6 +212,7 @@ a[% %error% %]b
 #data
 #errors
 #actions
+| 
 
 #data
 [% %error% %]
