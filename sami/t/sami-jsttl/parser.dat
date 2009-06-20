@@ -105,3 +105,56 @@ a[%b
 [Assign]
   [GetLValue a]
   [String b]
+
+#data
+[% a + b %]
+#actions
+[AppendValueOf]
+  [+]
+    [GetLValue a]
+    [GetLValue b]
+
+#data
+[% a + b * c %]
+#actions
+[AppendValueOf]
+  [+]
+    [GetLValue a]
+    [*]
+      [GetLValue b]
+      [GetLValue c]
+
+#data
+[% a * b + c %]
+#actions
+[AppendValueOf]
+  [+]
+    [*]
+      [GetLValue a]
+      [GetLValue b]
+    [GetLValue c]
+
+#data
+[% (a + b) * c %]
+#actions
+[AppendValueOf]
+  [*]
+    [+]
+      [GetLValue a]
+      [GetLValue b]
+    [GetLValue c]
+
+#data
+[% a + b * c || d > e %]
+#actions
+[AppendValueOf]
+  [||]
+    [+]
+      [GetLValue a]
+      [*]
+        [GetLValue b]
+        [GetLValue c]
+    [>]
+      [GetLValue d]
+      [GetLValue e]
+

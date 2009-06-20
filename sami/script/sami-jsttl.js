@@ -442,14 +442,15 @@ JSTTL.Tokenizer.KEYWORDS = {
   END: true,
   VIEW: true,
   JAVASCRIPT: true,
-  'MOD': '%',
-  'Mod': '%',
-  'mOd': '%',
-  'moD': '%',
-  'MoD': '%',
-  'MOd': '%',
-  'mOD': '%',
-  'mod': '%',
+  'MOD': 'mod',
+  'Mod': 'mod',
+  'mOd': 'mod',
+  'moD': 'mod',
+  'MoD': 'mod',
+  'MOd': 'mod',
+  'mOD': 'mod',
+  'mod': 'mod',
+  '%': 'mod',
   'div': 'div',
   'Div': 'div',
   'dIv': 'div',
@@ -466,10 +467,12 @@ JSTTL.Tokenizer.KEYWORDS = {
   'aND': 'and',
   'AnD': 'and',
   'and': 'and',
+  '&&': 'and',
   'OR': 'or',
   'Or': 'or',
   'oR': 'or',
   'or': 'or',
+  '||': 'or',
   'NOT': 'not',
   'Not': 'not',
   'nOt': 'not',
@@ -477,7 +480,8 @@ JSTTL.Tokenizer.KEYWORDS = {
   'NoT': 'not',
   'NOt': 'not',
   'noT': 'not',
-  'not': 'not'
+  'not': 'not',
+  '!': 'not'
 }; // KEYWORDS
 
 /* --- Parser --- */
@@ -597,29 +601,52 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     }, // objs
 
     expression: function (objs) {
-      if (objs.list.length == 2) {
-        // XXX
+      if (objs.list.length == 3) {
+        return new JSTTL.Action.BinaryOperation
+            (objs.list[1].type, objs.list[0].value, objs.list[2].value);
       } else {
         return objs.list[0].value;
       }
     }, // expression
     expression1: function (objs) {
-      if (objs.list.length == 2) {
-        // XXX
+      if (objs.list.length == 3) {
+        return new JSTTL.Action.BinaryOperation
+            (objs.list[1].type, objs.list[0].value, objs.list[2].value);
       } else {
         return objs.list[0].value;
       }
     }, // expression1
     expression2: function (objs) {
-      if (objs.list.length == 2) {
-        // XXX
+      if (objs.list.length == 3) {
+        return new JSTTL.Action.BinaryOperation
+            (objs.list[1].type, objs.list[0].value, objs.list[2].value);
       } else {
         return objs.list[0].value;
       }
     }, // expression2
+    expression3: function (objs) {
+      if (objs.list.length == 3) {
+        return new JSTTL.Action.BinaryOperation
+            (objs.list[1].type, objs.list[0].value, objs.list[2].value);
+      } else {
+        return objs.list[0].value;
+      }
+    }, // expression3
+    expression4: function (objs) {
+      if (objs.list.length == 2) {
+        return new JSTTL.Action.UnaryOperation
+            (objs.list[1].type, objs.list[0].value);
+      } else {
+        return objs.list[0].value;
+      }
+    }, // expression4
 
     term: function function (objs) {
-      return objs.list[0].value;
+      if (objs.list.length == 3) {
+        return objs.list[1].value;
+      } else {
+        return objs.list[0].value;
+      }
     }, // term
     'scalar-term': function (objs) {
       if (objs.list[0].type == 'string') {
@@ -702,13 +729,14 @@ JSTTL.Action = new SAMI.Class (function () {
 
 }, {
   type: 'Action',
-  toString: function () {
+  toString: function (indent) {
+    if (indent == null) indent = '';
     var v = '[' + this.type + (this.value != undefined ? ' ' + this.value : '') + ']';
     if (this.action != null) {
-      v += "\n  " + this.action.toString ();
+      v += "\n  " + indent + this.action.toString (indent + '  ');
     }
     if (this.action2 != null) {
-      v += "\n  " + this.action2.toString ();
+      v += "\n  " + indent + this.action2.toString (indent + '  ');
     }
     return v;
   } // toString
@@ -743,6 +771,21 @@ JSTTL.Action.Assign = new SAMI.Subclass (function (s, t) {
 }, JSTTL.Action, {
   type: 'Assign'
 }); // Assign
+
+JSTTL.Action.UnaryOperation = new SAMI.Subclass (function (op, a) {
+  this.action = a;
+  this.type = op;
+}, JSTTL.Action, {
+  
+}); // UnaryOperation
+
+JSTTL.Action.BinaryOperation = new SAMI.Subclass (function (op, a, b) {
+  this.action = a;
+  this.action2 = b;
+  this.type = op;
+}, JSTTL.Action, {
+  
+}); // BinaryOperation
 
 JSTTL.Action.GetLValue = new SAMI.Subclass (function (s) {
   this.value = s;

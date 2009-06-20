@@ -37,14 +37,31 @@
   set-expressions := set-expression; //XXX
   set-expression := variable-name "=" righthand;
   
-  expression := expression "+" expression1;
+  expression := expression "&&" expression1;
+  expression := expression "||" expression1;
   expression := expression1;
-  
-  expression1 := expression1 "*" expression2;
+
+  expression1 := expression1 "==" expression2;
+  expression1 := expression1 "!=" expression2;
+  expression1 := expression1 "<=" expression2;
+  expression1 := expression1 ">=" expression2;
+  expression1 := expression1 "<"  expression2;
+  expression1 := expression1 ">"  expression2;
   expression1 := expression2;
   
-  expression2 := "not" term;
-  expression2 := term;
+  expression2 := expression2 "+" expression3;
+  expression2 := expression2 "-" expression3;
+  expression2 := expression2 "_" expression3;
+  expression2 := expression3;
+
+  expression3 := expression3 "*" expression4;
+  expression3 := expression3 "/" expression4;
+  expression3 := expression3 "div" expression4;
+  expression3 := expression3 "mod" expression4;
+  expression3 := expression4;
+  
+  expression4 := "not" term;
+  expression4 := term;
   
   term := scalar-term;
   term := "(" expression ")";
