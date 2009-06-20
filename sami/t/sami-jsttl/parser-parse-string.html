@@ -12,6 +12,7 @@
   template := template 'text';
   template := tag;
   template := 'text';
+  template := 'EOF';
 
   tag := directives 'eod';
   tag := 'eod';
@@ -106,7 +107,7 @@
   }, function (test) {
     errors = new SAMI.List;
 
-    var actual = t.parseString (test.getField ('data')).toString ();
+    var actual = t.parseString (test.getField ('data')) + '';
 
     tm.is (actual, test.getField ('actions'), 'Actions - ' + test.getField ('data'));
     tm.is (errors.sort ().list.join ("\n"), new SAMI.List (test.getField ('errors')).sort ().list.join ("\n"), 'Errors - ' + test.getField ('data'));

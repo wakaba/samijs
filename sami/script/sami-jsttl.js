@@ -719,7 +719,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     outn (tokens.toSource());
 
     var r = this._parseTokens (tokens);
-    return r.value;
+    return r != null ? r.value : null;
   } // parseString
 
 }); // Parser

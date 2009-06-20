@@ -210,15 +210,19 @@ a[% %error% %]b
 [AppendString b]
 
 #data
+#errors
+#actions
+
+#data
 [% %error% %]
 #errors
-1;4;unexpected token;%;
+1;4;m;unexpected token;%;
 #actions
 
 #data
 [% %errors% %]a
 #errors
-1;4;unexpected token;%;
+1;4;m;unexpected token;%;
 #actions
 [AppendString a]
 
