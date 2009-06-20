@@ -635,7 +635,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     expression4: function (objs) {
       if (objs.list.length == 2) {
         return new JSTTL.Action.UnaryOperation
-            (objs.list[1].type, objs.list[0].value);
+            (objs.list[0].type, objs.list[1].value);
       } else {
         return objs.list[0].value;
       }
@@ -651,6 +651,8 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     'scalar-term': function (objs) {
       if (objs.list[0].type == 'string') {
         return new JSTTL.Action.String (objs.list[0].value);
+      } else if (objs.list[0].type == 'number') {
+        return new JSTTL.Action.Number (objs.list[0].value);
       } else {
         return objs.list[0].value;
       }
@@ -798,6 +800,12 @@ JSTTL.Action.String = new SAMI.Subclass (function (s) {
 }, JSTTL.Action, {
   type: 'String'
 }); // String
+
+JSTTL.Action.Number = new SAMI.Subclass (function (s) {
+  this.value = s;
+}, JSTTL.Action, {
+  type: 'Number'
+}); // Number
 
 /* --- Onload --- */
 

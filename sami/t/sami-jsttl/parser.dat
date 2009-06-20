@@ -158,3 +158,30 @@ a[%b
       [GetLValue d]
       [GetLValue e]
 
+#data
+[%- SET a = b * c + d -%]
+#actions
+[Assign]
+  [GetLValue a]
+  [+]
+    [*]
+      [GetLValue b]
+      [GetLValue c]
+    [GetLValue d]
+
+#data
+[% NOT a + b %]
+#actions
+[AppendValueOf]
+  [+]
+    [not]
+      [GetLValue a]
+    [GetLValue b]
+
+#data
+[% a * 60 %]
+#actions
+[AppendValueOf]
+  [*]
+    [GetLValue a]
+    [Number 60]
