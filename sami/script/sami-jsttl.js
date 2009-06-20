@@ -680,7 +680,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     while (stack.list.length > 1) {
       var state = stack.pop (); // state
       var stoken = stack.pop ();
-      if (stoken.type == 'template') {
+      if (stoken.type == 'template' || stoken.type == 'text') {
         stack.push (stoken);
         stack.push (state);
         break;

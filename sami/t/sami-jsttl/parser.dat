@@ -185,3 +185,48 @@ a[%b
   [*]
     [GetLValue a]
     [Number 60]
+
+#data
+[% "a" %]
+#actions
+[AppendValueOf]
+  [_]
+    [String ]
+    [String a]
+
+#data
+a[% %error% %]
+#errors
+1;5;m;unexpected token;%;
+#actions
+[AppendString a]
+
+#data
+a[% %error% %]b
+#errors
+1;5;m;unexpected token;%;
+#actions
+[AppendString a]
+[AppendString b]
+
+#data
+[% %error% %]
+#errors
+1;4;unexpected token;%;
+#actions
+
+#data
+[% %errors% %]a
+#errors
+1;4;unexpected token;%;
+#actions
+[AppendString a]
+
+#data
+[% "a$b" %]
+#actions
+[AppendValueOf]
+  [_]
+    [String ]
+    [String a]
+    [GetLValue b]
