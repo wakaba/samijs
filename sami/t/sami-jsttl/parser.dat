@@ -232,8 +232,9 @@ a[% %error% %]b
 #actions
 [AppendValueOf]
   [_]
-    [String ]
-    [String a]
+    [_]
+      [String ]
+      [String a]
     [GetLValue b]
 
 #data
