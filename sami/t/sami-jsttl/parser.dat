@@ -260,3 +260,22 @@ x[% BLOCK a %][%z%][% END %]y
   [AppendValueOf]
     [GetLValue z]
 [AppendString y]
+
+#data
+[% BLOCK a %]
+#errors
+1;13;m;unexpected token;EOF;
+#actions
+
+#data
+aaa[% BLOCK a %]
+#errors
+1;16;m;unexpected token;EOF;
+#actions
+[AppendString aaa]
+
+#data
+[% END %]
+#errors
+1;4;m;unexpected token;END;
+#actions

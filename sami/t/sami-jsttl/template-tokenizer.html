@@ -29,7 +29,9 @@
   }, function (test) {
     errors = new SAMI.List;
 
-    var actual = t.tokenizeTemplate (test.getField ('data')).map (function (token) {
+    var actual = t.tokenizeTemplate (test.getField ('data')).grep (function (t) {
+      return t.type != 'EOF';
+    }).map (function (token) {
       var lc = token.line + ';' + token.column + ';';
       var type = token.type;
       var value = token.valueRef.substring (token.valueStart, token.valueEnd);

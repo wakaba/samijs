@@ -140,6 +140,8 @@ JSTTL.Tokenizer = SAMI.Class (function () {
       }
     }
 
+    tokens.push ({type: 'EOF', line: l, column: c});
+
     return tokens;
   }, // tokenizeTemplate
 
@@ -712,15 +714,18 @@ JSTTL.Parser = new SAMI.Subclass (function () {
       }
     }
 
-    // discard all tokens until 'eod' (or 'EOF' for safety) appears.
-    while (token.type != 'eod') {
+    // discard all tokens until 'eod' or 'EOF' appears.
+    while (token.type != 'eod' && token.type != 'EOF') {
       token = tokens.shift ();
     }
 
-    // dummy
-    if (tokens.length < 4) {
-      tokens.unshift ({type: 'text', value: ''});
-    }
+    //// dummy
+    //if (tokens.list.length < 4) {
+      if (tokens.list.length == 0) {
+        tokens.unshift (token); // EOF
+      }
+    //  tokens.unshift ({type: 'text', value: ''});
+    //}
 
     return true; // continue processing
   }, // _onParseError
@@ -731,7 +736,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     outn (s);
 
     var tokens = new SAMI.List;
-    tokens.push ({type: 'content-start'});
+    tokens.push ({type: 'content-start', line: 1, column: 1});
 
     this.tokenizeTemplate (s).forEach (function (t) {
       if (t.type == 'text') {
@@ -742,11 +747,12 @@ JSTTL.Parser = new SAMI.Subclass (function () {
             (t.valueRef.substring (t.valueStart, t.valueEnd),
              t.line, t.columnInner));
         tokens.getLast ().type = 'eod';
+      } else if (t.type == 'EOF') {
+        tokens.push (t);
       } else {
         this.die ('Unknown token type: ' + t.type);
       }
     });
-    tokens.push ({type: 'EOF'});
 
     outn (tokens.toSource());
 
