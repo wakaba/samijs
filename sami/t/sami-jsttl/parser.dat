@@ -318,3 +318,77 @@ aaa[% BLOCK a %]
 |     [GetLValue b]
 | [AppendValueOf]
 |   [GetLValue c]
+
+#data
+[% UNLESS a %]b[% END %]
+#actions
+[If]
+  [not]
+    [GetLValue a]
+  [AppendString b]
+
+#data
+[% IF a %]b[% ELSE %]c[% END %]d
+#actions
+[If]
+  [GetLValue a]
+  [AppendString b]
+  [AppendString c]
+[AppendString d]
+
+#data
+[% IF a %]b[% ELSIF c %]d[% END %]e
+#actions
+[If]
+  [GetLValue a]
+  [AppendString b]
+  [If]
+    [GetLValue c]
+    [AppendString d]
+[AppendString e]
+
+#data
+[% IF a %]b[% ELSIF c %]d[% ELSE %]e[% END %]f
+#actions
+[If]
+  [GetLValue a]
+  [AppendString b]
+  [If]
+    [GetLValue c]
+    [AppendString d]
+    [AppendString e]
+[AppendString f]
+
+#data
+[% IF a %]b[% ELSIF c %]d[% ELSIF e %]f[% ELSE %]g[% END %]h
+#actions
+[If]
+  [GetLValue a]
+  [AppendString b]
+  [If]
+    [GetLValue c]
+    [AppendString d]
+    [If]
+      [GetLValue e]
+      [AppendString f]
+      [AppendString g]
+[AppendString h]
+
+#data
+[% IF a; b; ELSIF c; ELSIF d; ELSE; e; END; IF f %][% END %]
+#actions escaped
+[If]
+  [GetLValue a]
+  [AppendValueOf]
+    [GetLValue b]
+  [If]
+    [GetLValue c]
+   \u0020
+    [If]
+      [GetLValue d]
+     \u0020
+      [AppendValueOf]
+        [GetLValue e]
+[If]
+  [GetLValue f]
+ \u0020

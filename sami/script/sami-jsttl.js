@@ -629,13 +629,13 @@ JSTTL.Parser = new SAMI.Subclass (function () {
 
     'if': function (objs) {
       var cond = objs.list[1].value;
-      if (objs.list[0].type == 'UNLESS') {
+      if (objs.list[0].value == 'UNLESS') {
         cond = new JSTTL.Action.UnaryOperation ('not', cond);
       }
 
       if (objs.list.length == 5) { // IF exp opt-content else END
         return new JSTTL.Action.If
-            (cond, objs.list[2].value, opjs.list[3].value);
+            (cond, objs.list[2].value, objs.list[3].value);
       } else { // IF exp opt-content END
         return new JSTTL.Action.If
             (cond, objs.list[2].value);
@@ -643,7 +643,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     }, // if
 
     'if-unless': function (objs) {
-      return objs.list[0].value;
+      return objs.list[0].type;
     }, // if-unless
 
     'else': function (objs) {
