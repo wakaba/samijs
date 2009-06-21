@@ -567,7 +567,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
           al.push (objs.list[0].value);
         }
 
-        al.push (objs.list[1].value);
+        al.push (objs.list[2].value);
         return al;
       } else {
         return objs.list[0].value;
@@ -626,6 +626,63 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     'block-name': function (objs) {
       return objs.list[0].value;
     }, // block-name
+
+    'if': function (objs) {
+      var cond = objs.list[1].value;
+      if (objs.list[0].type == 'UNLESS') {
+        cond = new JSTTL.Action.UnaryOperation ('not', cond);
+      }
+
+      if (objs.list.length == 5) { // IF exp opt-content else END
+        return new JSTTL.Action.If
+            (cond, objs.list[2].value, opjs.list[3].value);
+      } else { // IF exp opt-content END
+        return new JSTTL.Action.If
+            (cond, objs.list[2].value);
+      }
+    }, // if
+
+    'if-unless': function (objs) {
+      return objs.list[0].value;
+    }, // if-unless
+
+    'else': function (objs) {
+      if (objs.list.length == 2) { // ELSE optional-content
+        return objs.list[1].value;
+      } else { // elsif
+        return objs.list[0].value;
+      }
+    }, // else
+
+    'elsif': function (objs) {
+      if (objs.list.length == 4) { // ELSIF expression opt-content else
+        return new JSTTL.Action.If
+            (objs.list[1].value, objs.list[2].value, objs.list[3].value);
+      } else { // ELSIF exp opt-content
+        return new JSTTL.Action.If
+            (objs.list[1].value, objs.list[2].value);
+      }
+    }, // elsif
+
+    'optional-content': function (objs) {
+      if (objs.list.length == 4) { // ';' directives 'eod' template
+        if (objs.list[1].value instanceof JSTTL.Action.ActionList) {
+          objs.list[1].value.append (objs.list[3].value);
+          return objs.list[1].value;
+        } else {
+          var l = new JSTTL.Action.ActionList;
+          l.push (objs.list[1].value);
+          l.push (objs.list[3].value);
+          return l;
+        }
+      } else if (objs.list.length == 3) { // ';' directives ('eod' | ';')
+        return objs.list[1].value;
+      } else if (objs.list.length == 2) { // 'eod' template
+        return objs.list[1].value;
+      } else { // 'eod', ';'
+        return new JSTTL.Action.ActionList;
+      }
+    }, // optional-content
 
     expression: function (objs) {
       if (objs.list.length == 3) {
@@ -778,6 +835,9 @@ JSTTL.Action = new SAMI.Class (function () {
     if (this.action2 != null) {
       v += "\n  " + indent + this.action2.toString (indent + '  ');
     }
+    if (this.action3 != null) {
+      v += "\n  " + indent + this.action3.toString (indent + '  ');
+    }
     return v;
   } // toString
 }); // Action
@@ -811,6 +871,14 @@ JSTTL.Action.Block = new SAMI.Subclass (function (name, actions) {
     return r;
   } // toString
 }); // Block
+
+JSTTL.Action.If = new SAMI.Subclass (function (c, t, f) {
+  this.action = c;
+  this.action2 = t;
+  this.action3 = f;
+}, JSTTL.Action, {
+  type: 'If'
+}); // If
 
 JSTTL.Action.AppendString = new SAMI.Subclass (function (s) {
   this.value = s;

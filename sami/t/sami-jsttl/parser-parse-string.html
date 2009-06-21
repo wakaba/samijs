@@ -23,10 +23,12 @@
   directives := directives ";" directive;
   directives := directives ";";
   directives := directive;
+  // directives := ";"; // XXX
 
   directive := get;
   directive := set;
   directive := block;
+  directive := if;
   
   get := 'GET' righthand;
   get := righthand;
@@ -44,10 +46,29 @@
 
   block := 'BLOCK' block-name 'eod' template 'END';
   block := 'BLOCK' block-name 'eod' 'END';
+  // XXX 'eod' template -> optional-content
 
   block-name := 'identifier';
   block-name := 'number';
   block-name := path; // XXX
+
+  if := if-unless expression optional-content else 'END';
+  if := if-unless expression optional-content 'END';
+  if-unless := 'IF';
+  if-unless := 'UNLESS';
+
+  else := 'ELSE' optional-content;
+  else := elsif;
+
+  elsif := 'ELSIF' expression optional-content else;
+  elsif := 'ELSIF' expression optional-content;
+
+  optional-content := 'eod' template;
+  optional-content := 'eod';
+  optional-content := ';' directives 'eod' template;
+  optional-content := ';' directives 'eod';
+  optional-content := ';' directives ';';
+  optional-content := ';';
   
   expression := expression "&&" expression1;
   expression := expression "||" expression1;

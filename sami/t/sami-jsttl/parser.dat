@@ -279,3 +279,42 @@ aaa[% BLOCK a %]
 #errors
 1;4;m;unexpected token;END;
 #actions
+
+#data
+[% IF a %][% END %]
+#actions escaped
+| [If]
+|   [GetLValue a]
+|  \u0020
+
+#data
+[% IF a; END %]
+#actions escaped
+| [If]
+|   [GetLValue a]
+|  \u0020
+
+#data
+[% IF a %]b[% END %]
+#actions escaped
+| [If]
+|   [GetLValue a]
+|   [AppendString b]
+
+#data
+[% IF a %]b[% END %]c
+#actions escaped
+| [If]
+|   [GetLValue a]
+|   [AppendString b]
+| [AppendString c]
+
+#data
+[% IF a; b; END; c %]
+#actions escaped
+| [If]
+|   [GetLValue a]
+|   [AppendValueOf]
+|     [GetLValue b]
+| [AppendValueOf]
+|   [GetLValue c]
