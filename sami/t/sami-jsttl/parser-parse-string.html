@@ -16,7 +16,6 @@
   template := template 'text';
   template := tag;
   template := 'text';
-  template := 'EOF';
 
   tag := directives 'eod';
   tag := 'eod';
@@ -27,13 +26,14 @@
 
   directive := get;
   directive := set;
+  directive := block;
   
   get := 'GET' righthand;
   get := righthand;
 
-  righthand := expression filters conditions;
-  righthand := expression filters;
-  righthand := expression conditions;
+  righthand := expression filters conditions; // XXX
+  righthand := expression filters; // XXX
+  righthand := expression conditions; // XXX
   righthand := expression;
   
   set := 'SET' set-expression;
@@ -41,6 +41,13 @@
   
   set-expressions := set-expression; //XXX
   set-expression := variable-name "=" righthand;
+
+  block := 'BLOCK' block-name 'eod' template 'END';
+  block := 'BLOCK' block-name 'eod' 'END';
+
+  block-name := 'identifier';
+  block-name := 'number';
+  block-name := path; // XXX
   
   expression := expression "&&" expression1;
   expression := expression "||" expression1;

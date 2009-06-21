@@ -235,3 +235,27 @@ a[% %error% %]b
     [String ]
     [String a]
     [GetLValue b]
+
+#data
+[% BLOCK a %]
+[% END %]
+#actions
+[Block a]
+  [AppendString 
+]
+
+#data
+x[% BLOCK a %][% END %]y
+#actions
+[AppendString x]
+[Block a]
+[AppendString y]
+
+#data
+x[% BLOCK a %][%z%][% END %]y
+#actions
+[AppendString x]
+[Block a]
+  [AppendValueOf]
+    [GetLValue z]
+[AppendString y]

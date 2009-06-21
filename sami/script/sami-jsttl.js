@@ -163,8 +163,9 @@ JSTTL.Tokenizer = SAMI.Class (function () {
       case := 'CASE' [expression / 'DEFAULT']
       goto := ('BREAK' / 'NEXT' / 'LAST') [condition]
       wrapper := 'WRAPPER' scalar-term arguments
-      block := 'BLOCK' (atom / number / path)
-      macro := 'MACRO' (atom / number / path) ['BLOCK']
+      block := 'BLOCK' block-name
+      macro := 'MACRO' block-name ['BLOCK']
+      block-name := atom / number / path
       end := 'END'
       filter := ('FILTER' / "|") scalar-term
       use := 'USE' scalar-term
@@ -175,7 +176,6 @@ JSTTL.Tokenizer = SAMI.Class (function () {
       monomial := ("!" / "not") expression
       binomial := expression ("or" / "and" / "&&" / "||" / "==" / "!=" / "<" / ">" / "<=" / ">=" / "+" / "-" / "*" / "/" / "_" / "mod" / "div" / "%") expression
       trinomial := expression "?" expression ":" expression
-      path := scalar-term
       term := scalar-term / list-literal / hash-literal
       scalar-term := lvalue / double-quoted / single-quoted / path / number / ref
       ref := "\" lvalue
@@ -185,7 +185,7 @@ JSTTL.Tokenizer = SAMI.Class (function () {
       dollar-variable := "$" atom
       enclosed-dollar-variable := "${" lvalue "}"
       double-quoted := <"> *(char - ("\" / <"> / "$") / "\" char / dollar-variable / enclosed-dollar-variable) <">
-      path := (*achar - number) 1*("/" *achar) - "/"
+      path := atom 1*("/" (atom / number)) ;; XXX abspath, relpath
       number := ["-"] 1*DIGIT ["." 1*DIGIT] ;; token
       list-literal := "[" *(term / ",") "]"
       hash-literal := "{" hash-items "}"
@@ -608,6 +608,20 @@ JSTTL.Parser = new SAMI.Subclass (function () {
       return objs.list[0].value;
     }, // objs
 
+    block: function (objs) {
+      if (objs.list.length == 5) { // BLOCK block-name eod template END
+        return new JSTTL.Action.Block
+            (objs.list[1].value, objs.list[3].value);
+      } else { // BLOCK block-name eod END
+        return new JSTTL.Action.Block
+            (objs.list[1].value, new JSTTL.Action.ActionList);
+      }
+    }, // block
+
+    'block-name': function (objs) {
+      return objs.list[0].value;
+    }, // block-name
+
     expression: function (objs) {
       if (objs.list.length == 3) {
         return new JSTTL.Action.BinaryOperation
@@ -769,6 +783,25 @@ JSTTL.Action.ActionList = new SAMI.Subclass (function () {
     return this.list.join ("\n");
   } // toString
 }); // ActionList
+
+JSTTL.Action.Block = new SAMI.Subclass (function (name, actions) {
+  this.name = name;
+  this.action = actions;
+}, JSTTL.Action, {
+  type: 'Block',
+
+  // name
+
+  toString: function (indent) {
+    if (indent == null) indent = '';
+    var r = '[' + this.type + ' ' + this.name + ']';
+    var c = this.action.toString (indent + '  ');
+    if (c.length) {
+      r += "\n  " + indent + c;
+    }
+    return r;
+  } // toString
+}); // Block
 
 JSTTL.Action.AppendString = new SAMI.Subclass (function (s) {
   this.value = s;
