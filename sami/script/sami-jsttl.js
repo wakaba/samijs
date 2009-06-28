@@ -494,14 +494,18 @@ JSTTL.Tokenizer.KEYWORDS = {
 JSTTL.Parser = new SAMI.Subclass (function () {
 
   // XXX
-  var grammer = $('grammer').textContent;
-
-  // XXX
-  this._parsingTable = SAMI.PG.LR1.rulesStringToParsingTable (grammer, null, function (ev) {
-    out ('Error: Unexpected token type {' + ev.token.type + ', ' + ev.token.value + '}; ' + ev.value);
-  });
+  this.createParsingTableFromGrammer ();
 
 }, SAMI.Parser.LR1, {
+
+  // For developing
+  createParsingTableFromGrammer: function () {
+    var grammer = $('grammer').textContent;
+
+    this._parsingTable = SAMI.PG.LR1.rulesStringToParsingTable (grammer, null, function (ev) {
+      out ('Error: Unexpected token type {' + ev.token.type + ', ' + ev.token.value + '}; ' + ev.value);
+    });
+  }, // createParsingTableFromGrammer
 
   _processLR1StackObjects: function (key, objs) {
     var pr = this._processParsingNode[key];
