@@ -1,0 +1,84 @@
+#data
+#result
+
+#data
+abc
+#result
+abc
+
+#data
+a[%%]b
+#result
+ab
+
+#data
+[% 'abc' %]
+#result
+abc
+
+#data
+[% 'abc'; 'def'; %]
+#result
+abcdef
+
+#data
+abc
+[%--%]
+def
+#result
+abcdef
+
+#data
+[%12345%]
+#result
+12345
+
+#data
+[% a %]
+#result
+
+#data
+[%- a = 456 -%]
+#result
+
+#data
+[%- a = 56 -%]
+[% a %]
+#result
+56
+
+#data
+[% 0 + 1 %]
+#result
+1
+
+#data
+a
+[%- IF 1 -%]
+b
+[%- END -%]
+c
+#result
+abc
+
+#data
+a
+[%- IF 0 || 1 -%]
+b
+[%- ELSE -%]
+c
+[%- END -%]
+d
+#result
+abd
+
+#data
+a
+[%- IF 0 -%]
+b
+[%- ELSE -%]
+c
+[%- END -%]
+d
+#result
+acd

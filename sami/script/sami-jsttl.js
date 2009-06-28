@@ -447,15 +447,14 @@ JSTTL.Tokenizer.KEYWORDS = {
   END: true,
   VIEW: true,
   JAVASCRIPT: true,
-  'MOD': 'mod',
-  'Mod': 'mod',
-  'mOd': 'mod',
-  'moD': 'mod',
-  'MoD': 'mod',
-  'MOd': 'mod',
-  'mOD': 'mod',
-  'mod': 'mod',
-  '%': 'mod',
+  'MOD': '%',
+  'Mod': '%',
+  'mOd': '%',
+  'moD': '%',
+  'MoD': '%',
+  'MOd': '%',
+  'mOD': '%',
+  'mod': '%',
   'div': 'div',
   'Div': 'div',
   'dIv': 'div',
@@ -464,29 +463,26 @@ JSTTL.Tokenizer.KEYWORDS = {
   'DIv': 'div',
   'dIV': 'div',
   'div': 'div',
-  'AND': 'and',
-  'And': 'and',
-  'aNd': 'and',
-  'anD': 'and',
-  'ANd': 'and',
-  'aND': 'and',
-  'AnD': 'and',
-  'and': 'and',
-  '&&': 'and',
-  'OR': 'or',
-  'Or': 'or',
-  'oR': 'or',
-  'or': 'or',
-  '||': 'or',
-  'NOT': 'not',
-  'Not': 'not',
-  'nOt': 'not',
-  'noT': 'not',
-  'NoT': 'not',
-  'NOt': 'not',
-  'noT': 'not',
-  'not': 'not',
-  '!': 'not'
+  'AND': '&&',
+  'And': '&&',
+  'aNd': '&&',
+  'anD': '&&',
+  'ANd': '&&',
+  'aND': '&&',
+  'AnD': '&&',
+  'and': '&&',
+  'OR': '||',
+  'Or': '||',
+  'oR': '||',
+  'or': '||',
+  'NOT': '!',
+  'Not': '!',
+  'nOt': '!',
+  'noT': '!',
+  'NoT': '!',
+  'NOt': '!',
+  'noT': '!',
+  'not': '!'
 }; // KEYWORDS
 
 /* --- Parser --- */
@@ -635,7 +631,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
     'if': function (objs) {
       var cond = objs.list[1].value;
       if (objs.list[0].value == 'UNLESS') {
-        cond = new JSTTL.Action.UnaryOperation ('not', cond);
+        cond = new JSTTL.Action.UnaryOperation ('!', cond);
       }
 
       if (objs.list.length == 5) { // IF exp opt-content else END
@@ -795,7 +791,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
   parseString: function (s) {
     var self = this;
 
-    outn (s);
+//    outn (s);
 
     var tokens = new SAMI.List;
     tokens.push ({type: 'content-start', line: 1, column: 1});
@@ -816,7 +812,7 @@ JSTTL.Parser = new SAMI.Subclass (function () {
       }
     });
 
-    outn (tokens.toSource());
+//    outn (tokens.toSource());
 
     var r = this._parseTokens (tokens);
     return r != null ? r.value : null;
@@ -831,6 +827,15 @@ JSTTL.Action = new SAMI.Class (function () {
 
 }, {
   type: 'Action',
+
+  process: function (ctx) {
+    ctx.reportError ({
+      type: 'process method not implemented',
+      text: this.type,
+      level: 'm'
+    });
+  }, // process
+
   toString: function (indent) {
     if (indent == null) indent = '';
     var v = '[' + this.type + (this.value != undefined ? ' ' + this.value : '') + ']';
@@ -853,6 +858,12 @@ JSTTL.Action.ActionList = new SAMI.Subclass (function () {
 }, SAMI.List, {
   type: 'ActionList',
 
+  process: function (ctx) {
+    this.forEach (function (act) {
+      act.process (ctx);
+    });
+  }, // process
+
   toString: function () {
     return this.list.join ("\n");
   } // toString
@@ -865,6 +876,11 @@ JSTTL.Action.Block = new SAMI.Subclass (function (name, actions) {
   type: 'Block',
 
   // name
+
+  process: function (ctx) {
+    // XXX should we pass /ctx/ here?
+    this.registerBlock (this.name, this.action);
+  }, // process
 
   toString: function (indent) {
     if (indent == null) indent = '';
@@ -882,33 +898,66 @@ JSTTL.Action.If = new SAMI.Subclass (function (c, t, f) {
   this.action2 = t;
   this.action3 = f;
 }, JSTTL.Action, {
-  type: 'If'
+  type: 'If',
+
+  process: function (ctx) {
+    var cond = this.action.process (ctx);
+    if (cond) {
+      if (this.action2) this.action2.process (ctx);
+    } else {
+      if (this.action3) this.action3.process (ctx);
+    }
+  } // process
 }); // If
 
 JSTTL.Action.AppendString = new SAMI.Subclass (function (s) {
   this.value = s;
 }, JSTTL.Action, {
-  type: 'AppendString'
+  type: 'AppendString',
+
+  process: function (ctx) {
+    ctx.value += this.value;
+  } // process
 }); // AppendString
 
 JSTTL.Action.AppendValueOf = new SAMI.Subclass (function (s) {
   this.action = s;
 }, JSTTL.Action, {
-  type: 'AppendValueOf'
+  type: 'AppendValueOf',
+
+  process: function (ctx) {
+    ctx.value += this.action.process (ctx);
+  } // process
 }); // AppendValueOf
 
 JSTTL.Action.Assign = new SAMI.Subclass (function (s, t) {
   this.action = s;
   this.action2 = t;
 }, JSTTL.Action, {
-  type: 'Assign'
+  type: 'Assign',
+
+  process: function (ctx) {
+    var l = this.action.process (ctx);
+    var r = this.action2.process (ctx);
+    ctx.set (l, r);
+  } // process
 }); // Assign
 
 JSTTL.Action.UnaryOperation = new SAMI.Subclass (function (op, a) {
   this.action = a;
   this.type = op;
 }, JSTTL.Action, {
-  
+  process: function (ctx) {
+    if (this.type == '!') {
+      return !this.action.process (ctx);
+    } else {
+      ctx.reportError ({
+        type: 'operation not implemented',
+        level: 'm',
+        text: this.type
+      });
+    }
+  } // process
 }); // UnaryOperation
 
 JSTTL.Action.BinaryOperation = new SAMI.Subclass (function (op, a, b) {
@@ -916,26 +965,96 @@ JSTTL.Action.BinaryOperation = new SAMI.Subclass (function (op, a, b) {
   this.action2 = b;
   this.type = op;
 }, JSTTL.Action, {
-  
+  process: function (ctx) {
+    var type = this.type;
+    if (type == '+') {
+      return this.action.process (ctx) + this.action2.process (ctx);
+    } else if (type == '-') {
+      return this.action.process (ctx) - this.action2.process (ctx);
+    } else if (type == '*') {
+      return this.action.process (ctx) * this.action2.process (ctx);
+    } else if (type == '/') {
+      return this.action.process (ctx) / this.action2.process (ctx);
+    } else if (type == 'div') {
+      return Math.floor (this.action.process (ctx) / this.action2.process (ctx));
+    } else if (type == '%') {
+      return this.action.process (ctx) % this.action2.process (ctx);
+    } else if (type == '&&') {
+      return this.action.process (ctx) && this.action2.process (ctx);
+    } else if (type == '||') {
+      return this.action.process (ctx) || this.action2.process (ctx);
+    } else if (type == '<') {
+      return this.action.process (ctx) < this.action2.process (ctx);
+    } else if (type == '>') {
+      return this.action.process (ctx) > this.action2.process (ctx);
+    } else if (type == '<=') {
+      return this.action.process (ctx) <= this.action2.process (ctx);
+    } else if (type == '>=') {
+      return this.action.process (ctx) >= this.action2.process (ctx);
+    } else if (type == '==') {
+      return this.action.process (ctx) == this.action2.process (ctx);
+    } else if (type == '!=') {
+      return this.action.process (ctx) != this.action2.process (ctx);
+    } else {
+      ctx.reportError ({
+        type: 'operation not implemented',
+        level: 'm',
+        text: type
+      });
+    }
+  } // process
 }); // BinaryOperation
 
 JSTTL.Action.GetLValue = new SAMI.Subclass (function (s) {
   this.value = s;
 }, JSTTL.Action, {
-  type: 'GetLValue'
+  type: 'GetLValue',
+
+  process: function (ctx) {
+    return this.value;
+  } // process
 }); // GetLValue
 
 JSTTL.Action.String = new SAMI.Subclass (function (s) {
   this.value = s;
 }, JSTTL.Action, {
-  type: 'String'
+  type: 'String',
+
+  process: function (ctx) {
+    return this.value;
+  } // process
 }); // String
 
 JSTTL.Action.Number = new SAMI.Subclass (function (s) {
-  this.value = s;
+  this.value = parseFloat (s);
 }, JSTTL.Action, {
-  type: 'Number'
+  type: 'Number',
+
+  process: function (ctx) {
+    return this.value;
+  } // process
 }); // Number
+
+/* --- Context --- */
+
+JSTTL.Context = new SAMI.Class (function () {
+  this.vars = new SAMI.Hash;
+  this.blocks = new SAMI.Hash;
+  this.value = '';
+}, {
+  get: function (name) {
+    this.vars.get (name);
+  }, // get
+
+  set: function (name, value) {
+    this.vars.set (name, value);
+  }, // set
+
+  registerBlock: function (name, acts) {
+    this.blocks.set (name, acts);
+  } // registerBlock
+
+}); // Context
 
 /* --- JSTTL.Parser parsing table --- */
 

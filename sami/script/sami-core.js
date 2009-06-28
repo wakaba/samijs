@@ -1252,12 +1252,12 @@ SAMI.Parser.LR1 = new SAMI.Class (function () {
 
     while (tokens.list.length) {
       var token = tokens.shift ();
-outn ('Token: {' + token.type + ', ' + token.value + '}');
-outn ('Current stack: '  + stack);
+//outn ('Token: {' + token.type + ', ' + token.value + '}');
+//outn ('Current stack: '  + stack);
       var state = stack.getLast ();
       var goTo = state.getCellByTokenType (token.type);
       if (goTo) {
-outn('goTo: ' + goTo );
+//outn('goTo: ' + goTo );
         if (goTo.isReduction) {
           stack.pop (); // state
           var args = new SAMI.List;
