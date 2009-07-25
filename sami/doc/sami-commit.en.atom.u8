@@ -1,6 +1,15 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 <title xml:lang="en">SAMI ChangeLog Diffs</title>
-<link href="http://suika.fam.cx/www/js/sami/doc/sami-commit" hreflang="en" rel="self" type="application/atom+xml"></link><link href="http://suika.fam.cx/www/js/sami/doc/readme" rel="related"></link><link href="http://suika.fam.cx/www/js/sami/doc/readme#license" rel="license"></link><rights>This feed is free software; you can redistribute it and/or modify it under the same terms as Perl itself.</rights><entry xml:id="entry-1248524564"><id>http://suika.fam.cx/www/js/sami/doc/sami-commit#entry-1248524564</id><title>2009-07-25 Wakaba</title><updated>2009-07-25T12:22:43Z</updated><author><name>Wakaba</name><email>wakaba@suika.fam.cx</email></author><content type="text">++ swe/script/ChangeLog	25 Jul 2009 12:22:18 -0000
+<link href="http://suika.fam.cx/www/js/sami/doc/sami-commit" hreflang="en" rel="self" type="application/atom+xml"></link><link href="http://suika.fam.cx/www/js/sami/doc/readme" rel="related"></link><link href="http://suika.fam.cx/www/js/sami/doc/readme#license" rel="license"></link><rights>This feed is free software; you can redistribute it and/or modify it under the same terms as Perl itself.</rights><entry xml:id="entry-1248541551"><id>http://suika.fam.cx/www/js/sami/doc/sami-commit#entry-1248541551</id><title>2009-07-25 Wakaba</title><updated>2009-07-25T17:05:46Z</updated><author><name>Wakaba</name><email>wakaba@suika.fam.cx</email></author><content type="text">++ swe/script/ChangeLog	25 Jul 2009 17:05:35 -0000
+2009-07-26  Wakaba  &lt;wakaba@suika.fam.cx&gt;
+
+	* sami-browser.js: Added various hooks to customize the browser by
+	subclassing.  URLs are now internally handled as SAMI.URL objects.
+
+	* sami-core.js: A workaround for IE7's stupid behavior.  SAMI.URL
+	class added.
+
+</content></entry><entry xml:id="entry-1248524564"><id>http://suika.fam.cx/www/js/sami/doc/sami-commit#entry-1248524564</id><title>2009-07-25 Wakaba</title><updated>2009-07-25T12:22:43Z</updated><author><name>Wakaba</name><email>wakaba@suika.fam.cx</email></author><content type="text">++ swe/script/ChangeLog	25 Jul 2009 12:22:18 -0000
 	* sami-core.js: Returns a dummy response object when an XHR
 	request has thrown an exception.
 
@@ -77,4 +86,4 @@
 
 2009-07-25  Wakaba  &lt;wakaba@suika.fam.cx&gt;
 
-</content></entry><updated>2009-07-25T12:22:43Z</updated></feed>
+</content></entry><updated>2009-07-25T17:05:46Z</updated></feed>

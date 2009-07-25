@@ -1,3 +1,11 @@
+2009-07-26  Wakaba  <wakaba@suika.fam.cx>
+
+	* sami-browser.js: Added various hooks to customize the browser by
+	subclassing.  URLs are now internally handled as SAMI.URL objects.
+
+	* sami-core.js: A workaround for IE7's stupid behavior.  SAMI.URL
+	class added.
+
 2009-07-25  Wakaba  <wakaba@suika.fam.cx>
 
 	* sami-core.js: Returns a dummy response object when an XHR

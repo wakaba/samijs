@@ -123,10 +123,14 @@ SAMI.Event.Browser = new SAMI.Subclass (function (be) {
 }, SAMI.Event, {
   preventDefault: function () {
     this.defaultPrevented = true;
-    if (this.browserEvent.preventDefault) {
-      this.browserEvent.preventDefault ();
-    } else {
-      this.browserEvent.returnValue = false;
+    try {
+      if (this.browserEvent.preventDefault) {
+        this.browserEvent.preventDefault ();
+      } else {
+        this.browserEvent.returnValue = false;
+      }
+    } catch (e) {
+      // IE's unknown error
     }
   }, // preventDefault
   isDefaultPrevented: function () {
@@ -996,7 +1000,168 @@ SAMI.Class.addClassMethods (SAMI.Style, {
 
 /* --- URL --- */
 
-SAMI.URL = {};
+SAMI.URL = new SAMI.Class (function (urlString) {
+  if (urlString instanceof SAMI.URL) {
+    return urlString;
+  } else if (urlString === undefined) {
+    return; // subclassing
+  }
+
+  var self = this;
+  urlString = urlString.replace (/#([\s\S]*)/, function (_, s) {
+    self._fragment = s;
+    return '';
+  });
+  urlString = urlString.replace (/\?([\s\S]*)/, function (_, s) {
+    self._query = s;
+    return '';
+  });
+  urlString = urlString.replace (/^([^:\/]+):/, function (_, s) {
+    self._scheme = s;
+    return '';
+  });
+  urlString = urlString.replace (/^\/\/([^\/]+)/, function (_, s) {
+    s = s.replace (/([^@]*?)(?:(:)([^:]*))?$/, function (_, h, c, p) {
+      self._hostName = decodeURIComponent (h); // XXX IPv? addresses
+      self._port = c ? p : null;
+      return '';
+    });
+    if (s.length) {
+      self._userinfo = s.substring (0, s.length - 1);
+    }
+    return '';
+  });
+  self._path = urlString;
+}, {
+
+  getScheme: function () {
+    return decodeURIComponent (this._scheme).toLowerCase ();
+  }, // getScheme
+  getURLScheme: function () {
+    return this._scheme;
+  }, // getURLScheme
+  setURLScheme: function (newScheme) {
+    this._scheme = newScheme;
+  }, // setURLScheme
+
+  getURLHostName: function () {
+    return this._hostName != null ? encodeURIComponent (this._hostName) : null;
+  }, // getURLHostName
+  getHostName: function () {
+    return this._hostName;
+  }, // getHostName
+
+  getURLHost: function () {
+    var h = this.getURLHostName ();
+    var p = this._port;
+    if (h == null && p != null) {
+      return ':' + p;
+    } else if (p != null) {
+      return h + ':' + p;
+    } else {
+      return h;
+    }
+  }, // getURLHost
+  setURLHost: function (host) {
+    var self = this;
+    self._port = null;
+    host = host.replace (/:([^:]*)$/, function (_, p) {
+      self._port = p;
+      return '';
+    });
+    this._hostName = host;
+  }, // setURLHost
+
+  getURLAuthority: function () {
+    var s = '';
+    var userinfo = this._userinfo;
+    var hostname = this.getURLHostName ();
+    var port = this._port;
+    if (userinfo != null || port != null) {
+      hostname = hostname || '';
+    }
+    if (hostname == null) return null;
+
+    if (userinfo != null) {
+      s += userinfo + '@';
+    }
+    s += hostname;
+    if (port != null) {
+      s += ':' + port;
+    }
+    return s;
+  }, // getURLAuthority;
+
+  getURLPath: function () {
+    return this._path;
+  }, // getURLPath
+  setURLPath: function (newPath) {
+    this._path = newPath;
+  }, // setURLPath
+
+  _parseQuery: function () {
+    var qp = this._qparams = new SAMI.Hash;
+    if (this._query != null) {
+      new SAMI.List (this._query.split (/[&;]/)).forEach (function (x) {
+        var nv = x.split (/=/, 2);
+        qp.set (decodeURIComponent (nv[0]), decodeURIComponent (nv[1] || ''));
+      });
+    }
+    this._query = null;
+  }, // _parseQuery
+  getQueryParam: function (n) {
+    if (!this._qparams) this._parseQuery ();
+    return this._qparams.get (n);
+  }, // getQueryParam
+  setQueryParam: function (n, v) {
+    if (!this._qparams) this._parseQuery ();
+    if (v != null) this._qparams.set (n, v);
+  }, // setQueryParam
+  getURLQuery: function () {
+    if (this._qparams) {
+      var v = this._qparams.mapToList (function (n, v) {
+        return encodeURIComponent (n) + '=' + encodeURIComponent (v);
+      }).list.join ('&');
+      if (v.length) {
+        return v;
+      } else {
+        return null;
+      }
+    } else {
+      return this._query;
+    }
+  } // getURLQuery
+}); // URL
+
+SAMI.URL.prototype.toString = function () {
+  var u = '';
+
+  var s = this.getURLScheme ();
+  if (s != null) {
+    u += s + ':';
+  }
+
+  var a = this.getURLAuthority ();
+  if (a != null) {
+    u += '//' + a;
+  }
+
+  var p = this.getURLPath ();
+  if (p != null) {
+    u += p;
+  }
+
+  var q = this.getURLQuery ();
+  if (q != null) {
+    u += '?' + q;
+  }
+
+  if (this._fragment != null) {
+    u += '#' + this._fragment;
+  }
+
+  return u;
+}; // toString
 
 SAMI.Class.addClassMethods (SAMI.URL, {
   eq: function (u1, u2) {
@@ -1084,9 +1249,9 @@ SAMI.XHR = new SAMI.Class (function (url, onsuccess, onerror) {
     var doc = this.getDocument ();
     if (doc) {
       var url = doc.documentURI || doc.URL;
-      if (url) return url;
+      if (url) return new SAMI.URL (url);
     }
-    return this._url; // might be wrong if redirected
+    return new SAMI.URL (this._url); // might be wrong if redirected
   }, // getRequestURL
 
   getMediaTypeNoParam: function () {

@@ -28,6 +28,8 @@ SAMI.Browser.IFrame = new SAMI.Class (function (placeholder) {
 
 /* Events: |urlchanged| */
 SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
+  if (!placeholder) return; // for subclasses
+
   var self = this;
 
   this.root = document.createElement ('iframe');
@@ -47,29 +49,47 @@ SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
   this.setReadyState ('sami-uninitialized');
 }, {
   openURL: function (url) {
+    url = this.convertURL (url);
     this._openURL (url, {});
   }, // openURL
+  
+  convertURL: function (url) {
+    return new SAMI.URL (url);
+  }, // convertURL
 
   _openURL: function (url, args) {
-    var self = this;
-
-    var onresponse = function () {
-      var rurl = this.getRequestURL ();
-      self._window.location.href = rurl;
-      self._window.location.samiResponse = self._createResponse (this);
-      if (!args.noHistory) self._window.history.samiAddURL (rurl);
-
-      self._handleContent (this);
-      
-      var e = new SAMI.Event ('urlchanged');
-      self.dispatchEvent (e);
-
-      self.setReadyState ('complete');
-    };
-
-    this.setReadyState ('sami-startload');
-    new SAMI.XHR (url, onresponse, onresponse).get ();
+    var scheme = url.getScheme ();
+    var schemeHandler = this.schemeHandlers[scheme] ||
+        this.schemeHandlers['http'];
+    schemeHandler.apply (this, [url, args]);
   }, // openURL
+
+  schemeHandlers: {
+    http: function (url, args) {
+      var self = this;
+
+      var onresponse = function () {
+        var rurl = this.getRequestURL ();
+        self._window.location.samiSetURL (rurl);
+        self._window.location.samiResponse = self._createResponse (this);
+        if (!args.noHistory) self._window.history.samiAddURL (rurl);
+
+        self._handleContent (this);
+      
+        var e = new SAMI.Event ('urlchanged');
+        self.dispatchEvent (e);
+
+        self.setReadyState ('complete');
+      };
+
+      this.setReadyState ('sami-startload');
+      this._prepareXHR(new SAMI.XHR (url, onresponse, onresponse)).get ();
+    } // http
+  }, // schemeHandlers
+
+  _prepareXHR: function (xhr) {
+    return xhr;
+  }, // _prepareXHR
 
   _createResponse: function (xhr) {
     var res = new SAMI.Browser.Response ();
@@ -112,7 +132,7 @@ SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
     var self = this;
 
     var html = '<!DOCTYPE HTML>';
-    html += '<title>' + SAMI.String.htescape (args.url) + '</title>';
+    html += '<title>' + SAMI.String.htescape (args.url + '') + '</title>';
     html += '<style>' + this.uass['text/plain'] + '</style>';
     html += '<p class=content-type><code>' + SAMI.String.htescape (args.responseContentType) + '</code></p>';
     html += '<plaintext>' + args.responseBodyText;
@@ -130,7 +150,7 @@ SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
   showHTML: function (args) {
     var self = this;
     
-    var base = '<base href="' + SAMI.String.htescape (args.url) + '">';
+    var base = '<base href="' + SAMI.String.htescape (args.url + '') + '">';
 
     self.root.src = 'about:blank';
     // XXX maybe we should wait until load event is fired...
@@ -142,6 +162,8 @@ SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
     doc.write ('<style>' + this.uass['text/html'] + '</style>');
     doc.write (args.responseBodyText);
     doc.close ();
+
+    win.samiBrowser = this;
 
     new SAMI.Observer (win.document.body, 'click', function (be) {
       var ev = new SAMI.Event.Browser (be || win.event);
@@ -158,12 +180,12 @@ SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
   }, // showHTML
 
   uass: {
-    'text/html': ' body { color: blue } ',
+    'text/html': ' ',
     'text/plain': ' plaintext { white-space: -moz-pre-wrap; white-space: pre-wrap } '
   }, // uass
 
   getURL: function () {
-    return this._window.location.href;
+    return this._window.location.samiURL;
   } // getURL
 
 }); // XHR
@@ -222,7 +244,12 @@ SAMI.Browser.History = new SAMI.Class (function () {
 SAMI.Browser.Location = new SAMI.Class (function () {
 
 }, {
-  // href, samiResponse
+  // href, samiResponse, samiURL
+
+  samiSetURL: function (newURL) {
+    this.samiURL = newURL;
+    this.href = newURL + '';
+  } // samiSetURL
 }); // Location
 
 SAMI.Browser.Response = new SAMI.Class (function () {
