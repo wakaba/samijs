@@ -1,5 +1,12 @@
 2009-07-25  Wakaba  <wakaba@suika.fam.cx>
 
+	* sami-core.js: Returns a dummy response object when an XHR
+	request has thrown an exception.
+
+	* sami-browser.js: Implemented history-back navigation.
+
+2009-07-25  Wakaba  <wakaba@suika.fam.cx>
+
 	* sami-browser.js: Separate HTML converter as a handler of generic
 	content handler mechanisim and added a plain text handler.
 

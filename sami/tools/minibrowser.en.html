@@ -35,6 +35,8 @@ output {
 <output id=browser-status></output>
 <output id=browser-progress></output>
 
+<button type=button id=browser-back>Back</button>
+
 </section>
 
 <script>
@@ -48,8 +50,10 @@ output {
       var browserURL = document.getElementById ('browser-url');
       var browserStatus = document.getElementById ('browser-status');
       var browserProgress = document.getElementById ('browser-progress');
+      var browserBack = document.getElementById ('browser-back');
 
       var browser = new SAMI.Browser.XHR (bplaceholder);
+      window.browser = browser;
 
       new SAMI.Observer (browser, 'urlchanged', function (ev) {
         browserURL.value = ev.target.getURL ();
@@ -72,6 +76,10 @@ output {
       new SAMI.Observer (browserURL, 'change', function (ev) {
         bev = new SAMI.Event.Browser (ev);
         browser.openURL (bev.target.value);
+      });
+
+      new SAMI.Observer (browserBack, 'click', function (ev) {
+        browser.contentWindow.history.back ();
       });
     });
   });

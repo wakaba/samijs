@@ -1047,11 +1047,16 @@ SAMI.XHR = new SAMI.Class (function (url, onsuccess, onerror) {
     if (!this._xhr) return;
 
     var self = this;
-    this._xhr.open ('GET', this._url, true);
-    this._xhr.onreadystatechange = function () {
-      self._onreadystatechange ();
-    }; // onreadystatechange
-    this._xhr.send (null);
+    try {
+      this._xhr.open ('GET', this._url, true);
+      this._xhr.onreadystatechange = function () {
+        self._onreadystatechange ();
+      }; // onreadystatechange
+      this._xhr.send (null);
+    } catch (e) {
+      this._xhr = new SAMI.XHR.ErrorXHR (e);
+      this._onerror ();
+    }
   }, // get
 
   _onreadystatechange: function () {
@@ -1103,6 +1108,18 @@ SAMI.XHR = new SAMI.Class (function (url, onsuccess, onerror) {
   } // getSimpleErrorInfo
 
 }); // XHR
+
+SAMI.XHR.ErrorXHR = new SAMI.Class (function (e) {
+  this.status = 400;
+  this.statusText = e + '';
+}, {
+  responseText: '',
+  responseXML: null,
+
+  getResponseHeader: function () {
+    return null;
+  } // getResponseHeader
+}); // ErrorXHR
 
 /* --- Storage --- */
 

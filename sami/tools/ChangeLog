@@ -1,5 +1,9 @@
 2009-07-25  Wakaba  <wakaba@suika.fam.cx>
 
+	* minibrowser.en.html: Added a "back" button.
+
+2009-07-25  Wakaba  <wakaba@suika.fam.cx>
+
 	* minibrowser.en.html: Show HTTP response status code/text and
 	progress.
 

@@ -38,14 +38,26 @@ SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
   this._window = new SAMI.Browser.Window;
   this.contentWindow = this._window;
 
+  new SAMI.Observer (this._window.history, 'sami-historygo', function (ev) {
+    if (ev.url) {
+      self._openURL (ev.url, {noHistory: true});
+    }
+  });
+
   this.setReadyState ('sami-uninitialized');
 }, {
   openURL: function (url) {
+    this._openURL (url, {});
+  }, // openURL
+
+  _openURL: function (url, args) {
     var self = this;
-    new SAMI.XHR (url, function () {
+
+    var onresponse = function () {
       var rurl = this.getRequestURL ();
       self._window.location.href = rurl;
       self._window.location.samiResponse = self._createResponse (this);
+      if (!args.noHistory) self._window.history.samiAddURL (rurl);
 
       self._handleContent (this);
       
@@ -53,20 +65,10 @@ SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
       self.dispatchEvent (e);
 
       self.setReadyState ('complete');
-    }, function () {
-      var rurl = this.getRequestURL ();
-      self._window.location.href = rurl;
-      self._window.location.samiResponse = self._createResponse (this);
-
-      self._handleContent (this);
-
-      var e = new SAMI.Event ('urlchanged');
-      self.dispatchEvent (e);
-
-      self.setReadyState ('complete');
-    }).get ();
+    };
 
     this.setReadyState ('sami-startload');
+    new SAMI.XHR (url, onresponse, onresponse).get ();
   }, // openURL
 
   _createResponse: function (xhr) {
@@ -101,7 +103,7 @@ SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
       this.showText ({
         url: xhr.getRequestURL (),
         responseBodyText: xhr.getText (),
-        responseContentType: xhr.getHeaderFieldBody ('Content-Type')
+        responseContentType: xhr.getMediaTypeNoParam ()
       });
     } // application/octet-stream
   }, // contentHandlers
@@ -168,9 +170,54 @@ SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
 
 SAMI.Browser.Window = new SAMI.Class (function () {
   this.location = new SAMI.Browser.Location;
+  this.history = new SAMI.Browser.History;
 }, {
   // location
 }); // window
+
+/* Evnets: |sami-historygo| */
+SAMI.Browser.History = new SAMI.Class (function () {
+  this._prevURLs = new SAMI.List;
+  this._currentURL = 'about:blank';
+  this._nextURLs = new SAMI.List;
+}, {
+  back: function () {
+    this.go (-1);
+  }, // back
+  forward: function () {
+    this.go (1);
+  }, // forward
+  go: function (delta) {
+    var delta = delta || 0;
+
+    var url;
+    if (delta == 0) {
+      url = this._currentURL;
+    } else if (delta < 0) {
+      var bl = this._prevURLs.list;
+      url = bl[bl.length + delta];
+      if (!url) return;
+      var nl = this._nextURLs.list;
+      nl.unshift (this._currentURL);
+      this._nextURLs.prepend (new SAMI.List (bl.splice (bl.length + delta + 1)));
+      bl.pop ();
+      this._currentURL = url;
+    } else {
+      // XXX not implemented
+      return;
+    }
+
+    var e = new SAMI.Event ('sami-historygo');
+    e.url = url;
+    this.dispatchEvent (e);
+  }, // go
+
+  samiAddURL: function (url) {
+    this._prevURLs.push (this._currentURL);
+    this._currentURL = url;
+    this._nextURLs.clear ();
+  } // samiAddURL
+}); // History
 
 SAMI.Browser.Location = new SAMI.Class (function () {
 

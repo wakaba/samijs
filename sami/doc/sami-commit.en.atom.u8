@@ -1,6 +1,19 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 <title xml:lang="en">SAMI ChangeLog Diffs</title>
-<link href="http://suika.fam.cx/www/js/sami/doc/sami-commit" hreflang="en" rel="self" type="application/atom+xml"></link><link href="http://suika.fam.cx/www/js/sami/doc/readme" rel="related"></link><link href="http://suika.fam.cx/www/js/sami/doc/readme#license" rel="license"></link><rights>This feed is free software; you can redistribute it and/or modify it under the same terms as Perl itself.</rights><entry xml:id="entry-1248520947"><id>http://suika.fam.cx/www/js/sami/doc/sami-commit#entry-1248520947</id><title>2009-07-25 Wakaba</title><updated>2009-07-25T11:22:24Z</updated><author><name>Wakaba</name><email>wakaba@suika.fam.cx</email></author><content type="text">++ swe/script/ChangeLog	25 Jul 2009 11:22:20 -0000
+<link href="http://suika.fam.cx/www/js/sami/doc/sami-commit" hreflang="en" rel="self" type="application/atom+xml"></link><link href="http://suika.fam.cx/www/js/sami/doc/readme" rel="related"></link><link href="http://suika.fam.cx/www/js/sami/doc/readme#license" rel="license"></link><rights>This feed is free software; you can redistribute it and/or modify it under the same terms as Perl itself.</rights><entry xml:id="entry-1248524564"><id>http://suika.fam.cx/www/js/sami/doc/sami-commit#entry-1248524564</id><title>2009-07-25 Wakaba</title><updated>2009-07-25T12:22:43Z</updated><author><name>Wakaba</name><email>wakaba@suika.fam.cx</email></author><content type="text">++ swe/script/ChangeLog	25 Jul 2009 12:22:18 -0000
+	* sami-core.js: Returns a dummy response object when an XHR
+	request has thrown an exception.
+
+	* sami-browser.js: Implemented history-back navigation.
+
+2009-07-25  Wakaba  &lt;wakaba@suika.fam.cx&gt;
+
+++ swe/tools/ChangeLog	25 Jul 2009 12:22:39 -0000
+	* minibrowser.en.html: Added a &quot;back&quot; button.
+
+2009-07-25  Wakaba  &lt;wakaba@suika.fam.cx&gt;
+
+</content></entry><entry xml:id="entry-1248520947"><id>http://suika.fam.cx/www/js/sami/doc/sami-commit#entry-1248520947</id><title>2009-07-25 Wakaba</title><updated>2009-07-25T11:22:24Z</updated><author><name>Wakaba</name><email>wakaba@suika.fam.cx</email></author><content type="text">++ swe/script/ChangeLog	25 Jul 2009 11:22:20 -0000
 	* sami-browser.js: Separate HTML converter as a handler of generic
 	content handler mechanisim and added a plain text handler.
 
@@ -64,4 +77,4 @@
 
 2009-07-25  Wakaba  &lt;wakaba@suika.fam.cx&gt;
 
-</content></entry><updated>2009-07-25T11:22:24Z</updated></feed>
+</content></entry><updated>2009-07-25T12:22:43Z</updated></feed>
