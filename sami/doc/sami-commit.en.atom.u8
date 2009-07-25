@@ -1,6 +1,25 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 <title xml:lang="en">SAMI ChangeLog Diffs</title>
-<link href="http://suika.fam.cx/www/js/sami/doc/sami-commit" hreflang="en" rel="self" type="application/atom+xml"></link><link href="http://suika.fam.cx/www/js/sami/doc/readme" rel="related"></link><link href="http://suika.fam.cx/www/js/sami/doc/readme#license" rel="license"></link><rights>This feed is free software; you can redistribute it and/or modify it under the same terms as Perl itself.</rights><entry xml:id="entry-1248502269"><id>http://suika.fam.cx/www/js/sami/doc/sami-commit#entry-1248502269</id><title>2009-07-25 Wakaba</title><updated>2009-07-25T06:11:08Z</updated><author><name>Wakaba</name><email>wakaba@suika.fam.cx</email></author><content type="text">++ swe/script/ChangeLog	25 Jul 2009 06:10:36 -0000
+<link href="http://suika.fam.cx/www/js/sami/doc/sami-commit" hreflang="en" rel="self" type="application/atom+xml"></link><link href="http://suika.fam.cx/www/js/sami/doc/readme" rel="related"></link><link href="http://suika.fam.cx/www/js/sami/doc/readme#license" rel="license"></link><rights>This feed is free software; you can redistribute it and/or modify it under the same terms as Perl itself.</rights><entry xml:id="entry-1248505853"><id>http://suika.fam.cx/www/js/sami/doc/sami-commit#entry-1248505853</id><title>2009-07-25 Wakaba</title><updated>2009-07-25T07:10:49Z</updated><author><name>Wakaba</name><email>wakaba@suika.fam.cx</email></author><content type="text">++ swe/script/ChangeLog	25 Jul 2009 07:10:09 -0000
+	* sami-browser.js: Added |readyState| attribute.  Error response
+	body should be rendered as well.  The browser now set
+	location.samiResponse object after retrieval.  The showContent
+	method was split from the main request handler.
+
+	* sami-core.js: Use |window.event| if no event object is provided,
+	for compatibility with WinIE event model.  Added
+	|SAMI.String.htescaped|.  Added |SAMI.XHR.prototype.getRequestURL|
+	and |SAMI.XHR.prototype.getHeaderFieldBody|.
+
+2009-07-25  Wakaba  &lt;wakaba@suika.fam.cx&gt;
+
+++ swe/tools/ChangeLog	25 Jul 2009 07:10:44 -0000
+	* minibrowser.en.html: Show HTTP response status code/text and
+	progress.
+
+2009-07-25  Wakaba  &lt;wakaba@suika.fam.cx&gt;
+
+</content></entry><entry xml:id="entry-1248502269"><id>http://suika.fam.cx/www/js/sami/doc/sami-commit#entry-1248502269</id><title>2009-07-25 Wakaba</title><updated>2009-07-25T06:11:08Z</updated><author><name>Wakaba</name><email>wakaba@suika.fam.cx</email></author><content type="text">++ swe/script/ChangeLog	25 Jul 2009 06:10:36 -0000
 	* sami-browser.js: Added SAMI.Browser.XHR.
 
 	* sami-core.js: Added SAMI.Event.Browser and
@@ -37,4 +56,4 @@
 
 2009-07-25  Wakaba  &lt;wakaba@suika.fam.cx&gt;
 
-</content></entry><updated>2009-07-25T06:11:08Z</updated></feed>
+</content></entry><updated>2009-07-25T07:10:49Z</updated></feed>

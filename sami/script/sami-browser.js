@@ -36,29 +36,85 @@ SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
   placeholder.parentNode.replaceChild (this.root, placeholder);
 
   this._window = new SAMI.Browser.Window;
+  this.contentWindow = this._window;
+
+  this.setReadyState ('sami-uninitialized');
 }, {
   openURL: function (url) {
     var self = this;
     new SAMI.XHR (url, function () {
-      self._window.location.href = url; // XXX this might not be the document's address if the url is redirected.
-      var text = this.getText (); // XXX content-type
-
-      self.root.src = 'about:blank';
-//setTimeout (function () {
-var doc = self.root.contentWindow.document;
-doc.open ();
-doc.write (text);
-doc.close ();
-//}, 1000);
+      var rurl = this.getRequestURL ();
+      self._window.location.href = rurl;
+      self._window.location.samiResponse = self._createResponse (this);
+      self.showContent ({
+        url: rurl,
+        responseBodyText: this.getText (),
+        responseContentType: this.getHeaderFieldBody ('Content-Type')
+      });
       
       var e = new SAMI.Event ('urlchanged');
       self.dispatchEvent (e);
-    }, function () {
-      // XXX
-alert(this.getText());
 
+      self.setReadyState ('complete');
+    }, function () {
+      var rurl = this.getRequestURL ();
+      self._window.location.href = rurl;
+      self._window.location.samiResponse = self._createResponse (this);
+      self.showContent ({
+        url: url, // XXX this might be wrong after redirect
+        responseBodyText: this.getText (),
+        responseContentType: this.getHeaderFieldBody ('Content-Type')
+      });
+
+      var e = new SAMI.Event ('urlchanged');
+      self.dispatchEvent (e);
+
+      self.setReadyState ('complete');
     }).get ();
+
+    this.setReadyState ('sami-startload');
   }, // openURL
+
+  _createResponse: function (xhr) {
+    var res = new SAMI.Browser.Response ();
+    res.statusCode = xhr._xhr.status;
+    res.statusText = xhr._xhr.statusText;
+    return res;
+  }, // _createResponse
+
+  setReadyState: function (newReadyState) {
+    this.readyState = newReadyState;
+    var ev = new SAMI.Event ('readystatechange');
+    this.dispatchEvent (ev);
+  }, // setReadyState
+
+  showContent: function (args) {
+    var self = this;
+    
+    var base = '<base href="' + SAMI.String.htescape (args.url) + '">';
+    var style = '<style>body { color: red }</style>';
+
+    self.root.src = 'about:blank';
+    // XXX maybe we should wait until load event is fired...
+
+    var win = self.root.contentWindow;
+    var doc = win.document;
+    doc.open ();
+    doc.write (base);
+    doc.write (style);
+    doc.write (args.responseBodyText);
+    doc.close ();
+
+    new SAMI.Observer (win.document.body, 'click', function (be) {
+      var ev = new SAMI.Event.Browser (be || win.event);
+      if (ev.target.href) {
+        self.openURL (ev.target.href);
+        ev.preventDefault ();
+        return false;
+      }
+    });
+
+  }, // showContent
 
   getURL: function () {
     return this._window.location.href;
@@ -75,8 +131,14 @@ SAMI.Browser.Window = new SAMI.Class (function () {
 SAMI.Browser.Location = new SAMI.Class (function () {
 
 }, {
-  // href
+  // href, samiResponse
 }); // Location
+
+SAMI.Browser.Response = new SAMI.Class (function () {
+
+}, {
+  // statusCode, statusText
+}); // Response
 
 /* --- Onload --- */
 

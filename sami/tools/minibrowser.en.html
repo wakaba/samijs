@@ -14,6 +14,14 @@
   border: outset thin;
   overflow: auto;
 }
+
+output {
+  display: block;
+}
+
+[hidden] {
+  display: none;
+}
 </style>
 
 <h1>Mini browser</h1>
@@ -23,6 +31,9 @@
 <input id=browser-url type=url>
 
 <div id=browser-viewport></div>
+
+<output id=browser-status></output>
+<output id=browser-progress></output>
 
 </section>
 
@@ -35,11 +46,25 @@
     ]), function () {
       var bplaceholder = document.getElementById ('browser-viewport');
       var browserURL = document.getElementById ('browser-url');
+      var browserStatus = document.getElementById ('browser-status');
+      var browserProgress = document.getElementById ('browser-progress');
 
       var browser = new SAMI.Browser.XHR (bplaceholder);
 
-      browser.addEventListener ('urlchanged', function (ev) {
+      new SAMI.Observer (browser, 'urlchanged', function (ev) {
         browserURL.value = ev.target.getURL ();
+        var res = ev.target.contentWindow.location.samiResponse;
+        var status = res.statusCode + ' ' + res.statusText;
+        SAMI.Element.setTextContent (browserStatus, status);
+      });
+
+      new SAMI.Observer (browser, 'readystatechange', function (ev) {
+        var rs = ev.target.readyState;
+        if (rs == 'sami-startload') {
+          SAMI.Element.setTextContent (browserProgress, 'Loading...');
+        } else {
+          SAMI.Element.setTextContent (browserProgress, 'Document: Done');
+        }
       });
 
       browser.openURL ('http://suika.fam.cx/antenna.ja.html');

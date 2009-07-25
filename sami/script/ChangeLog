@@ -1,5 +1,17 @@
 2009-07-25  Wakaba  <wakaba@suika.fam.cx>
 
+	* sami-browser.js: Added |readyState| attribute.  Error response
+	body should be rendered as well.  The browser now set
+	location.samiResponse object after retrieval.  The showContent
+	method was split from the main request handler.
+
+	* sami-core.js: Use |window.event| if no event object is provided,
+	for compatibility with WinIE event model.  Added
+	|SAMI.String.htescaped|.  Added |SAMI.XHR.prototype.getRequestURL|
+	and |SAMI.XHR.prototype.getHeaderFieldBody|.
+
+2009-07-25  Wakaba  <wakaba@suika.fam.cx>
+
 	* sami-browser.js: Added SAMI.Browser.XHR.
 
 	* sami-core.js: Added SAMI.Event.Browser and

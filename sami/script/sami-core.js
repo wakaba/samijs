@@ -114,6 +114,7 @@ SAMI.Event.Error = new SAMI.Subclass (function () {
 }); // Error
 
 SAMI.Event.Browser = new SAMI.Subclass (function (be) {
+  be = be || window.event;
   this.browserEvent = be;
   this.type = be.type;
   this.bubbles = be.bubbles;
@@ -547,7 +548,15 @@ SAMI.Class.addClassMethods (SAMI.String, {
       s = s.replace (/['\\]/g, '\\$1').replace (/\u000D/g, '\\u000D').replace (/\u000A/g, '\\u000A');
       return "'" + s + "'";
     }
-  } // toJSStringLiteral
+  }, // toJSStringLiteral
+
+  htescape: function (s) {
+    return s
+        .replace (/&/g, '&amp;')
+        .replace (/</g, '&lt;')
+        .replace (/>/g, '&gt;')
+        .replace (/"/g, '&quot;');
+  } // htescape
 }); // String class methods
 
 SAMI.StringContainer = new SAMI.Class (function () {
@@ -1065,6 +1074,19 @@ SAMI.XHR = new SAMI.Class (function (url, onsuccess, onerror) {
   getDocument: function () {
     return this._xhr.responseXML;
   }, // getDocument
+
+  getRequestURL: function () {
+    var doc = this.getDocument ();
+    if (doc) {
+      var url = doc.documentURI || doc.URL;
+      if (url) return url;
+    }
+    return this._url; // might be wrong if redirected
+  }, // getRequestURL
+
+  getHeaderFieldBody: function (name) {
+    return this._xhr.getResponseHeader (name);
+  }, // getHeaderFieldBody
 
   getSimpleErrorInfo: function () {
     var r = this._xhr.status + ' ' + this._xhr.statusText;
