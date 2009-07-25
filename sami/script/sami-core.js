@@ -113,9 +113,14 @@ SAMI.Event.Error = new SAMI.Subclass (function () {
   
 }); // Error
 
-SAMI.Observer = new SAMI.Class (function (eventType, target, onevent) {
-  this.eventType = eventType;
-  this.target = target;
+SAMI.Observer = new SAMI.Class (function (target, eventType, onevent) {
+  if (typeof (target) == 'string') { // for compatibility
+    this.eventType = target;
+    this.target = eventType;
+  } else {
+    this.eventType = eventType;
+    this.target = target;
+  }
   if (target.addEventListener) {
     this.code = onevent;
   } else if (target.attachEvent) {

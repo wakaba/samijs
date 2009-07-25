@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html lang=en>
+<title>Mini browser</title>
+<link rel=stylesheet href="/www/style/html/xhtml">
+<style>
+.sami-browser-iframe {
+  width: 100%;
+  height: 20em;
+}
+</style>
+
+<h1>Mini browser</h1>
+
+<section id=browser>
+
+<input id=browser-url type=url>
+
+<div id=browser-viewport></div>
+
+</section>
+
+<script>
+  var SAMI = {};
+  SAMI.onLoadFunctions = [];
+  SAMI.onLoadFunctions.push (function () {
+    SAMI.Script.loadScripts (new SAMI.List ([
+      '../script/sami-browser.js'
+    ]), function () {
+      var bplaceholder = document.getElementById ('browser-viewport');
+      var browserURL = document.getElementById ('browser-url');
+
+      var browser = new SAMI.Browser.IFrame (bplaceholder);
+
+      browser.addEventListener ('urlchanged', function (ev) {
+        browserURL.value = ev.target.getURL ();
+      });
+
+      browser.openURL ('http://suika.fam.cx/');
+    });
+  });
+</script>
+<script src="../script/sami-core.js" defer async></script>

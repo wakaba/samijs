@@ -1,4 +1,11 @@
 2009-07-25  Wakaba  <wakaba@suika.fam.cx>
 
+	* sami-core.js: Changed order of arguments for SAMI.Observer
+	constructor.
+
+	* sami-browser.js: New file.
+
+2009-07-25  Wakaba  <wakaba@suika.fam.cx>
+
 	* ChangeLog: New file.
 

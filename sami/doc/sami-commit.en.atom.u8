@@ -1,0 +1,14 @@
+<feed xmlns="http://www.w3.org/2005/Atom"><link href="http://suika.fam.cx/www/js/sami/doc/sami-commit" hreflang="en" rel="self" type="application/atom+xml"></link><link href="http://suika.fam.cx/www/js/sami/doc/readme" rel="related"></link><link href="http://suika.fam.cx/www/js/sami/doc/readme#license" rel="license"></link><rights>This feed is free software; you can redistribute it and/or modify it under the same terms as Perl itself.</rights><entry xml:id="entry-1248498871"><id>http://suika.fam.cx/www/js/sami/doc/sami-commit#entry-1248498871</id><title>2009-07-25 Wakaba</title><updated>2009-07-25T05:14:31Z</updated><author><name>Wakaba</name><email>wakaba@suika.fam.cx</email></author><content type="text">++ swe/script/ChangeLog	25 Jul 2009 05:14:02 -0000
+	* sami-core.js: Changed order of arguments for SAMI.Observer
+	constructor.
+
+	* sami-browser.js: New file.
+
+2009-07-25  Wakaba  &lt;wakaba@suika.fam.cx&gt;
+
+++ swe/tools/ChangeLog	25 Jul 2009 05:14:25 -0000
+	* minibrowser.en.html: New file.
+
+2009-07-25  Wakaba  &lt;wakaba@suika.fam.cx&gt;
+
+</content></entry><updated>2009-07-25T05:14:31Z</updated></feed>
