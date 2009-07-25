@@ -7,6 +7,13 @@
   width: 100%;
   height: 20em;
 }
+
+.sami-browser-xhr {
+  position: relative;
+  display: block;
+  border: outset thin;
+  overflow: auto;
+}
 </style>
 
 <h1>Mini browser</h1>
@@ -29,13 +36,18 @@
       var bplaceholder = document.getElementById ('browser-viewport');
       var browserURL = document.getElementById ('browser-url');
 
-      var browser = new SAMI.Browser.IFrame (bplaceholder);
+      var browser = new SAMI.Browser.XHR (bplaceholder);
 
       browser.addEventListener ('urlchanged', function (ev) {
         browserURL.value = ev.target.getURL ();
       });
 
-      browser.openURL ('http://suika.fam.cx/');
+      browser.openURL ('http://suika.fam.cx/antenna.ja.html');
+
+      new SAMI.Observer (browserURL, 'change', function (ev) {
+        bev = new SAMI.Event.Browser (ev);
+        browser.openURL (bev.target.value);
+      });
     });
   });
 </script>

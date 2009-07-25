@@ -113,6 +113,32 @@ SAMI.Event.Error = new SAMI.Subclass (function () {
   
 }); // Error
 
+SAMI.Event.Browser = new SAMI.Subclass (function (be) {
+  this.browserEvent = be;
+  this.type = be.type;
+  this.bubbles = be.bubbles;
+  this.cancelable = be.cancelable;
+  this.target = be.target || be.srcElement;
+}, SAMI.Event, {
+  preventDefault: function () {
+    this.defaultPrevented = true;
+    if (this.browserEvent.preventDefault) {
+      this.browserEvent.preventDefault ();
+    } else {
+      this.browserEvent.returnValue = false;
+    }
+  }, // preventDefault
+  isDefaultPrevented: function () {
+    if (this.defaultPrevented) {
+      return this.defaultPrevented;
+    } else if (this.browserEvent.isDefaultPrevented) {
+      return this.browserEvent.isDefaultPrevented ();
+    } else {
+      return !this.browserEvent.returnValue;
+    }
+  } // isDefaultPrevented
+}); // Browser
+
 SAMI.Observer = new SAMI.Class (function (target, eventType, onevent) {
   if (typeof (target) == 'string') { // for compatibility
     this.eventType = target;
@@ -511,8 +537,18 @@ SAMI.Class.addClassMethods (SAMI.String, {
         return String.fromCharCode (c);
       }
     });
-  } // uUnescape
-});
+  }, // uUnescape
+
+  toJSStringLiteral: function (s) {
+    s += '';
+    if (s.toSource) {
+      return s.toSource ();
+    } else {
+      s = s.replace (/['\\]/g, '\\$1').replace (/\u000D/g, '\\u000D').replace (/\u000A/g, '\\u000A');
+      return "'" + s + "'";
+    }
+  } // toJSStringLiteral
+}); // String class methods
 
 SAMI.StringContainer = new SAMI.Class (function () {
   // Abstract

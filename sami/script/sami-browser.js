@@ -26,6 +26,58 @@ SAMI.Browser.IFrame = new SAMI.Class (function (placeholder) {
 
 }); // IFrame
 
+/* Events: |urlchanged| */
+SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
+  var self = this;
+
+  this.root = document.createElement ('iframe');
+  this.root.className = 'sami-browser-iframe';
+  
+  placeholder.parentNode.replaceChild (this.root, placeholder);
+
+  this._window = new SAMI.Browser.Window;
+}, {
+  openURL: function (url) {
+    var self = this;
+    new SAMI.XHR (url, function () {
+      self._window.location.href = url; // XXX this might not be the document's address if the url is redirected.
+      var text = this.getText (); // XXX content-type
+
+      self.root.src = 'about:blank';
+//setTimeout (function () {
+var doc = self.root.contentWindow.document;
+doc.open ();
+doc.write (text);
+doc.close ();
+//}, 1000);
+      
+      var e = new SAMI.Event ('urlchanged');
+      self.dispatchEvent (e);
+    }, function () {
+      // XXX
+alert(this.getText());
+
+    }).get ();
+  }, // openURL
+
+  getURL: function () {
+    return this._window.location.href;
+  } // getURL
+
+}); // XHR
+
+SAMI.Browser.Window = new SAMI.Class (function () {
+  this.location = new SAMI.Browser.Location;
+}, {
+  // location
+}); // window
+
+SAMI.Browser.Location = new SAMI.Class (function () {
+
+}, {
+  // href
+}); // Location
+
 /* --- Onload --- */
 
 if (SAMI.Browser.onLoadFunctions) {
