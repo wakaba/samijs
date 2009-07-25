@@ -46,11 +46,8 @@ SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
       var rurl = this.getRequestURL ();
       self._window.location.href = rurl;
       self._window.location.samiResponse = self._createResponse (this);
-      self.showContent ({
-        url: rurl,
-        responseBodyText: this.getText (),
-        responseContentType: this.getHeaderFieldBody ('Content-Type')
-      });
+
+      self._handleContent (this);
       
       var e = new SAMI.Event ('urlchanged');
       self.dispatchEvent (e);
@@ -60,11 +57,8 @@ SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
       var rurl = this.getRequestURL ();
       self._window.location.href = rurl;
       self._window.location.samiResponse = self._createResponse (this);
-      self.showContent ({
-        url: url, // XXX this might be wrong after redirect
-        responseBodyText: this.getText (),
-        responseContentType: this.getHeaderFieldBody ('Content-Type')
-      });
+
+      self._handleContent (this);
 
       var e = new SAMI.Event ('urlchanged');
       self.dispatchEvent (e);
@@ -88,11 +82,53 @@ SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
     this.dispatchEvent (ev);
   }, // setReadyState
 
-  showContent: function (args) {
+  _handleContent: function (xhr) {
+    var imt = xhr.getMediaTypeNoParam ();
+    var contentHandler = this.contentHandlers[imt] ||
+        this.contentHandlers['application/octet-stream'];
+    contentHandler.apply (this, [xhr]);
+  }, // _handleContent
+
+  contentHandlers: {
+    'text/html': function (xhr) {
+      this.showHTML ({
+        url: xhr.getRequestURL (),
+        responseBodyText: xhr.getText ()
+      });
+    }, // text/html
+
+    'application/octet-stream': function (xhr) {
+      this.showText ({
+        url: xhr.getRequestURL (),
+        responseBodyText: xhr.getText (),
+        responseContentType: xhr.getHeaderFieldBody ('Content-Type')
+      });
+    } // application/octet-stream
+  }, // contentHandlers
+
+  showText: function (args) {
+    var self = this;
+
+    var html = '<!DOCTYPE HTML>';
+    html += '<title>' + SAMI.String.htescape (args.url) + '</title>';
+    html += '<style>' + this.uass['text/plain'] + '</style>';
+    html += '<p class=content-type><code>' + SAMI.String.htescape (args.responseContentType) + '</code></p>';
+    html += '<plaintext>' + args.responseBodyText;
+
+    self.root.src = 'about:blank';
+    // XXX maybe we should wait until load event is fired...
+
+    var win = self.root.contentWindow;
+    var doc = win.document;
+    doc.open ();
+    doc.write (html);
+    doc.close ();
+  }, // showText
+
+  showHTML: function (args) {
     var self = this;
     
     var base = '<base href="' + SAMI.String.htescape (args.url) + '">';
-    var style = '<style>body { color: red }</style>';
 
     self.root.src = 'about:blank';
     // XXX maybe we should wait until load event is fired...
@@ -101,20 +137,28 @@ SAMI.Browser.XHR = new SAMI.Class (function (placeholder) {
     var doc = win.document;
     doc.open ();
     doc.write (base);
-    doc.write (style);
+    doc.write ('<style>' + this.uass['text/html'] + '</style>');
     doc.write (args.responseBodyText);
     doc.close ();
 
     new SAMI.Observer (win.document.body, 'click', function (be) {
       var ev = new SAMI.Event.Browser (be || win.event);
-      if (ev.target.href) {
-        self.openURL (ev.target.href);
-        ev.preventDefault ();
-        return false;
+      var target = ev.target;
+      while (target) {
+        if (target.href) {
+          self.openURL (target.href);
+          ev.preventDefault ();
+          return false;
+        }
+        target = target.parentNode;
       }
     });
+  }, // showHTML
 
-  }, // showContent
+  uass: {
+    'text/html': ' body { color: blue } ',
+    'text/plain': ' plaintext { white-space: -moz-pre-wrap; white-space: pre-wrap } '
+  }, // uass
 
   getURL: function () {
     return this._window.location.href;

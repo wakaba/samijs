@@ -1084,6 +1084,15 @@ SAMI.XHR = new SAMI.Class (function (url, onsuccess, onerror) {
     return this._url; // might be wrong if redirected
   }, // getRequestURL
 
+  getMediaTypeNoParam: function () {
+    // XXX maybe we should apply HTML5 content sniffing algorithm, at
+    // least for unspecified case
+
+    var type = this.getHeaderFieldBody ('Content-Type') || 'text/plain';
+    type = (type.split(/;/, 2)[0] || 'text/plain').replace (/\s+/g, '').toLowerCase ();
+    return type;
+  }, // getMediaTypeNoParam
+
   getHeaderFieldBody: function (name) {
     return this._xhr.getResponseHeader (name);
   }, // getHeaderFieldBody
