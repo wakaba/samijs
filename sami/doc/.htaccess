@@ -1,0 +1,3 @@
+AddType application/atom+xml .atom
+AddCharset utf-8 .u8
+AddLanguage en .en
