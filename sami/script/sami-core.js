@@ -630,20 +630,30 @@ SAMI.Class.addClassMethods (SAMI.Node, {
         nl = null;
       }
       return new SAMI.List (nl);
-    } else if (window.uu && uu.css) {
+    } else if (self.uu && uu.css) {
       if (selectors != "") {
         /* NOTE: uu.css return all elements for "" or ",xxx". */
         return new SAMI.List (uu.css (selectors, node));
       } else {
         return new SAMI.List;
       }
-    } else if (window.Ten && Ten.DOM && Ten.DOM.getElementsBySelector) {
+    } else if (self.Ten && Ten.DOM && Ten.DOM.getElementsBySelector) {
       return new SAMI.List (Ten.DOM.getElementsBySelector (selectors));
     } else {
-      return new SAMI.List;
+      return new SAMI.List; // XXX
     }
-  } // querySelectorAll
-});
+  }, // querySelectorAll
+
+  getElementsByClassName: function (node, className) {
+    if (node.getElementsByClassName) {
+      return new SAMI.List (node.getElementsByClassName (className));
+    } else if (self.Ten && Ten.DOM && Ten.DOM.getElementsByClassName) {
+      return new SAMI.List (Ten.DOM.getElementsByClassName (className, node));
+    } else {
+      return new SAMI.List; // XXX
+    }
+  } // getElementsByClassName
+}); // SAMI.Node
 
 SAMI.Document = {};
 
@@ -1223,6 +1233,22 @@ SAMI.XHR = new SAMI.Class (function (url, onsuccess, onerror) {
       this._onerror ();
     }
   }, // get
+
+  post: function () { // XXX response body
+    if (!this._xhr) return;
+
+    var self = this;
+    try {
+      this._xhr.open ('POST', this._url, true);
+      this._xhr.onreadystatechange = function () {
+        self._onreadystatechange ();
+      }; // onreadystatechange
+      this._xhr.send (null);
+    } catch (e) {
+      this._xhr = new SAMI.XHR.ErrorXHR (e);
+      this._onerror ();
+    }
+  }, // post
 
   _onreadystatechange: function () {
     if (this._xhr.readyState == 4) {
