@@ -1267,6 +1267,9 @@ SAMI.XHR = new SAMI.Class (function (url, onsuccess, onerror) {
   getText: function () {
     return this._xhr.responseText;
   }, // getText
+  getJSON: function () {
+    return SAMI.JSON.parse (this._xhr.responseText);
+  }, // getJSON
   getDocument: function () {
     return this._xhr.responseXML;
   }, // getDocument

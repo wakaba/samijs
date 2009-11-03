@@ -1,3 +1,7 @@
+2009-11-03  Wakaba  <wakaba@suika.fam.cx>
+
+	* sami-core.js (getJSON): New method.
+
 2009-09-22  Wakaba  <wakaba@suika.fam.cx>
 
 	* sami-core.js: Added |post| method to XHR.
