@@ -1,0 +1,23 @@
+SAMI JavaScript Framework
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sami is a lightweight JavaScript framework for modern Web applications
+in Web browser environment or the Web platform.
+
+Sami Update Information (An Atom feed)
+http://suika.fam.cx/www/js/sami/doc/sami-commit
+
+Sami git Repository
+http://suika.fam.cx/gate/git/bare/sami.git/
+
+Sami git Repository Web Interface
+http://suika.fam.cx/gate/git/wi/sami.git/
+
+* Author
+
+Wakaba <w@suika.fam.cx>.
+
+* Acknowledgement
+
+Sami is partially inspired by Ten.js
+<http://www.hatena.ne.jp/js/Ten/Ten.js>.
