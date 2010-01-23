@@ -1,3 +1,10 @@
 AddType application/atom+xml .atom
 AddCharset utf-8 .u8
 AddLanguage en .en
+
+Redirect 301 /www/js/sami/doc/sami-commit.en.atom.u8 http://suika.fam.cx/gate/git/wi/sami.git/atom
+Redirect 301 /www/js/sami/doc/sami-commit.en.atom http://suika.fam.cx/gate/git/wi/sami.git/atom
+Redirect 301 /www/js/sami/doc/sami-commit.en http://suika.fam.cx/gate/git/wi/sami.git/atom
+Redirect 301 /www/js/sami/doc/sami-commit http://suika.fam.cx/gate/git/wi/sami.git/atom
+
+## License: Public domain.
