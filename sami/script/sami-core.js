@@ -266,6 +266,10 @@ SAMI.List = new SAMI.Class (function (arrayLike) {
     this.list = arrayLike || [];
   }
 }, {
+  getLength: function () {
+    return this.list.length;
+  }, // getLength
+
   getFirst: function () {
     if (this.list.length) {
       return this.list[0];
@@ -529,6 +533,20 @@ SAMI.Set.Unordered = new SAMI.Class (function () {
   } // has
 }); // Unordered
 
+/* --- Integer --- */
+
+if (!SAMI.Integer) SAMI.Integer = {};
+
+SAMI.Class.addClassMethods (SAMI.Integer, {
+  toPaddedHex: function (i, n) {
+    var h = parseInt (i).toString (16).toUpperCase ();
+    while (h.length < n) {
+      h = '0' + h;
+    }
+    return h;
+  } // toPaddedHex
+}); // SAMI.Integer class methods
+
 /* --- String --- */
 
 if (!SAMI.String) SAMI.String = {};
@@ -560,6 +578,14 @@ SAMI.Class.addClassMethods (SAMI.String, {
       return "'" + s + "'";
     }
   }, // toJSStringLiteral
+
+  toCSSIDENT: function (s) {
+    s += '';
+    s = s.replace (/[\u0000-\u002C\u002E\u002F\u003A-\u0040\u005B-\u005E\u0060\u007A-\u007F]|^[0-9-]/g, function (t) {
+      return '\\' + SAMI.Integer.toPaddedHex (t.charCodeAt (0), 6);
+    });
+    return s;
+  }, // toCSSIDENT
 
   htescape: function (s) {
     return s
@@ -653,11 +679,14 @@ SAMI.Class.addClassMethods (SAMI.Node, {
 
   getElementsByClassName: function (node, className) {
     if (node.getElementsByClassName) {
+      // Live, but applications should not rely on it.
       return new SAMI.List (node.getElementsByClassName (className));
     } else if (self.Ten && Ten.DOM && Ten.DOM.getElementsByClassName) {
+      // Not live
       return new SAMI.List (Ten.DOM.getElementsByClassName (className, node));
     } else {
-      return new SAMI.List; // XXX
+      // Not live
+      return SAMI.Node.querySelectorAll (node, '.' + SAMI.String.toCSSIDENT (className));
     }
   } // getElementsByClassName
 }); // SAMI.Node

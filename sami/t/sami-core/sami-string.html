@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<title>SAMI.Integer</title>
+<h1>SAMI.Integer</h1>
+
+<p id=result class=FAIL>FAIL (noscript)</p>
+
+<pre id=result-tap style="white-space: pre-wrap"></pre>
+
+<script src="../../script/sami-core.js"></script>
+<script src="../../script/sami-test.js"></script>
+<script>
+  var r = document.getElementById ('result');
+  var tap = document.getElementById ('result-tap');
+
+  SAMI.Global.install ();
+  SAMI.Test.Utility.install ();
+
+  var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
+  tm.is (SAMI.String.toCSSIDENT ('a'), 'a');
+  tm.is (SAMI.String.toCSSIDENT ('ABC'), 'ABC');
+  tm.is (SAMI.String.toCSSIDENT ('0120'), '\\000030120');
+  tm.is (SAMI.String.toCSSIDENT ('-foo-bar'), '\\00002Dfoo-bar');
+  tm.is (SAMI.String.toCSSIDENT ('Q&A'), 'Q\\000026A');
+  tm.is (SAMI.String.toCSSIDENT ('\u4e00abc'), '\u4e00abc');
+  tm.is (SAMI.String.toCSSIDENT ('\u0000\u002C\u002E\u002F\u003A\u003F\u0040\u005B\u005C\u005D\u005E\u0060\u007B\u007B\u007C\u007D\u007E\u007F'), '\\000000\\00002C\\00002E\\00002F\\00003A\\00003F\\000040\\00005B\\00005C\\00005D\\00005E\\000060\\00007B\\00007B\\00007C\\00007D\\00007E\\00007F');
+
+  tm.done ();
+</script>

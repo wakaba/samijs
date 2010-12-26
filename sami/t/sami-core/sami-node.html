@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<title>SAMI.Node</title>
+<h1>SAMI.Node</h1>
+
+<p id=result class=FAIL>FAIL (noscript)</p>
+
+<pre id=result-tap style="white-space: pre-wrap"></pre>
+
+<div class=data>
+  <div class=test-class-1>A</div>
+  <div class=test-class-1>B</div>
+  <div class=test-class-1>C</div>
+  <div class=2-test-class>a</div>
+</div>
+
+<script src="../../script/sami-core.js"></script>
+<script src="../../script/sami-test.js"></script>
+<script>
+  var r = document.getElementById ('result');
+  var tap = document.getElementById ('result-tap');
+
+  SAMI.Global.install ();
+  SAMI.Test.Utility.install ();
+
+  var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
+  { // getElementsByClassName - not found
+    var l = SAMI.Node.getElementsByClassName (document, 'notfoundclass');
+    tm.is (l.getLength (), 0);
+  }
+
+  { // getElementsByClassName - found
+    var l = SAMI.Node.getElementsByClassName (document, 'test-class-1');
+    tm.is (l.getLength (), 3);
+    tm.is (l.getFirst ().innerHTML, 'A');
+    tm.is (l.getLast ().innerHTML, 'C');
+  }
+
+  { // getElementsByClassName - found, invalid as CSS |IDENT|
+    var l = SAMI.Node.getElementsByClassName (document, '2-test-class');
+    tm.is (l.getLength (), 1);
+    tm.is (l.getFirst ().innerHTML, 'a');
+  }
+
+  tm.done ();
+</script>
