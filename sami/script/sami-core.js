@@ -266,6 +266,13 @@ SAMI.List = new SAMI.Class (function (arrayLike) {
     this.list = arrayLike || [];
   }
 }, {
+  getFirst: function () {
+    if (this.list.length) {
+      return this.list[0];
+    } else {
+      return null;
+    }
+  }, // getFirst
   getLast: function () {
     if (this.list.length) {
       return this.list[this.list.length - 1];

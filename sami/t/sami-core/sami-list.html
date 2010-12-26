@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<title>SAMI.List</title>
+<h1>SAMI.List</h1>
+
+<p id=result class=FAIL>FAIL (noscript)</p>
+
+<pre id=result-tap style="white-space: pre-wrap"></pre>
+
+<script src="../../script/sami-core.js"></script>
+<script src="../../script/sami-test.js"></script>
+<script>
+  var r = document.getElementById ('result');
+  var tap = document.getElementById ('result-tap');
+
+  SAMI.Global.install ();
+  SAMI.Test.Utility.install ();
+
+  var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
+  { // empty
+    var list = new SAMI.List;
+
+    var first = list.getFirst ();
+    tm.is (first, null);
+
+    var last = list.getFirst ();
+    tm.is (last, null);
+  }
+  
+  { // not empty
+    var list = new SAMI.List (['a', 'b']);
+
+    var first = list.getFirst ();
+    tm.is (first, 'a');
+
+    var last = list.getLast ();
+    tm.is (last, 'b');
+  }
+
+  tm.done ();
+</script>
