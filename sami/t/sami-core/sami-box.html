@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<title>SAMI.Box</title>
+<style>
+  .sami-box-test-box {
+    position: absolute;
+  }
+</style>
+<h1>SAMI.Box</h1>
+
+<p id=result class=FAIL>FAIL (noscript)</p>
+
+<pre id=result-tap style="white-space: pre-wrap"></pre>
+
+<script src="../../script/sami-core.js"></script>
+<script src="../../script/sami-test.js"></script>
+<script src="http://suika.fam.cx/www/css/noderect/NodeRect.js"></script>
+<script>
+  var r = document.getElementById ('result');
+  var tap = document.getElementById ('result-tap');
+
+  SAMI.Global.install ();
+  SAMI.Test.Utility.install ();
+
+  var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
+  {
+    var box = new SAMI.Box ({
+      id: 'sami-box-test-1',
+      className: 'class1 class2 sami-box-test-box',
+      rect: {
+        top: 12, left: 23, width: 109, height: 20
+      }
+    });
+    var el = document.getElementById ('sami-box-test-1');
+    tm.ng (el);
+
+    box.show ();
+
+    el = document.getElementById ('sami-box-test-1');
+    tm.ok (el);
+    var rect = NR.Element.getRects (el, window).borderBox;
+    tm.is (rect.top, 12);
+    tm.is (rect.left, 23);
+    tm.is (rect.width, 109);
+    tm.is (rect.height, 20);
+    tm.is (el.className, 'class1 class2 sami-box-test-box');
+
+    box.discard ();
+
+    if (document.all) {
+      tm.is (el.parentNode.nodeType, 11); // DOCUMENT_NODE
+    } else {
+      tm.ng (el.parentNode);
+    }
+    el = document.getElementById ('sami-box-test-1');
+    tm.ng (el);
+  }
+
+  {
+    var box = new SAMI.Box ({
+      id: 'sami-box-test-2',
+      className: 'sami-box-test-box',
+      rect: {
+        top: 12, left: 23, width: 109, height: 20
+      }
+    });
+    box.show ();
+
+    var el = document.getElementById ('sami-box-test-2');
+
+    var rect = NR.Element.getRects (el, window).borderBox;
+    tm.is (rect.top, 12);
+    tm.is (rect.left, 23);
+    tm.is (rect.width, 109);
+    tm.is (rect.height, 20);
+
+    box.applyPositionDiff ({x: 10, y: -20});
+    rect = NR.Element.getRects (el, window).borderBox;
+    tm.is (rect.top, 12 - 20);
+    tm.is (rect.left, 23 + 10);
+    tm.is (rect.width, 109);
+    tm.is (rect.height, 20);
+
+    box.applyPositionDiff ({x: -5, y: -30});
+    rect = NR.Element.getRects (el, window).borderBox;
+    tm.is (rect.top, 12 - 30);
+    tm.is (rect.left, 23 - 5);
+    tm.is (rect.width, 109);
+    tm.is (rect.height, 20);
+  }
+
+  tm.done ();
+</script>

@@ -114,10 +114,16 @@ SAMI.Event.Error = new SAMI.Subclass (function () {
 }); // Error
 
 SAMI.Event.Browser = new SAMI.Subclass (function (be) {
+  if (!be) return; // For inheriting
   be = be || window.event;
   this.browserEvent = be;
-  this.type = be.type;
-  this.bubbles = be.bubbles;
+  if (be.type == 'datasetchanged' && be.samiEventType) {
+    this.type = be.samiEventType;
+    this.bubbles = be.samiBubbles;
+  } else {
+    this.type = be.type;
+    this.bubbles = be.bubbles;
+  }
   this.cancelable = be.cancelable;
   this.target = be.target || be.srcElement;
 }, SAMI.Event, {
@@ -144,7 +150,46 @@ SAMI.Event.Browser = new SAMI.Subclass (function (be) {
   } // isDefaultPrevented
 }); // Browser
 
+SAMI.Event.Browser.Custom = new SAMI.Subclass (function (opts) {
+  var be;
+  if (document.createEvent) {
+    be = document.createEvent ('Event');
+    be.initEvent (opts.type, opts.bubbles, opts.cancelable);
+    this.type = be.type;
+    this.bubbles = be.bubbles;
+  } else {
+    be = document.createEventObject ();
+    be.samiBubbles = opts.bubbles || false;
+    be.cancelable = opts.cancelable || false;
+    be.samiEventType = opts.type;
+    this.type = be.samiEventType;
+    this.bubbles = be.samiBubbles;
+  }
+  this.browserEvent = be;
+  this.cancelable = be.cancelable;
+  if (opts.args) {
+    for (var n in opts.args) {
+      be[n] = opts.args[n];
+    }
+  }
+}, SAMI.Event.Browser, {
+  fireOn: function (el) {
+    this.target = el;
+    if (el.dispatchEvent) {
+      el.dispatchEvent (this.browserEvent);
+    } else {
+      // IE does not support custom events.  Instead, we fire
+      // |ondatasetchanged|, as modern scripts are unlikely relying
+      // on outdated databinding feature.
+      //
+      // |fireEvent| cannot be invoked for elements not part of the document.
+      el.fireEvent ('ondatasetchanged', this.browserEvent);
+    }
+  } // fireOn
+}); // Custom
+
 SAMI.Observer = new SAMI.Class (function (target, eventType, onevent) {
+  if (!target) return; // For inheriting
   if (typeof (target) == 'string') { // for compatibility
     this.eventType = target;
     this.target = eventType;
@@ -185,6 +230,22 @@ SAMI.Observer = new SAMI.Class (function (target, eventType, onevent) {
     }
   } // stop
 }); // Observer
+
+SAMI.Observer.Custom = function (target, eventType, onevent) {
+  if (document.dispatchEvent) {
+    return new SAMI.Observer (target, eventType, onevent);
+  } else {
+    return new SAMI.Observer (target, 'datasetchanged', function (event) {
+      if (event.samiEventType && event.samiEventType == eventType) {
+        if (!event.samiBubbles) {
+          if (event.srcElement != target) return;
+        }
+        onevent.apply (this, arguments);
+        event.returnValue = false;
+      }
+    });
+  }
+};
 
 new SAMI.Observer ('load', window, function () {
   SAMI.windowLoaded = true;
@@ -971,6 +1032,50 @@ SAMI.ElementHash = new SAMI.Class (function () {
     }
   } // getOrCreate
 }); // ElementHash
+
+SAMI.Box = new SAMI.Class (function (opts) {
+  this.element = document.createElement ('div');
+
+  if (opts.rect) {
+    var rect = opts.rect;
+    this.initialRect = rect;
+    var style = this.element.style;
+    style.top = rect.top + 'px';
+    style.left = rect.left + 'px';
+    style.width = rect.width + 'px';
+    style.height = rect.height + 'px';
+  }
+
+  if (opts.className) {
+    this.element.className = opts.className;
+  }
+
+  if (opts.id) {
+    this.element.id = opts.id;
+  }
+}, {
+  show: function () {
+    var el = this.element;
+    if (!el.parentNode) {
+      if (window.Ten && Ten.AsyncLoader) {
+        Ten.AsyncLoader.insertToBody (el);
+      } else {
+        document.body.appendChild (el);
+      }
+    }
+  }, // show
+  discard: function () {
+    var parent = this.element.parentNode;
+    if (parent) parent.removeChild (this.element);
+  }, // discard
+
+  applyPositionDiff: function (vector) {
+    var initial = this.initialRect;
+    var style = this.element.style;
+    style.top = (initial ? initial.top : 0) + vector.y + 'px';
+    style.left = (initial ? initial.left : 0) + vector.x + 'px';
+  } // applyPositionDiff
+}); // Box
 
 /* --- Script --- */
 

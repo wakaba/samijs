@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<title>SAMI.Event</title>
+<h1>SAMI.Event</h1>
+
+<p id=result class=FAIL>FAIL (noscript)</p>
+
+<pre id=result-tap style="white-space: pre-wrap"></pre>
+
+<script src="../../script/sami-core.js"></script>
+<script src="../../script/sami-test.js"></script>
+<script>
+  var r = document.getElementById ('result');
+  var tap = document.getElementById ('result-tap');
+
+  SAMI.Global.install ();
+  SAMI.Test.Utility.install ();
+
+  var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
+  { // SAMI.Event.Browser.Custom
+    var ev = new SAMI.Event.Browser.Custom ({
+      type: 'samiTestEvent1',
+      bubbles: true
+    });
+    tm.is (ev.type, 'samiTestEvent1');
+    tm.is (ev.cancelable, false);
+    tm.is (ev.bubbles, true);
+    tm.is (ev.target, null);
+
+    var el = document.createElement ('div');
+    var el2 = document.createElement ('div');
+    var called = false;
+    var called2 = false;
+    new SAMI.Observer.Custom (el, 'samiTestEvent1', function (event) {
+      var ev = new SAMI.Event.Browser (event);
+      tm.is (ev.type, 'samiTestEvent1');
+      tm.is (ev.target, el);
+      called = true;
+    });
+    new SAMI.Observer.Custom (el2, 'samiTestEvent1', function (event) {
+      var ev = new SAMI.Event.Browser (event);
+      tm.is (ev.type, 'samiTestEvent1');
+      tm.is (ev.target, el);
+      called2 = true;
+    });
+
+    el2.appendChild (el);
+    document.body.appendChild (el2);
+    ev.fireOn (el);
+    tm.is (ev.target, el);
+
+    tm.ok (called);
+    tm.ok (called2);
+  }
+
+  { // SAMI.Event.Browser.Custom - bubbles = false
+    var ev = new SAMI.Event.Browser.Custom ({
+      type: 'samiTestEvent2'
+    });
+    tm.is (ev.type, 'samiTestEvent2');
+    tm.is (ev.cancelable, false);
+    tm.is (ev.bubbles, false);
+    tm.is (ev.target, null);
+
+    var el = document.createElement ('div');
+    var el2 = document.createElement ('div');
+    var called = false;
+    var called2 = false;
+    new SAMI.Observer.Custom (el, 'samiTestEvent2', function (event) {
+      var ev = new SAMI.Event.Browser (event);
+      tm.is (ev.type, 'samiTestEvent2');
+      tm.is (ev.target, el);
+      called = true;
+    });
+    new SAMI.Observer.Custom (el2, 'samiTestEvent2', function (event) {
+      called2 = true;
+    });
+
+    el2.appendChild (el);
+    document.body.appendChild (el2);
+    ev.fireOn (el);
+    tm.is (ev.target, el);
+
+    tm.ok (called);
+    tm.ng (called2);
+  }
+
+  tm.done ();
+</script>
