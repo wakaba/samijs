@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<title>SAMI.Viewport</title>
+<h1>SAMI.Viewport</h1>
+
+<p id=result class=FAIL>FAIL (noscript)</p>
+
+<pre id=result-tap style="white-space: pre-wrap"></pre>
+
+<script src="../../script/sami-core.js"></script>
+<script src="../../script/sami-test.js"></script>
+<script>
+  var r = document.getElementById ('result');
+  var tap = document.getElementById ('result-tap');
+
+  SAMI.Global.install ();
+  SAMI.Test.Utility.install ();
+
+  var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
+  {
+    var vp = SAMI.Viewport.top;
+    tm.ok (vp);
+
+    var el = vp.getElementFromVector ({x: -10, y: -20});
+    tm.ng (el);
+
+    el = vp.getElementFromVector ({x: 0, y: 0});
+    tm.ok (el);
+    tm.is (el.nodeType, 1);
+
+    el = vp.getElementFromVector ({x: 10, y: 20});
+    tm.ok (el);
+    tm.is (el.nodeType, 1);
+  }
+
+  tm.done ();
+</script>

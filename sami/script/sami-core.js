@@ -923,7 +923,7 @@ SAMI.Class.addClassMethods (SAMI.Element, {
   }, // getClassNames
   addClassName: function (el, newClassName) {
     el.className = el.className + ' ' + newClassName;
-  }, // deleteClassName
+  }, // addClassName
   deleteClassName: function (el, oldClassName) {
     var classNames = el.className.split (SAMI.SpaceChars);
     var newClasses = [];
@@ -1062,8 +1062,13 @@ SAMI.Box = new SAMI.Class (function (opts) {
       } else {
         document.body.appendChild (el);
       }
+    } else {
+      if (el.style.display == 'none') el.style.display = '';
     }
   }, // show
+  hide: function () {
+    this.element.style.display = 'none';
+  }, // hide
   discard: function () {
     var parent = this.element.parentNode;
     if (parent) parent.removeChild (this.element);
@@ -1121,7 +1126,7 @@ SAMI.Class.addClassMethods (SAMI.Script, {
   } // loadScripts
 }); // Script class methods
 
-/* --- Style --- */
+/* --- Style and rendering --- */
 
 SAMI.Style = {};
 
@@ -1148,6 +1153,21 @@ SAMI.Class.addClassMethods (SAMI.Style, {
     SAMI.Element.appendToHead (link);
   } // loadStyle
 }); // Style class methods
+
+SAMI.Viewport = new SAMI.Class (function (window) {
+  this.window = window;
+}, {
+  getElementFromVector: function (vector) {
+    if (vector.x < 0 || vector.y < 0) return null;
+    var node = this.window.document.elementFromPoint (vector.x, vector.y);
+    while (node && (node.nodeType != 1 /* ELEMENT_NODE */)) {
+      node = node.parentNode;
+    }
+    return node; // or |null|
+  } // getElementFromVector
+}); // Viewport
+
+SAMI.Viewport.top = new SAMI.Viewport (window);
 
 /* --- URL --- */
 

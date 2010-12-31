@@ -89,5 +89,20 @@
     tm.is (rect.height, 20);
   }
 
+  {
+    var box = new SAMI.Box ({
+      id: 'sami-box-test-3'
+    });
+    box.show ();
+
+    var el = document.getElementById ('sami-box-test-3');
+
+    box.hide ();
+    tm.is (el.style.display, 'none');
+
+    box.show ();
+    tm.isnt (el.style.display, 'none');
+  }
+
   tm.done ();
 </script>
