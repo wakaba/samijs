@@ -749,7 +749,32 @@ SAMI.Class.addClassMethods (SAMI.Node, {
       // Not live
       return SAMI.Node.querySelectorAll (node, '.' + SAMI.String.toCSSIDENT (className));
     }
-  } // getElementsByClassName
+  }, // getElementsByClassName
+
+  isDescendantOf: function (descendant, ancestor) {
+    if (!descendant || !ancestor) return false;
+    if (ancestor.contains &&
+        ancestor.nodeType == 1 /* ELEMENT_NODE */ &&
+        descendant.nodeType == 1 /* ELEMENT_NODE */) {
+      return descendant != ancestor && ancestor.contains (descendant);
+    } else if (ancestor.compareDocumentPosition) {
+      if (ancestor.compareDocumentPosition (descendant)
+              & 0x10 /* DOCUMENT_POSITION_CONTAINED_BY */) {
+        if (descendant.nodeType != 2 /* ATTRIBUTE_NODE */) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      while (descendant) {
+        descendant = descendant.parentNode;
+        if (descendant == ancestor) {
+          return true;
+        }
+      }
+      return false;
+    }
+  } // isDescendantOf
 }); // SAMI.Node
 
 SAMI.Document = {};

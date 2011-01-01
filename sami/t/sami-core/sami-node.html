@@ -6,11 +6,21 @@
 
 <pre id=result-tap style="white-space: pre-wrap"></pre>
 
-<div class=data>
+<div class=data style=display:none>
   <div class=test-class-1>A</div>
   <div class=test-class-1>B</div>
   <div class=test-class-1>C</div>
   <div class=2-test-class>a</div>
+</div>
+
+<div id=node1 style=display:none>
+  <div id=node2>
+    <div id=node3>
+      text
+    </div>
+  </div>
+  <div id=node4>
+  </div>
 </div>
 
 <script src="../../script/sami-core.js"></script>
@@ -40,6 +50,55 @@
     var l = SAMI.Node.getElementsByClassName (document, '2-test-class');
     tm.is (l.getLength (), 1);
     tm.is (l.getFirst ().innerHTML, 'a');
+  }
+  
+  { // isDescendantOf - missing arguments
+    tm.is (SAMI.Node.isDescendantOf (null, null), false);
+    tm.is (SAMI.Node.isDescendantOf (document, null), false);
+    tm.is (SAMI.Node.isDescendantOf (null, document.body), false);
+  }
+
+  { // isDescendantOf - yes
+    tm.is (SAMI.Node.isDescendantOf (document.body, document), true);
+    tm.is (SAMI.Node.isDescendantOf ($('node1'), document), true);
+    tm.is (SAMI.Node.isDescendantOf ($('node3').firstChild, document), true);
+    tm.is (SAMI.Node.isDescendantOf ($('node2'), $('node1')), true);
+    tm.is (SAMI.Node.isDescendantOf ($('node3'), $('node1')), true);
+    tm.is (SAMI.Node.isDescendantOf ($('node3'), $('node2')), true);
+    tm.is (SAMI.Node.isDescendantOf ($('node3').firstChild, $('node1')), true);
+
+    var div1 = document.createElement ('div');
+    var div2 = document.createElement ('div');
+    div1.appendChild (div2);
+    tm.is (SAMI.Node.isDescendantOf (div2, div1), true);
+  }
+
+  { // isDescendantOf - self
+    tm.is (SAMI.Node.isDescendantOf (document, document), false);
+    tm.is (SAMI.Node.isDescendantOf (document.body, document.body), false);
+    tm.is (SAMI.Node.isDescendantOf ($('node1'), $('node1')), false);
+    tm.is (SAMI.Node.isDescendantOf ($('node3').firstChild, $('node3').firstChild), false);
+  }
+
+  { // isDescendantOf - ancestor
+    tm.is (SAMI.Node.isDescendantOf (document, document.body), false);
+    tm.is (SAMI.Node.isDescendantOf (document, $('node1')), false);
+    tm.is (SAMI.Node.isDescendantOf ($('node1'), $('node3')), false);
+    tm.is (SAMI.Node.isDescendantOf ($('node1'), $('node4')), false);
+    tm.is (SAMI.Node.isDescendantOf ($('node1'), $('node3').firstChild), false);
+  }
+
+  { // isDescendantOf - others
+    tm.is (SAMI.Node.isDescendantOf ($('node2'), $('node4')), false);
+    tm.is (SAMI.Node.isDescendantOf ($('node4'), $('node2')), false);
+    tm.is (SAMI.Node.isDescendantOf ($('node4'), document.createElement ('div')), false);
+  }
+
+  { // isDescendantOf - attributes
+    tm.is (SAMI.Node.isDescendantOf ($('node2'), $('node2').getAttributeNode ('id')), false);
+    tm.is (SAMI.Node.isDescendantOf ($('node2').getAttributeNode ('id'), $('node2')), false);
+    tm.is (SAMI.Node.isDescendantOf ($('node2'), document.createAttribute ('attr1')), false);
+    tm.is (SAMI.Node.isDescendantOf (document.createAttribute ('attr1'), $('node2')), false);
   }
 
   tm.done ();
