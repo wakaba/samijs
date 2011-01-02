@@ -1074,6 +1074,7 @@ SAMI.Script = {};
 
 SAMI.Class.addClassMethods (SAMI.Script, {
   loadScripts: function (urls, onload) {
+    urls = new SAMI.List (urls);
     var number = urls.list.length;
     var counter = 0;
     var check = function () {

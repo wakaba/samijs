@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<title>SAMI.UI</title>
+<h1>SAMI.UI</h1>
+
+<p id=result class=FAIL>FAIL (noscript)</p>
+
+<pre id=result-tap style="white-space: pre-wrap"></pre>
+
+<script src="../../script/sami-core.js"></script>
+<script src="../../script/sami-test.js"></script>
+<script>
+  var r = document.getElementById ('result');
+  var tap = document.getElementById ('result-tap');
+
+  SAMI.Global.install ();
+  SAMI.Test.Utility.install ();
+
+  var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
+  {
+    var called1 = 0;
+    var called2 = 0;
+    SAMI.UI = {};
+    SAMI.UI.onLoadFunctions = [
+      function () { called1++ },
+      function () { called2++ }
+    ];
+    SAMI.Script.loadScripts (['../../script/sami-ui.js'], function () {
+      tm.is (called1, 1);
+      tm.is (called2, 1);
+      tm.done ();
+    });
+  }
+</script>

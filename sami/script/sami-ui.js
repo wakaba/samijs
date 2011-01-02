@@ -90,7 +90,7 @@ if (SAMI.UI.onLoadFunctions) {
 }
 
 /* ***** BEGIN LICENSE BLOCK *****
- * Copyright 2011 Wakaba <w@suika.fam.cx>.  All rights reserved.
+ * Copyright 2010-2011 Wakaba <w@suika.fam.cx>.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or 
  * modify it under the same terms as Perl itself.
@@ -123,7 +123,7 @@ if (SAMI.UI.onLoadFunctions) {
  * The Original Code is sami-core.js code.
  *
  * The Initial Developer of the Original Code is Wakaba.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
