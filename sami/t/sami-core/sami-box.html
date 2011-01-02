@@ -26,7 +26,7 @@
   {
     var box = new SAMI.Box ({
       id: 'sami-box-test-1',
-      className: 'class1 class2 sami-box-test-box',
+      classNames: 'class1 class2 sami-box-test-box',
       rect: {
         top: 12, left: 23, width: 109, height: 20
       }
@@ -59,7 +59,7 @@
   { // rect
     var box = new SAMI.Box ({
       id: 'sami-box-test-2',
-      className: 'sami-box-test-box',
+      classNames: 'sami-box-test-box',
       rect: {
         top: 12, left: 23, width: 109, height: 20
       }
@@ -162,7 +162,7 @@
     tm.ng (el);
   }
 
-  { // applyClassNameDiff without initial value
+  { // applyClassNamesDiff without initial value
     var box = new SAMI.Box ({
       id: 'sami-box-test-5'
     });
@@ -171,17 +171,17 @@
     var el = document.getElementById ('sami-box-test-5');
     tm.is (SAMI.Element.getClassNames (el).join (' '), '');
 
-    box.applyClassNameDiff ('class1');
+    box.applyClassNamesDiff ('class1');
     tm.is (SAMI.Element.getClassNames (el).join (' '), 'class1');
 
-    box.applyClassNameDiff ('class2');
+    box.applyClassNamesDiff ('class2');
     tm.is (SAMI.Element.getClassNames (el).join (' '), 'class2');
   }
 
-  { // applyClassNameDiff with initial value
+  { // applyClassNamesDiff with initial value
     var box = new SAMI.Box ({
       id: 'sami-box-test-6',
-      className: 'initialclass1'
+      classNames: 'initialclass1'
     });
     box.show ();
 
@@ -189,10 +189,10 @@
 
     tm.is (SAMI.Element.getClassNames (el).join (' '), 'initialclass1');
 
-    box.applyClassNameDiff ('class1');
+    box.applyClassNamesDiff ('class1');
     tm.is (SAMI.Element.getClassNames (el).join (' '), 'initialclass1 class1');
 
-    box.applyClassNameDiff ('class2');
+    box.applyClassNamesDiff ('class2');
     tm.is (SAMI.Element.getClassNames (el).join (' '), 'initialclass1 class2');
   }
 

@@ -1075,9 +1075,9 @@ SAMI.Box = new SAMI.Class (function (opts) {
     this.setInitialRect (opts.rect);
   }
 
-  if (opts.className) {
-    this.initialClassName = opts.className;
-    this.element.className = opts.className;
+  if (opts.classNames) {
+    this.initialClassNames = opts.classNames;
+    this.element.className = opts.classNames;
   }
 
   if (opts.id) {
@@ -1139,9 +1139,9 @@ SAMI.Box = new SAMI.Class (function (opts) {
     style.top = (initial ? initial.top : 0) + vector.y + 'px';
     style.left = (initial ? initial.left : 0) + vector.x + 'px';
   }, // applyPositionDiff
-  applyClassNameDiff: function (className) {
-    this.element.className = (this.initialClassName || '') + ' ' + (className || '');
-  } // applyClassNameDiff
+  applyClassNamesDiff: function (classNames) {
+    this.element.className = (this.initialClassNames || '') + ' ' + (classNames || '');
+  } // applyClassNamesDiff
 }); // Box
 
 /* --- Script --- */
@@ -1925,7 +1925,7 @@ if (SAMI.isDynamicallyLoaded) {
 }
 
 /* ***** BEGIN LICENSE BLOCK *****
- * Copyright 2008-2009 Wakaba <w@suika.fam.cx>.  All rights reserved.
+ * Copyright 2008-2011 Wakaba <w@suika.fam.cx>.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or 
  * modify it under the same terms as Perl itself.
