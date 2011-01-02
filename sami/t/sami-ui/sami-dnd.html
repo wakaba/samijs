@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<title>SAMI.DND</title>
+<h1>SAMI.DND</h1>
+
+<p id=result class=FAIL>FAIL (noscript)</p>
+
+<pre id=result-tap style="white-space: pre-wrap"></pre>
+
+<script src="../../script/sami-core.js"></script>
+<script src="../../script/sami-ui.js"></script>
+<script src="../../script/sami-test.js"></script>
+<script>
+  var r = document.getElementById ('result');
+  var tap = document.getElementById ('result-tap');
+
+  SAMI.Global.install ();
+  SAMI.Test.Utility.install ();
+
+  var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
+  {
+    var div1 = document.createElement ('div');
+    var div2 = document.createElement ('div');
+    var dnd = new SAMI.DND (div1, {
+    });
+    dnd.addDropzone (div2);
+    tm.ok (dnd);
+  }
+
+  tm.done ();
+</script>
