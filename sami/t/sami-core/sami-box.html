@@ -56,7 +56,7 @@
     tm.ng (el);
   }
 
-  {
+  { // rect
     var box = new SAMI.Box ({
       id: 'sami-box-test-2',
       className: 'sami-box-test-box',
@@ -87,9 +87,23 @@
     tm.is (rect.left, 23 - 5);
     tm.is (rect.width, 109);
     tm.is (rect.height, 20);
+
+    box.setInitialRect ({top: 40, left: 30, width: 20, height: 60});
+    rect = NR.Element.getRects (el, window).borderBox;
+    tm.is (rect.top, 40);
+    tm.is (rect.left, 30);
+    tm.is (rect.width, 20);
+    tm.is (rect.height, 60);
+
+    box.applyPositionDiff ({x: -5, y: -30});
+    rect = NR.Element.getRects (el, window).borderBox;
+    tm.is (rect.top, 40 - 30);
+    tm.is (rect.left, 30 - 5);
+    tm.is (rect.width, 20);
+    tm.is (rect.height, 60);
   }
 
-  {
+  { // |show| and |hide|
     var box = new SAMI.Box ({
       id: 'sami-box-test-3'
     });
@@ -102,6 +116,84 @@
 
     box.show ();
     tm.isnt (el.style.display, 'none');
+  }
+
+  { // |restore|
+    var box = new SAMI.Box ({
+      id: 'sami-box-test-4'
+    });
+    box.show ();
+
+    var el = document.getElementById ('sami-box-test-4');
+
+    box.restore ();
+    tm.is (el.style.display, 'none');
+
+    box.hide ();
+    tm.is (el.style.display, 'none');
+
+    box.restore ();
+    tm.is (el.style.display, 'none');
+
+    box.show ();
+    tm.isnt (el.style.display, 'none');
+
+    box.restore ();
+    tm.is (el.style.display, 'none');
+
+    box.restore ();
+    tm.isnt (el.style.display, 'none');
+
+    box.restore ();
+    tm.is (el.style.display, 'none');
+
+    box.hide ();
+    tm.is (el.style.display, 'none');
+
+    box.restore ();
+    tm.is (el.style.display, 'none');
+
+    box.discard ();
+    var el = document.getElementById ('sami-box-test-4');
+    tm.ng (el);
+
+    box.restore ();
+    var el = document.getElementById ('sami-box-test-4');
+    tm.ng (el);
+  }
+
+  { // applyClassNameDiff without initial value
+    var box = new SAMI.Box ({
+      id: 'sami-box-test-5'
+    });
+    box.show ();
+
+    var el = document.getElementById ('sami-box-test-5');
+    tm.is (SAMI.Element.getClassNames (el).join (' '), '');
+
+    box.applyClassNameDiff ('class1');
+    tm.is (SAMI.Element.getClassNames (el).join (' '), 'class1');
+
+    box.applyClassNameDiff ('class2');
+    tm.is (SAMI.Element.getClassNames (el).join (' '), 'class2');
+  }
+
+  { // applyClassNameDiff with initial value
+    var box = new SAMI.Box ({
+      id: 'sami-box-test-6',
+      className: 'initialclass1'
+    });
+    box.show ();
+
+    var el = document.getElementById ('sami-box-test-6');
+
+    tm.is (SAMI.Element.getClassNames (el).join (' '), 'initialclass1');
+
+    box.applyClassNameDiff ('class1');
+    tm.is (SAMI.Element.getClassNames (el).join (' '), 'initialclass1 class1');
+
+    box.applyClassNameDiff ('class2');
+    tm.is (SAMI.Element.getClassNames (el).join (' '), 'initialclass1 class2');
   }
 
   tm.done ();

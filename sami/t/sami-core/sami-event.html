@@ -1,10 +1,13 @@
 <!DOCTYPE HTML>
-<title>SAMI.Event</title>
-<h1>SAMI.Event</h1>
+<title>SAMI.Event / SAMI.Observer</title>
+<h1>SAMI.Event / SAMI.Observer</h1>
 
 <p id=result class=FAIL>FAIL (noscript)</p>
 
 <pre id=result-tap style="white-space: pre-wrap"></pre>
+
+<a id=node1></a>
+<a id=node2></a>
 
 <script src="../../script/sami-core.js"></script>
 <script src="../../script/sami-test.js"></script>
@@ -16,6 +19,72 @@
   SAMI.Test.Utility.install ();
 
   var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
+  { // SAMI.Observer disabled flag
+    var called = 0;
+    var node1 = $('node1');
+    var dispatch = function () {
+      if (node1.dispatchEvent) {
+        var event = document.createEvent ('Event');
+        event.initEvent ('click', false, false);
+        node1.dispatchEvent (event);
+      } else {
+        node1.fireEvent ('onclick');
+      }
+    };
+
+    var observer = new SAMI.Observer (node1, 'click', function () {
+      called++;
+    });
+    dispatch ();
+    tm.is (called, 1);
+
+    observer.stop ();
+    called = 0;
+    dispatch ();
+    tm.is (called, 0);
+
+    observer.stop ();
+    called = false;
+    dispatch ();
+    tm.is (called, 0);
+
+    observer.start ();
+    called = 0;
+    dispatch ();
+    tm.is (called, 1);
+
+    observer.start ();
+    called = 0;
+    dispatch ();
+    tm.is (called, 1);
+    dispatch ();
+    tm.is (called, 2);
+  }
+
+  { // SAMI.Observer disabled by default
+    var called = 0;
+    var node2 = $('node2');
+    var dispatch = function () {
+      if (node2.dispatchEvent) {
+        var event = document.createEvent ('Event');
+        event.initEvent ('click', false, false);
+        node2.dispatchEvent (event);
+      } else {
+        node2.fireEvent ('onclick');
+      }
+    };
+
+    var observer = new SAMI.Observer (node2, 'click', function () {
+      called++;
+    }, {disabled: true});
+    dispatch ();
+    tm.is (called, 0);
+
+    observer.start ();
+    dispatch ();
+    tm.is (called, 1);
+  }
 
   { // SAMI.Event.Browser.Custom
     var ev = new SAMI.Event.Browser.Custom ({

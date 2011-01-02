@@ -41,5 +41,19 @@
     tm.is (list.getLength (), 2);
   }
 
+  { // join
+    var list = new SAMI.List;
+    tm.is (list.join (' '), '');
+
+    var list = new SAMI.List (['a', 'b']);
+    tm.is (list.join (' '), 'a b');
+    tm.is (list.join ('\n'), 'a\nb');
+
+    var list = new SAMI.List (['', '', 'a', 'b', '']);
+    tm.is (list.join (''), 'ab');
+    tm.is (list.join (' '), '  a b ');
+    tm.is (list.join ('\n'), '\n\na\nb\n');
+  }
+
   tm.done ();
 </script>

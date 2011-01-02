@@ -188,7 +188,7 @@ SAMI.Event.Browser.Custom = new SAMI.Subclass (function (opts) {
   } // fireOn
 }); // Custom
 
-SAMI.Observer = new SAMI.Class (function (target, eventType, onevent) {
+SAMI.Observer = new SAMI.Class (function (target, eventType, onevent, opts) {
   if (!target) return; // For inheriting
   if (typeof (target) == 'string') { // for compatibility
     this.eventType = target;
@@ -200,14 +200,16 @@ SAMI.Observer = new SAMI.Class (function (target, eventType, onevent) {
   if (target.addEventListener) {
     this.code = onevent;
   } else if (target.attachEvent) {
-    this.code = function () {
+    this.code = function (event) {
       onevent (event);
     };
   } else {
     this.code = onevent;
   }
   this.disabled = true;
-  this.start ();
+  if (!opts || !opts.disabled) {
+    this.start ();
+  }
 }, {
   start: function () {
     if (!this.disabled) return;
@@ -430,6 +432,10 @@ SAMI.List = new SAMI.Class (function (arrayLike) {
     });
   }, // uniq
 
+  join: function () {
+    return this.list.join.apply (this.list, arguments);
+  }, // join
+
   sort: function (code) {
     var l = code ? this.list.sort (code) : this.list.sort ();
     return new this.constructor (l);
@@ -448,7 +454,7 @@ SAMI.List = new SAMI.Class (function (arrayLike) {
       if (eq (item, value)) {
         return new SAMI.List.Return (true);
       }
-    });
+    }) || false;
   }, // has
   
   switchByElementType: function () {
@@ -944,8 +950,12 @@ SAMI.Class.addClassMethods (SAMI.Element, {
   }, // hasAttribute
   
   getClassNames: function (el) {
-    return new SAMI.List (el.className.split (SAMI.SpaceChars));
+    var classNames = el.className;
+    return new SAMI.List (classNames ? classNames.split (SAMI.SpaceChars) : []).grep (function (v) { return v.length });
   }, // getClassNames
+  hasClassName: function (el, className) {
+    return this.getClassNames (el).has (className);
+  }, // hasClassName
   addClassName: function (el, newClassName) {
     el.className = el.className + ' ' + newClassName;
   }, // addClassName
@@ -1062,16 +1072,11 @@ SAMI.Box = new SAMI.Class (function (opts) {
   this.element = document.createElement ('div');
 
   if (opts.rect) {
-    var rect = opts.rect;
-    this.initialRect = rect;
-    var style = this.element.style;
-    style.top = rect.top + 'px';
-    style.left = rect.left + 'px';
-    style.width = rect.width + 'px';
-    style.height = rect.height + 'px';
+    this.setInitialRect (opts.rect);
   }
 
   if (opts.className) {
+    this.initialClassName = opts.className;
     this.element.className = opts.className;
   }
 
@@ -1090,21 +1095,53 @@ SAMI.Box = new SAMI.Class (function (opts) {
     } else {
       if (el.style.display == 'none') el.style.display = '';
     }
+    delete this.prevShown;
   }, // show
   hide: function () {
-    this.element.style.display = 'none';
+    if (!this.element) {
+      delete this.prevShown;
+    } else if (this.element.style.display != 'none') {
+      this.element.style.display = 'none';
+      this.prevShown = true;
+    } else {
+      delete this.prevShown;
+    }
   }, // hide
+  restore: function () {
+    if (this.prevShown) {
+      this.show ();
+    } else {
+      this.hide ();
+    }
+  }, // restore
   discard: function () {
     var parent = this.element.parentNode;
-    if (parent) parent.removeChild (this.element);
+    if (parent) {
+      this.prevShown = this.element.style.display != 'none';
+      parent.removeChild (this.element);
+    } else {
+      delete this.prevShown;
+    }
   }, // discard
+
+  setInitialRect: function (rect) {
+    this.initialRect = rect;
+    var style = this.element.style;
+    style.top = rect.top + 'px';
+    style.left = rect.left + 'px';
+    style.width = rect.width + 'px';
+    style.height = rect.height + 'px';
+  }, // setPositionByRect
 
   applyPositionDiff: function (vector) {
     var initial = this.initialRect;
     var style = this.element.style;
     style.top = (initial ? initial.top : 0) + vector.y + 'px';
     style.left = (initial ? initial.left : 0) + vector.x + 'px';
-  } // applyPositionDiff
+  }, // applyPositionDiff
+  applyClassNameDiff: function (className) {
+    this.element.className = (this.initialClassName || '') + ' ' + (className || '');
+  } // applyClassNameDiff
 }); // Box
 
 /* --- Script --- */

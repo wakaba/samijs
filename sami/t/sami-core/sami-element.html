@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<title>SAMI.Element</title>
+<h1>SAMI.Element</h1>
+
+<p id=result class=FAIL>FAIL (noscript)</p>
+
+<pre id=result-tap style="white-space: pre-wrap"></pre>
+
+<script src="../../script/sami-core.js"></script>
+<script src="../../script/sami-test.js"></script>
+<script>
+  var r = document.getElementById ('result');
+  var tap = document.getElementById ('result-tap');
+
+  SAMI.Global.install ();
+  SAMI.Test.Utility.install ();
+
+  var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
+  { // getClassNames, hasClassName
+    var div1 = document.createElement ('div');
+    var l1 = SAMI.Element.getClassNames (div1);
+    tm.is (l1.getLength (), 0);
+    tm.is (SAMI.Element.hasClassName (div1, 'class1'), false);
+    tm.is (SAMI.Element.hasClassName (div1, 'class2'), false);
+    tm.is (SAMI.Element.hasClassName (div1, 'class3'), false);
+
+    div1.className = 'class1 class2';
+    var l2 = SAMI.Element.getClassNames (div1);
+    tm.is (l2.getLength (), 2);
+    tm.is (l2.getFirst (), 'class1');
+    tm.is (l2.getLast (), 'class2');
+    tm.is (SAMI.Element.hasClassName (div1, 'class1'), true);
+    tm.is (SAMI.Element.hasClassName (div1, 'class2'), true);
+    tm.is (SAMI.Element.hasClassName (div1, 'class3'), false);
+    tm.is (SAMI.Element.hasClassName (div1, 'class1 class2'), false);
+
+    div1.className = ' class1  class2 ';
+    var l3 = SAMI.Element.getClassNames (div1);
+    tm.is (l3.getLength (), 2);
+    tm.is (l3.getFirst (), 'class1');
+    tm.is (l3.getLast (), 'class2');
+    tm.is (SAMI.Element.hasClassName (div1, 'class1'), true);
+    tm.is (SAMI.Element.hasClassName (div1, 'class2'), true);
+    tm.is (SAMI.Element.hasClassName (div1, 'class3'), false);
+    tm.is (SAMI.Element.hasClassName (div1, 'class1 class2'), false);
+  }
+
+  tm.done ();
+</script>
