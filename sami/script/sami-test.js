@@ -92,6 +92,7 @@ SAMI.Test.Item = new SAMI.Class (function () {
     return this.fields.has (fieldName);
   }, // hasField
   setField: function (fieldName, fieldValue, fieldOpt) {
+    fieldValue = new String (fieldValue);
     fieldValue.options = fieldOpt;
     this.fields.set (fieldName, fieldValue);
   } // setField
