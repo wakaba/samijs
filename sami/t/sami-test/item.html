@@ -31,7 +31,7 @@ value1
   var called = false;
   SAMI.Test.parseTestData ({}, document.getElementById ('test-data').text).forEach (function (test) {
     called = true;
-    tm.is (test.getFieldValue ('field0'), '');
+    tm.is (test.getFieldValue ('field0'), null);
     tm.is (test.getFieldValue ('field1'), '');
     tm.is (test.getFieldValue ('field2'), 'value1');
     tm.is (test.getFieldValue ('field3'), 'value1');

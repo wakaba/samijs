@@ -91,7 +91,7 @@ SAMI.Test.Item = new SAMI.Class (function () {
   getFieldValue: function (fieldName) {
     var f = this.getField (fieldName);
     if (f == null) {
-      return '';
+      return null;
     } else if (f == '') {
       return f.options.getFirst () || '';
     } else {
