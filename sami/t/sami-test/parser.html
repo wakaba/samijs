@@ -22,11 +22,11 @@
   }, function (test) {
     var actual = SAMI.Test.parseTestData ({}, test.getField ('data')).map (function (test) {
       return test.fields.mapToList (function (n, v) {
-        return '* ' + n + '\n"' + v + '"';
+        return '* ' + n + (v.options.getLength () ? '(' + v.options.join (',') + ')' : '') + '\n"' + v + '"';
       }).sort ().list.join ("\n");
     }).list.join ("\n$\n");
 
-    tm.ok (actual == test.getField ('document'), test.getField ('data'));
+    tm.is (actual, test.getField ('document'), test.getField ('data'));
   }, function () {
     tm.done ();
   }, function (e) {

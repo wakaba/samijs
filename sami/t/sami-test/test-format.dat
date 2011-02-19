@@ -28,3 +28,17 @@
 $
 * field2
 ""
+
+#data
+| #field1 prop1 prop2 prop3
+| data
+#document
+* field1(prop1,prop2,prop3)
+"data"
+
+#data
+| #field1 prop1 prop2 escaped
+| data\u4e00
+#document escaped
+* field1(prop1,prop2)
+"data\u4e00"
