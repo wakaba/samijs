@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<title>SAMI.Test.Item</title>
+
+<h1>SAMI.Test.Item</h1>
+
+<p id=result class=FAIL>FAIL (noscript)</p>
+
+<pre id=result-tap></pre>
+
+<script type="text/plain" id=test-data>
+#field1
+#field2 value1
+#field3 value1 value2
+#field4 value1 value2
+value3
+#field5 escaped
+value1
+#field6
+#field7
+value1
+</script>
+
+<script src="../../script/sami-core.js"></script>
+<script src="../../script/sami-test.js"></script>
+<script>
+  var r = document.getElementById ('result');
+  var tap = document.getElementById ('result-tap');
+
+  var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
+  var called = false;
+  SAMI.Test.parseTestData ({}, document.getElementById ('test-data').text).forEach (function (test) {
+    called = true;
+    tm.is (test.getFieldValue ('field0'), '');
+    tm.is (test.getFieldValue ('field1'), '');
+    tm.is (test.getFieldValue ('field2'), 'value1');
+    tm.is (test.getFieldValue ('field3'), 'value1');
+    tm.is (test.getFieldValue ('field4'), 'value3');
+    tm.is (test.getFieldValue ('field5'), 'value1');
+    tm.is (test.getFieldValue ('field6'), '');
+    tm.is (test.getFieldValue ('field7'), 'value1');
+  });
+  tm.ok (called);
+
+  tm.done ();
+</script>

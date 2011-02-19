@@ -88,6 +88,16 @@ SAMI.Test.Item = new SAMI.Class (function () {
   getField: function (fieldName) {
     return this.fields.get (fieldName);
   }, // getField
+  getFieldValue: function (fieldName) {
+    var f = this.getField (fieldName);
+    if (f == null) {
+      return '';
+    } else if (f == '') {
+      return f.options.getFirst () || '';
+    } else {
+      return f;
+    }
+  }, // getFieldValue
   hasField: function (fieldName) {
     return this.fields.has (fieldName);
   }, // hasField
