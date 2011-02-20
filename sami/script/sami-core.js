@@ -365,6 +365,35 @@ SAMI.List = new SAMI.Class (function (arrayLike) {
     return null;
   }, // forEachReverse
 
+  forEachAsync: function (code, ondone, opts) {
+    var list = [];
+    var length = this.list.length;
+    if (length == 0) {
+      if (ondone) ondone (undefined);
+      return;
+    }
+    for (var i = 0; i < length; i++) {
+      list.push (this.list[i]);
+    }
+    var n = (opts ? opts.n : null) || 1000;
+    var nOrig = n;
+    var delay = (opts ? opts.delay : null) || 0;
+    var loopCode = function () {
+      while (list.length && (n > 0)) {
+        var r = code (list.shift ());
+        if (r && r.stop) return ondone (r.returnValue);
+        n--;
+      }
+      if (list.length) {
+        n = nOrig;
+        setTimeout (loopCode, delay);
+      } else {
+        if (ondone) ondone (undefined);
+      }
+    };
+    setTimeout (loopCode, delay);
+  }, // forEachAsync
+
   map: function (code) {
     var newList = new this.constructor;
     var length = this.list.length;

@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<title>SAMI.List</title>
+<h1>SAMI.List</h1>
+
+<p id=result class=FAIL>FAIL (noscript)</p>
+
+<pre id=result-tap style="white-space: pre-wrap"></pre>
+
+<script src="../../script/sami-core.js"></script>
+<script src="../../script/sami-test.js"></script>
+<script>
+  var r = document.getElementById ('result');
+  var tap = document.getElementById ('result-tap');
+
+  SAMI.Global.install ();
+  SAMI.Test.Utility.install ();
+
+  var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
+
+  var list = new SAMI.List ([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  var result = '';
+  list.forEachAsync (function (item) {
+    result += ' ' + item;
+  }, function () {
+    tm.is (result, ' 1 2 3 4 5 6 7 8 9');
+    tm.done ();
+  });
+</script>

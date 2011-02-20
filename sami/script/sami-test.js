@@ -48,6 +48,7 @@ SAMI.Class.addClassMethods (SAMI.Test, {
         }
 
         if (test.hasField (fieldName)) {
+          // XXX |this| is not an EventTarget
           var e = new SAMI.Event ('error');
           e.type = 'duplicate field';
           e.text = fieldName;
@@ -65,13 +66,11 @@ SAMI.Class.addClassMethods (SAMI.Test, {
     return tests;
   }, // parseTestData
 
-  executeTestsByURL: function (url, fieldProps, code, ondone, onerror) {
+  executeTestsByURL: function (url, fieldProps, code, ondone, onerror, opts) {
     new SAMI.XHR (url, function () {
-      SAMI.Test.parseTestData (fieldProps, this.getText ()).forEach (function (test) {
+      SAMI.Test.parseTestData (fieldProps, this.getText ()).forEachAsync (function (test) {
         code (test);
-      });
-
-      if (ondone) ondone ();
+      }, ondone, opts ? opts.async : null);
     }, function () {
       var e = new SAMI.Event ('error');
       e.type = 'cannot retrieve test file';
