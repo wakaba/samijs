@@ -654,8 +654,9 @@ SAMI.Class.addClassMethods (SAMI.String, {
       if (c > 0x10FFFF) {
         return "\uFFFD";
       } else if (c > 0xFFFF) {
+        c -= 0x10000;
         var h = 55296 // 0b1101100000000000
-            | (((c & 1047552) >> 10) - 0x40); // 0b11111111110000000000
+            | (((c & 1047552) >> 10)); // 0b11111111110000000000
         var l = 56320 // 0b1101110000000000
             | (c & 1023); // 0b1111111111
         return String.fromCharCode (h, l);

@@ -17,6 +17,13 @@
 
   var tm = new SAMI.Test.Manager (r, new SAMI.StringContainer.Element (tap));
 
+  tm.is (SAMI.String.uUnescape ('a'), 'a');
+  tm.is (SAMI.String.uUnescape ('a\\u4E00b'), 'a\u4E00b');
+  tm.is (SAMI.String.uUnescape ('a\\U00004E00b'), 'a\u4E00b');
+  tm.is (SAMI.String.uUnescape ('\\U00010000'), '\uD800\uDC00');
+  tm.is (SAMI.String.uUnescape ('\\U000FFFFF'), '\uDBBF\uDFFF');
+  tm.is (SAMI.String.uUnescape ('\\U00100000'), '\uDBC0\uDC00');
+  tm.is (SAMI.String.uUnescape ('\\U0010FFFF'), '\uDBFF\uDFFF');
   tm.is (SAMI.String.toCSSIDENT ('a'), 'a');
   tm.is (SAMI.String.toCSSIDENT ('ABC'), 'ABC');
   tm.is (SAMI.String.toCSSIDENT ('0120'), '\\000030120');
