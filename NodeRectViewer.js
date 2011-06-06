@@ -663,7 +663,18 @@ NodeRectViewer.Controller.prototype.update = function () {
   this.clearHighlight ();
 
   var type = this.boxType;
-  var el = uu.css (this.selector)[this.selectorIndex];
+  var getBySelector = function (sel) {
+    if (window.uu && uu.css) {
+      return uu.css (sel);
+    } else if (window.Ten) {
+      return Ten.querySelectorAll (sel);
+    } else if (window.document.querySelector) {
+      return document.querySelectorAll (sel);
+    } else {
+      return [];
+    }
+  }; // getBySelector
+  var el = getBySelector (this.selector)[this.selectorIndex];
   if ((type.substring (0, 2) != 'ev' && el) ||
       (type.substring (0, 2) == 'ev' && this.lastEvent)) {
     NR.resetIndex ();
@@ -927,9 +938,11 @@ function NROnLoad () {
   NodeRectViewer.controller = new NodeRectViewer.Controller ();
 } // NROnLoad
 
+/*
 var s = document.createElement ('script');
-s.src = "http://uupaa-js.googlecode.com/svn/trunk/uupaa.js";
+s.src = "http://uupaa-js.googlecode.com/svn/trunk/0.8/src/uupaa.js";
 document.body.appendChild (s);
+*/
 
 var s = document.createElement ('script');
 if (NodeRectViewer.DEBUG) {
