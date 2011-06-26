@@ -10,7 +10,7 @@
     border-radius: 2px;
   }
   .fdh-history-list:hover .fdh-history-button,
-  .fdh-history-list:active .fdh-history-button {
+  .fdh-history-list:focus .fdh-history-button {
     background-color: Highlight;
     color: HighlightText;
   }
@@ -29,7 +29,7 @@
     border-radius: 2px;
   }
   .fdh-history-list:hover menu,
-  .fdh-history-list:active menu {
+  .fdh-history-list:focus menu {
     display: block;
     text-align: left;
   }
@@ -42,7 +42,7 @@
     cursor: pointer;
   }
   .fdh-history-list li:hover,
-  .fdh-history-list li:active {
+  .fdh-history-list li:focus {
     background-color: Highlight;
     color: HighlightText;
   }
