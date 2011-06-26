@@ -51,8 +51,8 @@ if (self.Ten && Ten.AsyncLoader) {
 
 var link = document.createElement ('link');
 link.rel = 'stylesheet';
-// link.href = 'http://suika.fam.cx/www/js/formdatahistory/styles/defaultui.css';
-link.href = 'https://raw.github.com/wakaba/samijs/master/formdatahistory/styles/defaultui.css';
+link.href = 'http://suika.fam.cx/www/js/formdatahistory/styles/defaultui.css';
+// link.href = 'https://raw.github.com/wakaba/samijs/master/formdatahistory/styles/defaultui.css';
 document.body.appendChild (link);
 
 if (document.compatMode == 'BackCompat') {
