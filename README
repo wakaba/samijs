@@ -1,0 +1,19 @@
+sami.js and other JavaScript libraries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* sami
+
+SAMI, a simple JavaScript framework.
+
+* formdatahistory
+
+Form data auto-backup script.
+
+* jste (OBSOLETE)
+
+Original version of JSTE - JavaScript Tutorial Engine.  This version
+is obsoleted; latest version is included in the SAMI directory.
+
+* kkn (OBSOLETE)
+
+Earlier version of SAMI scripts, extracted from original JSTE script.
