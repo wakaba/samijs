@@ -1,0 +1,33 @@
+formdatahistory.js
+~~~~~~~~~~~~~~~~~~
+
+This script saves form data in localStorage not to lost your input
+text by browser crash and so on.
+
+* Usage
+
+  <script src="path/to/formdatahistory.js"></script>
+  <script>
+    var f = new FDH.Form (form, formName);
+    f.watch ();
+  </script>
+
+... where /form/ is an HTML form element and /formName/ identifies the
+kind of form in the origin.
+
+* Demo
+
+See "demo/bookmarklet-source.js" or
+<http://let.hatelabo.jp/wakabatan/let/gYC-xJmuk7W6UA>.
+
+* Author
+
+Wakaba <w@suika.fam.cx>.
+
+* Acknowledgements
+
+Thanks to id:onishi for the original idea.
+
+* License
+
+Perl/MPL/GPL/LGPL.  See source codes for the actual terms.
