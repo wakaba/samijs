@@ -138,11 +138,12 @@
       var formDataList = JSON.parse (localStorage["fdhHistory-" + this.formName]|| '[]');
       if (!this.historyList && !formDataList.length) return;
       var container = this.historyList || document.createElement ('div');
-      container.innerHTML = '<span class=fdh-history-button>A <span>▼</span></span><menu></menu>';
+      container.innerHTML = '<span class=fdh-history-button tabindex=0>A <span>▼</span></span><menu></menu>';
       container.firstChild.firstChild.data = this.TEXT_BACKUP + ' ';
       var menu = container.lastChild;
       for (var i = formDataList.length - 1; i >= 0; i--) (function (formData) {
         var li = document.createElement ('li');
+        li.tabindex = 0;
         self.createHistoryListItem (formData, li);
         menu.appendChild (li);
         FDH.compat.observe (li, 'click', function () {
