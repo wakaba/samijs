@@ -13,9 +13,9 @@ var code = function () {
     });
 
     if (self.Hatena && Hatena.Haiku) {
-      var orig = Hatena.Haiku.EntryForm.createReplyForm;
+      var origHReply = Hatena.Haiku.EntryForm.createReplyForm;
       Hatena.Haiku.EntryForm.createReplyForm = function () {
-        var form = orig.apply (this, arguments);
+        var form = origHReply.apply (this, arguments);
         var f = new FDH.Form (form, formName);
         f.watch ();
         return form;
@@ -28,6 +28,16 @@ var code = function () {
       var f = new FDH.Form (form, formName);
       f.watch ();
     }) (forms[i]);
+  }
+
+  if (self.Hatena && Hatena.Diary && Hatena.Diary.NewSection) {
+    var origDInsert = Hatena.Diary.NewSection.prototype.insertForm;
+    Hatena.Diary.NewSection.prototype.insertForm = function (form) {
+      var result = origDInsert.apply (this, arguments);
+      var f = new FDH.Form (form, formName);
+      f.watch ();
+      return result;
+    };
   }
 }; // code
 
