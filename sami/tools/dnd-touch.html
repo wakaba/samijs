@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html lang=en>
+<title>Drag and drop</title>
+<link rel=stylesheet href="/www/style/html/xhtml">
+<style>
+  .sami-dnd-active {
+    color: blue;
+  }
+
+  .sami-dnd-drag-guide {
+    position: absolute;
+    border: blue 4px solid;
+    pointer-events: none;
+  }
+
+  .sami-dnd-drop-guide {
+    position: absolute;
+    border: 4px blue solid;
+    pointer-events: none;
+  }
+
+  .sami-dnd-left {
+    border-style: none none none solid;
+  }
+  .sami-dnd-right {
+    border-style: none solid none none;
+  }
+  .sami-dnd-top {
+    border-style: solid none none none;
+  }
+  .sami-dnd-bottom {
+    border-style: none none solid none;
+  }
+
+  .dropzone3-item {
+    display: inline;
+  }
+</style>
+
+<article>
+  <h1>Drag and drop demo</h1>
+
+  <div class=draggable data-value=draggablevalue1>
+    abc defgh ijklm nopqrst uvwxyz abcdef ghi jklmn o pqrst uvwxyz.
+    abc defgh ijklm nopqrst uvwxyz abcdef ghi jklmn o pqrst uvwxyz.
+    abc defgh ijklm nopqrst uvwxyz abcdef ghi jklmn o pqrst uvwxyz.
+    abc defgh ijklm nopqrst uvwxyz abcdef ghi jklmn o pqrst uvwxyz.
+    abc defgh ijklm nopqrst uvwxyz abcdef ghi jklmn o pqrst uvwxyz.
+  </div>
+
+  <div class=dropzone>
+    dropzone dropzone dropzone dropzone dropzone dropzone dropzone
+    dropzone dropzone dropzone dropzone dropzone dropzone dropzone
+    <span>child child child child child child child child child child1</span>
+    <span>child child child child child child child child child child2</span>
+    dropzone dropzone dropzone dropzone dropzone dropzone dropzone
+    dropzone dropzone dropzone dropzone dropzone dropzone dropzone
+    dropzone dropzone dropzone dropzone dropzone
+    <div>child child child child child child child child child child2</div>
+  </div>
+
+  <div class=dropzone>
+    dropzone2 dropzone2 dropzone2 dropzone2 dropzone2 dropzone2
+    dropzone2 dropzone2 dropzone2 dropzone2 dropzone2 dropzone2
+    dropzone2 dropzone2 dropzone2 dropzone2 dropzone2 dropzone2
+    dropzone2 dropzone2 dropzone2 dropzone2 dropzone2 dropzone2
+    dropzone2 dropzone2 dropzone2 dropzone2 dropzone2 dropzone2
+    dropzone2 dropzone2 dropzone2 dropzone2 dropzone2 dropzone2
+    dropzone2 dropzone2 dropzone2 dropzone2 dropzone2 dropzone2
+    dropzone2 dropzone2 dropzone2 dropzone2 dropzone2 dropzone2
+  </div>
+
+  <div class=dropzone>
+    <span class=dropzone3-item>dropzone3 dropzone3 dropzone3 dropzone3 
+    dropzone3 dropzone3 dropzone3 dropzone3 dropzone3 dropzone3</span>
+    <span class=dropzone3-item>dropzone3 dropzone3 dropzone3 dropzone3 
+    dropzone3 dropzone3 dropzone3 dropzone3 dropzone3 dropzone3</span>
+    <span class=dropzone3-item>dropzone3 dropzone3 dropzone3 dropzone3 
+    dropzone3 dropzone3 dropzone3 dropzone3 dropzone3 dropzone3</span>
+    <span class=dropzone3-item>dropzone3 dropzone3 dropzone3 dropzone3 
+    dropzone3 dropzone3 dropzone3 dropzone3 dropzone3 dropzone3</span>
+    <span class=dropzone3-item>dropzone3 dropzone3 dropzone3 dropzone3 
+    dropzone3 dropzone3 dropzone3 dropzone3 dropzone3 dropzone3</span>
+  </div>
+
+</article>
+
+<script>
+  var SAMI = {};
+  SAMI.onLoadFunctions = [];
+  SAMI.onLoadFunctions.push (function () {
+    SAMI.Script.loadScripts ([
+      '/www/css/noderect/NodeRect.js',
+      '../script/sami-ui.js'
+    ], function () {
+      var el = SAMI.Node.getElementsByClassName (document, 'draggable').getFirst ();
+      var el2 = SAMI.Node.getElementsByClassName (document, 'dropzone').getFirst ();
+      var el3 = SAMI.Node.getElementsByClassName (document, 'dropzone').list[1];
+      var el4 = SAMI.Node.getElementsByClassName (document, 'dropzone').getLast ();
+      var choose = SAMI.DND.CHOOSE_TOP_BOTTOM;
+      var dnd = new SAMI.DND.Emulated.Touch (el, {
+        ondragstart: function (el, ds) {
+          ds.setData ({value: el.getAttribute ('data-value')});
+        }, // ondragstart
+        ondragenter: choose.ondragenter,
+        ondragover: choose.ondragover,
+        ondrop: function (el, ds, el2, opts) {
+          var drop = new SAMI.StringContainer.Element (el2);
+          drop.appendText (opts.type + ' {' + ds.getData ().value + '} (' + (ds.pointingLeftHalfOf (el2) ? 'left' : 'right') + ') (' + (ds.pointingUpperHalfOf (el2) ? 'top' : 'bottom') + ') ');
+        } // ondrop
+      });
+      dnd.addDropzone (el2, {type: 'abc', color: 'red'});
+      dnd.addDropzone (el3, {type: 'xyz', color: 'orange'});
+      dnd.addDropzone (el4, {type: 'xyz'}, SAMI.DND.CHOOSE_BY_CLASSNAME ('dropzone3-item').determineDropTarget);
+    });
+  });
+</script>
+<script src="../script/sami-core.js" defer async></script>

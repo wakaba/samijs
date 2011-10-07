@@ -413,6 +413,141 @@ SAMI.DND.Emulated = new SAMI.Class (function (el, opts) {
   } // dispatchDragstart
 }); // Emulated
 
+SAMI.DND.Emulated.Touch = new SAMI.Class (function (el, opts) {
+  this.targetElement = el;
+  this.ondragstart = opts.ondragstart;
+  this.ondragenter = opts.ondragenter;
+  this.ondragover = opts.ondragover;
+  this.ondrop = opts.ondrop;
+  this.dragStates = {};
+  this.setMouseEvents ();
+}, {
+  setMouseEvents: function () {
+    var self = this;
+    var el = this.targetElement;
+    var noselect = new SAMI.Observer (document, 'selectstart', function (event) {
+      event.returnValue = false;
+    }, {disabled: true});
+    new SAMI.Observer (el, 'touchstart', function (event) {
+      var ds = new SAMI.DND.Emulated.DragState (
+        NR.Element.getRects (el, window).borderBox,
+        NR.Event.getRects (event.touches[0], window).client
+      );
+      self.dragStates['mouse'] = ds;
+      ds.showDragGuide ();
+
+      SAMI.Element.addClassName (el, 'sami-dnd-active');
+
+      var ev = new SAMI.Event.Browser (event);
+      ev.preventDefault (); // Non-IE
+
+      self.dispatchDragstart(el, ds);
+      noselect.start ();
+    });
+    new SAMI.Observer (document, 'touchmove', function (event) {
+      var ds = self.dragStates['mouse'];
+      if (ds) {
+        var vector = NR.Event.getRects (event.touches[0], window).client;
+        ds.setVector (vector);
+        if (Math.random () < 0.3 && self.ondragenter) {
+          ds.hideGuides ();
+          var pointed = SAMI.Viewport.top.getElementFromVector (vector);
+          ds.restoreGuides ();
+          if (pointed) {
+            var invoked = false;
+            var ev = new SAMI.Event.Browser.Custom ({
+              type: 'samiDragenterEmulated',
+              bubbles: true,
+              args: {dragState: ds, invoked: function () { invoked = true }}
+            });
+            ev.fireOn (pointed);
+            if (!invoked) {
+              ds.setPointedElement (null, function (oldEl, newEl) {
+                self.dispatchDragenter (self.targetElement, ds, oldEl, newEl, null);
+              });
+            }
+          } else {
+            ds.setPointedElement (null, function (oldEl, newEl) {
+              self.dispatchDragenter (self.targetElement, ds, oldEl, newEl, null);
+            });
+          }
+        }
+      }
+    });
+    new SAMI.Observer (document, 'touchend', function (event) {
+      var ds = self.dragStates['mouse'];
+      if (ds) {
+        var vector = event.touches.length ? NR.Event.getRects (event.touches[0], window).client : ds.getVector();
+        ds.hideGuides ();
+        var el = SAMI.Viewport.top.getElementFromVector (vector);
+
+        ds.setPointedElement (null, function (oldEl, newEl) {
+          self.dispatchDragenter (el, ds, oldEl, newEl, null);
+        });
+
+        var ev = new SAMI.Event.Browser.Custom ({
+          type: 'samiDroppedEmulated',
+          bubbles: true,
+          args: {dragState: ds}
+        });
+        ev.fireOn (el);
+
+        SAMI.Element.deleteClassName (self.targetElement, 'sami-dnd-active');
+        ds.discard ();
+        delete self.dragStates['mouse'];
+        noselect.stop ();
+      }
+    });
+  }, // setMouseEvents
+
+  addDropzone: function (dropzone, params, determineDropTarget) {
+    var self = this;
+    var el = this.targetElement;
+    determineDropTarget = determineDropTarget || SAMI.DND.CHOOSE_DROPZONE.determineDropTarget;
+    new SAMI.Observer.Custom (dropzone, 'samiDragenterEmulated', function (event) {
+      event.invoked ();
+      var ds = event.dragState;
+      var target = determineDropTarget (dropzone, event.target || event.srcElement);
+      ds.setPointedElement (target, function (oldEl, newEl) {
+        self.dispatchDragenter (el, ds, oldEl, newEl, params);
+      }, function (newEl) {
+        self.dispatchDragover (el, ds, newEl, params);
+      });
+    });
+    new SAMI.Observer.Custom (dropzone, 'samiDroppedEmulated', function (event) {
+      var target = determineDropTarget (dropzone, event.target || event.srcElement);
+      if (target) {
+        self.dispatchDrop(el, event.dragState, target, params);
+      }
+    });
+  }, // addDropzone
+
+  dispatchDragstart: function () {
+    var code = this.ondragstart;
+    if (code) {
+      code.apply (this, arguments);
+    }
+  }, // dispatchDragstart
+  dispatchDragenter: function () {
+    var code = this.ondragenter;
+    if (code) {
+      code.apply (this, arguments);
+    }
+  }, // dispatchDragenter
+  dispatchDragover: function () {
+    var code = this.ondragover;
+    if (code) {
+      code.apply (this, arguments);
+    }
+  }, // dispatchDragover
+  dispatchDrop: function () {
+    var code = this.ondrop;
+    if (code) {
+      code.apply (this, arguments);
+    }
+  } // dispatchDragstart
+}); // Emulated.Touch
+
 SAMI.DND.Base.DragState = new SAMI.Class (function () {
 
 }, {
