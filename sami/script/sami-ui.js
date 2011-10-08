@@ -488,7 +488,7 @@ SAMI.DND.Emulated.Touch = new SAMI.Class (function (el, opts) {
         var ev = new SAMI.Event.Browser.Custom ({
           type: 'samiDroppedEmulated',
           bubbles: true,
-          args: {dragState: ds}
+          args: {dragState: ds, samiDND: self}
         });
         ev.fireOn (el);
 
@@ -515,6 +515,7 @@ SAMI.DND.Emulated.Touch = new SAMI.Class (function (el, opts) {
       });
     });
     new SAMI.Observer.Custom (dropzone, 'samiDroppedEmulated', function (event) {
+      if (event.samiDND != self) return;
       var target = determineDropTarget (dropzone, event.target || event.srcElement);
       if (target) {
         self.dispatchDrop(el, event.dragState, target, params);
