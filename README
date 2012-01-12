@@ -5,6 +5,12 @@ sami.js and other JavaScript libraries
 
 SAMI, a simple JavaScript framework.
 
+* noderect
+
+NodeRect.js, CSSOM View wrapper module.
+
+NodeRectViewer.js, an interactive demo for NodeRect.js.
+
 * formdatahistory
 
 Form data auto-backup script.
