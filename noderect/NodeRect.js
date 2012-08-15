@@ -888,7 +888,7 @@ NR.View.getViewportRects = function (view) {
     rects.bodyScrollableArea = NR.Vector.invalid;
   }
 
-  if (document.all) {
+  if (document.all && !window.opera) {
     if (quirks) {
       rects.scrollState = rects.bodyScrollState;
     } else {
@@ -905,7 +905,7 @@ NR.View.getViewportRects = function (view) {
        and both |html| and |body| has scrollbars.  In such cases there
        is no way to obtain ICB (content edge), AFAICT. */
 
-    if (document.all) {
+    if (document.all && !window.opera) {
       /*
           This returns wrong value if the author does not specify the border
           of the |body| element - default viewport border width is 2px, but
@@ -921,7 +921,7 @@ NR.View.getViewportRects = function (view) {
           = NR.View.getBoundingClientRectOrigin (view, doc);
     }
   } else {
-    if (document.all) {
+    if (document.all && !window.opera) {
       rects.icb = rects.deOffset;
 
       rects.boundingClientOrigin = rects.icb.subtract (rects.deClient.getTopLeft ());
@@ -966,7 +966,7 @@ NR.View.getViewportRects = function (view) {
   rects.contentBox.label = 'Viewport content box';
 
   if (rects.boundingClientOrigin) {
-    if (document.all && quirks) {
+    if (document.all && !window.opera && quirks) {
       //
     } else {
       rects.boundingClientOrigin
