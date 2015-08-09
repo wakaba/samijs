@@ -1,2 +1,8 @@
+Redirect 301 /www/js/enum/props.en.html /www/jsenum/props.en.html
+Redirect 301 /www/js/enum/props.en /www/jsenum/props.en
+Redirect 301 /www/js/enum/props /www/jsenum/props
+Redirect 301 /www/js/enum/prop-list.txt /www/jsenum/prop-list.txt
+Redirect 301 /www/js/enum/prop-list /www/jsenum/prop-list
+Redirect 301 /www/js/enum/ /www/jsenum/
 
 ## License: Public Domain.
