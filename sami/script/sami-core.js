@@ -1015,7 +1015,7 @@ SAMI.Class.addClassMethods (SAMI.Element, {
   }, // getIds
 
   /* 
-    NR.js <http://suika.fam.cx/www/css/noderect/NodeRect.js> must be loaded
+    NR.js <https://suika.suikawiki.org/www/css/noderect/NodeRect.js> must be loaded
     before the invocation.
   */  
   scroll: function (elements) {
@@ -1880,7 +1880,7 @@ if (SAMI.isDynamicallyLoaded) {
 }
 
 /* ***** BEGIN LICENSE BLOCK *****
- * Copyright 2008-2011 Wakaba <w@suika.fam.cx>.  All rights reserved.
+ * Copyright 2008-2011 Wakaba <wakaba@suikawiki.org>.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or 
  * modify it under the same terms as Perl itself.
@@ -1917,7 +1917,7 @@ if (SAMI.isDynamicallyLoaded) {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Wakaba <w@suika.fam.cx>
+ *   Wakaba <wakaba@suikawiki.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or

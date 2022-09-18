@@ -44,14 +44,14 @@ var code = function () {
 if (self.Ten && Ten.AsyncLoader) {
   Ten.AsyncLoader.loadScripts
       ([
-          // 'http://suika.fam.cx/www/js/formdatahistory/scripts/formdatahistory.js'
+          // 'https://suika.suikawiki.org/www/js/formdatahistory/scripts/formdatahistory.js'
           'https://raw.github.com/wakaba/samijs/master/formdatahistory/scripts/formdatahistory.js'
        ], function () {
          code ();
        });
 } else {
   var script = document.createElement ('script');
-  // script.src = 'http://suika.fam.cx/www/js/formdatahistory/scripts/formdatahistory.js';
+  // script.src = 'https://suika.suikawiki.org/www/js/formdatahistory/scripts/formdatahistory.js';
   script.src = 'https://raw.github.com/wakaba/samijs/master/formdatahistory/scripts/formdatahistory.js';
   script.onload = function () {
     code ();
@@ -61,7 +61,7 @@ if (self.Ten && Ten.AsyncLoader) {
 
 var link = document.createElement ('link');
 link.rel = 'stylesheet';
-link.href = 'http://suika.fam.cx/www/js/formdatahistory/styles/defaultui.css';
+link.href = 'https://suika.suikawiki.org/www/js/formdatahistory/styles/defaultui.css';
 // link.href = 'https://raw.github.com/wakaba/samijs/master/formdatahistory/styles/defaultui.css';
 document.body.appendChild (link);
 
@@ -74,7 +74,7 @@ if (document.compatMode == 'BackCompat') {
 void (0);
 
 /* ***** BEGIN LICENSE BLOCK *****
- * Copyright 2011 Wakaba <w@suika.fam.cx>.  All rights reserved.
+ * Copyright 2011 Wakaba <wakaba@suikawiki.org>.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or 
  * modify it under the same terms as Perl itself.

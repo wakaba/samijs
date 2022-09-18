@@ -583,7 +583,7 @@ NR.Element.getBoxAreas = function (el, view) {
 NR.Element.getAttrRects = function (el) {
   var rects = {};
 
-  /* See <http://suika.fam.cx/%7Ewakaba/wiki/sw/n/offset%2A> for
+  /* See <https://suika.suikawiki.org/%7Ewakaba/wiki/sw/n/offset%2A> for
      compatibility problems. */
 
   rects.offset = NR.Rect.tlwh
@@ -1105,14 +1105,14 @@ if (self.NROnLoad) {
 
 NR.js - Cross-browser wrapper for CSSOM View attributes
 
-Documentation: <http://suika.fam.cx/%7Ewakaba/wiki/sw/n/NodeRect%2Ejs>.
+Documentation: <https://suika.suikawiki.org/%7Ewakaba/wiki/sw/n/NodeRect%2Ejs>.
 
-Author: Wakaba <w@suika.fam.cx>.
+Author: Wakaba <wakaba@suikawiki.org>.
 
 */
 
 /* ***** BEGIN LICENSE BLOCK *****
- * Copyright 2008-2009 Wakaba <w@suika.fam.cx>.  All rights reserved.
+ * Copyright 2008-2009 Wakaba <wakaba@suikawiki.org>.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or 
  * modify it under the same terms as Perl itself.
@@ -1149,7 +1149,7 @@ Author: Wakaba <w@suika.fam.cx>.
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Wakaba <w@suika.fam.cx>
+ *   Wakaba <wakaba@suikawiki.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or

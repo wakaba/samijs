@@ -5,7 +5,7 @@ if (!window.NodeRectViewer) window.NodeRectViewer = {};
 NodeRectViewer.DEBUG = true;
 
 var s = document.createElement ('script');
-s.src = "http://suika.fam.cx/www/css/noderect/NodeRectViewer.js?"
+s.src = "https://suika.suikawiki.org/www/css/noderect/NodeRectViewer.js?"
     + Math.random ();
 document.body.appendChild (s);
 
@@ -13,7 +13,7 @@ void (0);
 
 /*
 
-Author: Wakaba <w@suika.fam.cx>
+Author: Wakaba <wakaba@suikawiki.org>
 License: Public Domain.
 
 */
